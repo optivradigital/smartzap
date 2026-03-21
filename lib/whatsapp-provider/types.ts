@@ -1,0 +1,44 @@
+/**
+ * WhatsApp Provider Abstraction
+ * Supports: Meta Cloud API (official) + Evolution API (unofficial, via Baileys)
+ */
+
+export type WhatsAppProviderType = 'meta' | 'evolution'
+
+export interface SendTextResult {
+  success: boolean
+  messageId?: string
+  error?: string
+}
+
+export interface ConnectionStatus {
+  connected: boolean
+  phone?: string
+  name?: string
+  qrCode?: string        // base64, only when connecting via Evolution
+  state?: string         // 'open' | 'connecting' | 'close'
+}
+
+export interface ProviderConfig {
+  type: WhatsAppProviderType
+  // Meta
+  phoneNumberId?: string
+  accessToken?: string
+  // Evolution
+  evolutionUrl?: string
+  evolutionApiKey?: string
+  evolutionInstance?: string
+}
+
+export interface SendMessageOptions {
+  phone: string
+  text: string
+  simulateTyping?: boolean    // sends typing indicator before message (Evolution only)
+  typingDurationMs?: number   // how long to show "typing..." (default 1500ms)
+}
+
+export interface IWhatsAppProvider {
+  type: WhatsAppProviderType
+  sendText(options: SendMessageOptions): Promise<SendTextResult>
+  getConnectionStatus(): Promise<ConnectionStatus>
+}
