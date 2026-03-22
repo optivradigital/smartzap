@@ -5,6 +5,8 @@ import { AppSettings } from '../../../types';
 import { AccountLimits } from '../../../lib/meta-limits';
 import { PhoneNumber } from '../../../hooks/useSettings';
 import { AISettings } from './AISettings';
+import { WhatsAppProviderSettings } from './WhatsAppProviderSettings';
+import { UserManagement } from './UserManagement';
 
 interface WebhookStats {
   lastEventAt?: string | null;
@@ -331,6 +333,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       )}
 
       <div className="space-y-8">
+        {/* WhatsApp Provider Section — FIRST so users can choose Meta or Evolution */}
+        <div className="glass-panel rounded-2xl p-8">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <span className="w-1 h-6 bg-green-500 rounded-full"></span>
+            Conexão WhatsApp
+          </h3>
+          <WhatsAppProviderSettings />
+        </div>
+
         {/* Status Card */}
         <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
           <div className={`p-4 rounded-2xl ${settings.isConnected ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
@@ -1119,6 +1130,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
         )}
+      {/* User Management Section */}
+        <div className="glass-panel rounded-2xl p-8">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
+            Gerenciar Usuarios
+          </h3>
+          <p className="text-sm text-gray-400 mb-6">
+            Adicione e gerencie os usuarios que podem acessar o SmartZap. Apenas admins podem gerenciar usuarios.
+          </p>
+          <UserManagement />
+        </div>
       </div>
     </div>
   );

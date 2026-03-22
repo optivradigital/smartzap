@@ -43,6 +43,10 @@ export default function NewCampaignPage() {
       liveValidation={controller.liveValidation}
       isOverLimit={controller.isOverLimit}
       currentLimit={controller.currentLimit}
+      antiBanConfig={controller.antiBanConfig}
+      setAntiBanConfig={controller.setAntiBanConfig}
+      providerType={controller.providerType}
+      setProviderType={controller.setProviderType}
     />
   )
 }

@@ -136,7 +136,7 @@ export const campaignService = {
   },
 
   create: async (input: CreateCampaignInput): Promise<Campaign> => {
-    const { name, templateName, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables } = input;
+    const { name, templateName, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, providerType, delayMinMs, delayMaxMs, simulateTyping, dailyLimit, messageVariants } = input;
 
     // 1. Create campaign in Database (source of truth) with contacts
     const response = await fetch('/api/campaigns', {
@@ -149,7 +149,13 @@ export const campaignService = {
         scheduledAt,
         selectedContactIds,
         contacts: selectedContacts, // Pass contacts to be saved in campaign_contacts
-        templateVariables, // Pass template variables to be saved in database
+        templateVariables,
+        providerType,
+        delayMinMs,
+        delayMaxMs,
+        simulateTyping,
+        dailyLimit,
+        messageVariants,
         status: scheduledAt ? CampaignStatus.SCHEDULED : CampaignStatus.SENDING,
       }),
     });

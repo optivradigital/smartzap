@@ -8,6 +8,7 @@ import { Template, TestContact } from '../types';
 import { useAccountLimits } from './useAccountLimits';
 import { CampaignValidation } from '../lib/meta-limits';
 import { countTemplateVariables } from '../lib/template-validator';
+import { AntiBanConfig, DEFAULT_ANTI_BAN } from '../components/features/campaigns/AntiBanSettings';
 
 export const useCampaignWizardController = () => {
   const navigate = useNavigate();
@@ -18,6 +19,10 @@ export const useCampaignWizardController = () => {
   // Form State
   const [name, setName] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+
+  // Anti-ban config for Evolution API campaigns
+  const [antiBanConfig, setAntiBanConfig] = useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
+  const [providerType, setProviderType] = useState<'meta' | 'evolution'>('meta');
   const [recipientSource, setRecipientSource] = useState<'all' | 'specific' | 'test' | null>(null);
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   
@@ -319,6 +324,12 @@ export const useCampaignWizardController = () => {
       selectedContactIds: recipientSource === 'test' ? [] : selectedContactIds, // Save for resume functionality
       scheduledAt: scheduleTime || scheduledAt || undefined, // Use provided time or state
       templateVariables: templateVariables.length > 0 ? templateVariables : undefined,
+      providerType: providerType,
+      delayMinMs: antiBanConfig.delayMinMs,
+      delayMaxMs: antiBanConfig.delayMaxMs,
+      simulateTyping: antiBanConfig.simulateTyping,
+      dailyLimit: antiBanConfig.dailyLimit,
+      messageVariants: antiBanConfig.messageVariants.length > 0 ? antiBanConfig.messageVariants : undefined,
     });
   };
   
@@ -354,6 +365,10 @@ export const useCampaignWizardController = () => {
     handleNext,
     handleBack,
     handleSend,
+    antiBanConfig,
+    setAntiBanConfig,
+    providerType,
+    setProviderType,
     isCreating: createCampaignMutation.isPending,
     isLoading: contactsQuery.isLoading || templatesQuery.isLoading || limitsLoading || settingsQuery.isLoading,
     

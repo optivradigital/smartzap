@@ -37,7 +37,14 @@ interface CreateCampaignBody {
   scheduledAt?: string
   selectedContactIds?: string[]
   contacts?: { name: string; phone: string }[]
-  templateVariables?: string[]  // Static values for {{2}}, {{3}}, etc.
+  templateVariables?: string[]
+  // Anti-ban (Evolution API)
+  providerType?: 'meta' | 'evolution'
+  delayMinMs?: number
+  delayMaxMs?: number
+  simulateTyping?: boolean
+  dailyLimit?: number | null
+  messageVariants?: string[]
 }
 
 /**
@@ -65,7 +72,13 @@ export async function POST(request: Request) {
       templateName: data.templateName,
       recipients: data.recipients,
       scheduledAt: data.scheduledAt,
-      templateVariables: data.templateVariables,  // Now properly validated by Zod
+      templateVariables: data.templateVariables,
+      providerType: (data as any).providerType,
+      delayMinMs: (data as any).delayMinMs,
+      delayMaxMs: (data as any).delayMaxMs,
+      simulateTyping: (data as any).simulateTyping,
+      dailyLimit: (data as any).dailyLimit,
+      messageVariants: (data as any).messageVariants,
     })
 
     // If contacts were provided, add them to campaign_contacts

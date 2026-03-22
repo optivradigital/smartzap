@@ -5,6 +5,7 @@ import { Template, Contact, TestContact } from '../../../types';
 import { getPricingBreakdown } from '../../../lib/whatsapp-pricing';
 import { useExchangeRate } from '../../../hooks/useExchangeRate';
 import { WhatsAppPhonePreview } from '@/components/ui/WhatsAppPhonePreview';
+import { AntiBanSettings, AntiBanConfig, DEFAULT_ANTI_BAN } from './AntiBanSettings';
 import { CampaignValidation, AccountLimits, TIER_DISPLAY_NAMES, getNextTier, TIER_LIMITS, getUpgradeRoadmap, UpgradeStep } from '../../../lib/meta-limits';
 
 // Helper Icon
@@ -55,6 +56,11 @@ interface CampaignWizardViewProps {
   liveValidation?: CampaignValidation | null;
   isOverLimit?: boolean;
   currentLimit?: number;
+  // Anti-ban config
+  antiBanConfig?: AntiBanConfig;
+  setAntiBanConfig?: (config: AntiBanConfig) => void;
+  providerType?: 'meta' | 'evolution';
+  setProviderType?: (t: 'meta' | 'evolution') => void;
 }
 
 // Modal de bloqueio quando campanha excede limites da conta
@@ -207,6 +213,12 @@ const UpgradeRoadmapModal: React.FC<{
   const nextTier = getNextTier(currentTier);
   const currentLimit = TIER_LIMITS[currentTier];
   const nextLimit = nextTier ? TIER_LIMITS[nextTier] : null;
+
+  // Anti-ban internal state (used if not provided as props)
+  const [antiBanConfigInternal, setAntiBanConfigInternal] = React.useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
+  const antiBanConfig = antiBanConfigProp ?? antiBanConfigInternal;
+  const setAntiBanConfig = setAntiBanConfigProp ?? setAntiBanConfigInternal;
+  const providerType = providerTypeProp ?? 'meta';
 
   // Get upgrade steps
   const upgradeSteps = accountLimits ? getUpgradeRoadmap(accountLimits) : [];
@@ -791,6 +803,17 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Anti-Ban Settings (shown in Step 1) */}
+            {step === 1 && (
+              <div className="px-6 pb-6">
+                <AntiBanSettings
+                  value={antiBanConfig}
+                  onChange={setAntiBanConfig}
+                  providerType={providerType}
+                />
               </div>
             )}
 

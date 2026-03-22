@@ -107,6 +107,13 @@ export const campaignDb = {
         recipients: number
         scheduledAt?: string
         templateVariables?: string[]
+        // Anti-ban (Evolution API)
+        providerType?: 'meta' | 'evolution'
+        delayMinMs?: number
+        delayMaxMs?: number
+        simulateTyping?: boolean
+        dailyLimit?: number | null
+        messageVariants?: string[]
     }): Promise<Campaign> => {
         const id = generateId()
         const now = new Date().toISOString()
@@ -128,6 +135,12 @@ export const campaignDb = {
                 created_at: now,
                 scheduled_date: campaign.scheduledAt,
                 started_at: campaign.scheduledAt ? null : now,
+                provider_type: campaign.providerType || 'meta',
+                delay_min_ms: campaign.delayMinMs ?? 3000,
+                delay_max_ms: campaign.delayMaxMs ?? 12000,
+                simulate_typing: campaign.simulateTyping ?? false,
+                daily_limit: campaign.dailyLimit ?? null,
+                message_variants: campaign.messageVariants ?? [],
             })
             .select()
             .single()
