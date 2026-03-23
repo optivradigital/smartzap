@@ -16,7 +16,8 @@ export interface ConnectionStatus {
   phone?: string
   name?: string
   qrCode?: string        // base64, only when connecting via Evolution
-  state?: string         // 'open' | 'connecting' | 'close'
+  state?: string         // 'open' | 'connecting' | 'close' | 'error'
+  error?: string         // error message when state is 'error'
 }
 
 export interface ProviderConfig {
