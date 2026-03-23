@@ -50,7 +50,7 @@ export interface AuthResult {
 export function hashPassword(password: string): string {
   const salt = randomBytes(32).toString('hex')
   const hash = pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, PBKDF2_KEYLEN, PBKDF2_DIGEST).toString('hex')
-  return 
+  return salt + ':' + hash
 }
 
 /**

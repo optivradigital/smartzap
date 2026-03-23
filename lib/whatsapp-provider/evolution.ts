@@ -118,14 +118,14 @@ export class EvolutionProvider implements IWhatsAppProvider {
           )
           const instances = await infoRes.json()
           const inst = Array.isArray(instances)
-            ? instances.find((i: Record<string, unknown>) => i.instance?.instanceName === this.instance)
+            ? instances.find((i: Record<string, unknown>) => (i.instance as any)?.instanceName === this.instance)
             : null
 
           return {
             connected: true,
             state: 'open',
-            phone: inst?.instance?.owner?.replace('@s.whatsapp.net', '') || undefined,
-            name: inst?.instance?.profileName || undefined,
+            phone: (inst?.instance as any)?.owner?.replace('@s.whatsapp.net', '') || undefined,
+            name: (inst?.instance as any)?.profileName || undefined,
           }
         } catch {
           return { connected: true, state: 'open' }

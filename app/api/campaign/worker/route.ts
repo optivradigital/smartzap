@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
 
       // Marca campanha como concluída
       const finalCampaign = await campaignDb.getById(campaignId)
-      const allFailed = finalCampaign && finalCampaign.failed === finalCampaign.total_recipients && finalCampaign.total_recipients > 0
+      const allFailed = finalCampaign && finalCampaign.failed === finalCampaign.recipients && finalCampaign.recipients > 0
       await campaignDb.updateStatus(campaignId, {
         status: allFailed ? CampaignStatus.FAILED : CampaignStatus.COMPLETED,
         completedAt: new Date().toISOString(),

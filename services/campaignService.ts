@@ -5,9 +5,16 @@ interface CreateCampaignInput {
   templateName: string;
   recipients: number;
   selectedContacts?: { name: string; phone: string }[];
-  selectedContactIds?: string[];  // For resume functionality
-  scheduledAt?: string;           // ISO timestamp for scheduling
-  templateVariables?: string[];   // Dynamic template variables
+  selectedContactIds?: string[];
+  scheduledAt?: string;
+  templateVariables?: string[];
+  // Anti-ban (Evolution API)
+  providerType?: 'meta' | 'evolution';
+  delayMinMs?: number;
+  delayMaxMs?: number;
+  simulateTyping?: boolean;
+  dailyLimit?: number | null;
+  messageVariants?: string[];
 }
 
 interface RealMessageStatus {

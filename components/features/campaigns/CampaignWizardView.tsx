@@ -214,12 +214,6 @@ const UpgradeRoadmapModal: React.FC<{
   const currentLimit = TIER_LIMITS[currentTier];
   const nextLimit = nextTier ? TIER_LIMITS[nextTier] : null;
 
-  // Anti-ban internal state (used if not provided as props)
-  const [antiBanConfigInternal, setAntiBanConfigInternal] = React.useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
-  const antiBanConfig = antiBanConfigProp ?? antiBanConfigInternal;
-  const setAntiBanConfig = setAntiBanConfigProp ?? setAntiBanConfigInternal;
-  const providerType = providerTypeProp ?? 'meta';
-
   // Get upgrade steps
   const upgradeSteps = accountLimits ? getUpgradeRoadmap(accountLimits) : [];
 
@@ -397,8 +391,17 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
   blockReason,
   liveValidation,
   isOverLimit = false,
-  currentLimit = 250
+  currentLimit = 250,
+  antiBanConfig: antiBanConfigProp,
+  setAntiBanConfig: setAntiBanConfigProp,
+  providerType: providerTypeProp,
 }) => {
+  // Anti-ban internal state (fallback when not provided as props)
+  const [antiBanConfigInternal, setAntiBanConfigInternal] = React.useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
+  const antiBanConfig = antiBanConfigProp ?? antiBanConfigInternal;
+  const setAntiBanConfig = setAntiBanConfigProp ?? setAntiBanConfigInternal;
+  const providerType = providerTypeProp ?? 'meta';
+
   // State for upgrade modal
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
