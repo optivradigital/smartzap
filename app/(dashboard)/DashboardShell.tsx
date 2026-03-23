@@ -27,6 +27,7 @@ import {
     Workflow
 } from 'lucide-react'
 import React from 'react'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { HealthStatus } from '@/lib/health-check'
 
 // Setup step interface
@@ -473,6 +474,7 @@ export function DashboardShell({
     // For now we use the prop directly for immediate rendering
 
     const companyName = initialAuthStatus?.company?.name
+    const { user: currentAuthUser, isSuperAdmin: isAuthSuperAdmin } = useCurrentUser()
     const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#16a34a' })
     React.useEffect(() => {
       fetch('/api/settings/branding').then(r => r.ok ? r.json() : null).then(d => { if (d) setBranding(d) }).catch(() => {})
@@ -656,7 +658,9 @@ export function DashboardShell({
                             </div>
                             <div className="flex-1 min-w-0 text-left">
                                 <p className="text-sm font-medium text-white truncate">{companyName || 'SmartZap'}</p>
-                                <p className="text-xs text-gray-500 truncate">Administrador</p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  {currentAuthUser?.role === 'super_admin' ? 'Super Admin' : currentAuthUser?.role === 'manager' ? 'Manager' : 'Usuário'}
+                                </p>
                             </div>
                             {isLoggingOut ? (
                                 <div className="w-4 h-4 border-2 border-gray-500 border-t-white rounded-full animate-spin" />
@@ -691,7 +695,19 @@ export function DashboardShell({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
+                        {/* Org name badge */}
+                        {currentAuthUser?.organizationId && (
+                          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span className="text-xs text-gray-300 font-medium">
+                              {branding.brand_name !== 'SmartZap' ? branding.brand_name : (currentAuthUser?.name || 'Organização')}
+                            </span>
+                            {isAuthSuperAdmin && (
+                              <span className="text-xs px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 font-semibold ml-0.5">Admin</span>
+                            )}
+                          </div>
+                        )}
                         <div className="relative group">
                             <Bell size={20} className="text-gray-500 group-hover:text-white transition-colors cursor-pointer" />
                             <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary-500 rounded-full border-2 border-zinc-950"></span>

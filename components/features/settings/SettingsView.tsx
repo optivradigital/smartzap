@@ -1161,7 +1161,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             Gerenciar Usuarios
           </h3>
           <p className="text-sm text-gray-400 mb-6">
-            Adicione e gerencie os usuarios que podem acessar o SmartZap. Apenas admins podem gerenciar usuarios.
+            Adicione e gerencie os usuarios da sua organizacao. Managers podem criar e remover usuarios.
           </p>
           <UserManagement />
         </div>
