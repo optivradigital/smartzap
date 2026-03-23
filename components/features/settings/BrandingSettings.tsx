@@ -29,13 +29,9 @@ export function BrandingSettings() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    // Local preview
     const reader = new FileReader()
     reader.onload = (ev) => setPreview(ev.target?.result as string)
     reader.readAsDataURL(file)
-
-    // Upload
     setIsUploading(true)
     setError('')
     try {
@@ -46,7 +42,7 @@ export function BrandingSettings() {
       if (!res.ok) throw new Error(data.error || 'Erro ao fazer upload')
       setLogoUrl(data.url)
       setPreview(null)
-      toast.success('Logo carregado com sucesso!')
+      toast.success('Logo carregado!')
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao fazer upload'
       setError(msg)
@@ -61,7 +57,6 @@ export function BrandingSettings() {
   const handleRemoveLogo = async () => {
     setLogoUrl('')
     setPreview(null)
-    // Save immediately
     await fetch('/api/settings/branding', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -98,50 +93,48 @@ export function BrandingSettings() {
   const currentLogo = preview || logoUrl
 
   return (
-    <div className=space-y-6>
+    <div className="space-y-6">
       {error && (
-        <div className=bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm">
           {error}
         </div>
       )}
 
-      {/* Nome */}
       <div>
-        <label className=block text-sm font-medium text-gray-300 mb-2>Nome da aplicacao</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Nome da aplicacao</label>
         <input
-          type=text
+          type="text"
           value={brandName}
           onChange={e => setBrandName(e.target.value)}
-          placeholder=SmartZap
-          className=w-full bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-zinc-500
+          placeholder="SmartZap"
+          className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-zinc-500"
         />
-        <p className=text-xs text-gray-500 mt-1>Aparece no topo da sidebar e na aba do navegador</p>
+        <p className="text-xs text-gray-500 mt-1">Aparece no topo da sidebar e na aba do navegador</p>
       </div>
 
-      {/* Logo Upload */}
       <div>
-        <label className=block text-sm font-medium text-gray-300 mb-2>Logo</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Logo</label>
         {currentLogo ? (
-          <div className=flex items-center gap-4 p-4 bg-zinc-800 rounded-xl border border-zinc-700>
-            <img src={currentLogo} alt=Logo className=h-12 object-contain max-w-[120px] />
-            <div className=flex-1 min-w-0>
-              <p className=text-xs text-gray-400 truncate>{logoUrl || 'Pré-visualização'}</p>
-              {isUploading && <p className=text-xs text-blue-400 mt-1>Enviando...</p>}
+          <div className="flex items-center gap-4 p-4 bg-zinc-800 rounded-xl border border-zinc-700">
+            <img src={currentLogo} alt="Logo" className="h-12 object-contain max-w-[120px]" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-400 truncate">{logoUrl || 'Pre-visualizacao'}</p>
+              {isUploading && <p className="text-xs text-blue-400 mt-1">Enviando...</p>}
             </div>
-            <div className=flex gap-2>
+            <div className="flex gap-2">
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={isUploading}
-                className=p-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-gray-300 transition-colors
-                title=Trocar logo
+                className="p-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-gray-300 transition-colors"
+                title="Trocar logo"
               >
                 <Upload size={16} />
               </button>
               <button
                 onClick={handleRemoveLogo}
                 disabled={isUploading}
-                className=p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors
-                title=Remover logo
+                className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                title="Remover logo"
               >
                 <X size={16} />
               </button>
@@ -151,61 +144,60 @@ export function BrandingSettings() {
           <button
             onClick={() => fileRef.current?.click()}
             disabled={isUploading}
-            className=w-full flex flex-col items-center gap-3 p-8 bg-zinc-800 border border-dashed border-zinc-600 rounded-xl hover:border-zinc-400 hover:bg-zinc-700/50 transition-colors text-gray-400 hover:text-gray-200
+            className="w-full flex flex-col items-center gap-3 p-8 bg-zinc-800 border border-dashed border-zinc-600 rounded-xl hover:border-zinc-400 hover:bg-zinc-700/50 transition-colors text-gray-400 hover:text-gray-200"
           >
             {isUploading ? (
               <>
-                <div className=w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin />
-                <span className=text-sm>Enviando...</span>
+                <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm">Enviando...</span>
               </>
             ) : (
               <>
                 <Image size={28} />
-                <span className=text-sm>Clique para carregar logo</span>
-                <span className=text-xs text-gray-600>PNG, JPG, SVG ou WebP — máx 2MB</span>
+                <span className="text-sm">Clique para carregar logo</span>
+                <span className="text-xs text-gray-600">PNG, JPG, SVG ou WebP - max 2MB</span>
               </>
             )}
           </button>
         )}
         <input
           ref={fileRef}
-          type=file
-          accept=image/png,image/jpeg,image/jpg,image/svg+xml,image/webp
-          className=hidden
+          type="file"
+          accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+          className="hidden"
           onChange={handleFileChange}
         />
       </div>
 
-      {/* Cor Principal */}
       <div>
-        <label className=block text-sm font-medium text-gray-300 mb-2>Cor principal</label>
-        <div className=flex items-center gap-3>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Cor principal</label>
+        <div className="flex items-center gap-3">
           <input
-            type=color
+            type="color"
             value={primaryColor}
             onChange={e => setPrimaryColor(e.target.value)}
-            className=w-12 h-12 rounded-xl border border-zinc-700 bg-transparent cursor-pointer
+            className="w-12 h-12 rounded-xl border border-zinc-700 bg-transparent cursor-pointer"
           />
           <input
-            type=text
+            type="text"
             value={primaryColor}
             onChange={e => setPrimaryColor(e.target.value)}
-            placeholder=#16a34a
-            className=flex-1 bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-zinc-500
+            placeholder="#16a34a"
+            className="flex-1 bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-zinc-500"
           />
           <div
-            className=w-12 h-12 rounded-xl border border-zinc-700 flex-shrink-0
+            className="w-12 h-12 rounded-xl border border-zinc-700 flex-shrink-0"
             style={{ backgroundColor: primaryColor }}
           />
         </div>
-        <p className=text-xs text-gray-500 mt-1>Cor dos botoes e destaques. Padrao: verde (#16a34a)</p>
+        <p className="text-xs text-gray-500 mt-1">Cor dos botoes e destaques. Padrao: verde (#16a34a)</p>
       </div>
 
       <button
         onClick={handleSave}
         disabled={isSaving}
-        className=px-6 py-3 rounded-xl font-semibold text-white transition-colors
-        style={{ backgroundColor: primaryColor, opacity: isSaving ? 0.7 : 1 }}
+        className="px-6 py-3 rounded-xl font-semibold text-white transition-colors disabled:opacity-70"
+        style={{ backgroundColor: primaryColor }}
       >
         {isSaving ? 'Salvando...' : 'Salvar Branding'}
       </button>
