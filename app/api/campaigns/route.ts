@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { campaignDb, campaignContactDb } from '@/lib/supabase-db'
 import { CreateCampaignSchema, validateBody, formatZodErrors } from '@/lib/api-validation'
+import { getRequestOrgId } from '@/lib/org-context'
 
 // Force dynamic - NO caching at all
 export const dynamic = 'force-dynamic'
@@ -8,14 +9,17 @@ export const revalidate = 0
 
 /**
  * GET /api/campaigns
- * List all campaigns from Supabase (NO CACHE - always fresh)
+ * List campaigns scoped to the current user's organization
  */
 export async function GET() {
   try {
-    const campaigns = await campaignDb.getAll()
+    const orgId = await getRequestOrgId()
+    if (!orgId) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    }
+    const campaigns = await campaignDb.getAll(orgId)
     return NextResponse.json(campaigns, {
       headers: {
-        // Disable ALL caching
         'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         'Pragma': 'no-cache',
         'Expires': '0',
@@ -23,10 +27,7 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Failed to fetch campaigns:', error)
-    return NextResponse.json(
-      { error: 'Falha ao buscar campanhas' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Falha ao buscar campanhas' }, { status: 500 })
   }
 }
 
@@ -38,7 +39,6 @@ interface CreateCampaignBody {
   selectedContactIds?: string[]
   contacts?: { name: string; phone: string }[]
   templateVariables?: string[]
-  // Anti-ban (Evolution API)
   providerType?: 'meta' | 'evolution'
   delayMinMs?: number
   delayMaxMs?: number
@@ -49,13 +49,16 @@ interface CreateCampaignBody {
 
 /**
  * POST /api/campaigns
- * Create a new campaign with contacts
+ * Create a new campaign in the current user's organization
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const orgId = await getRequestOrgId()
+    if (!orgId) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    }
 
-    // Validate input
+    const body = await request.json()
     const validation = validateBody(CreateCampaignSchema, body)
     if (!validation.success) {
       return NextResponse.json(
@@ -65,14 +68,13 @@ export async function POST(request: Request) {
     }
 
     const data = validation.data
-
-    // Create campaign with template variables
     const campaign = await campaignDb.create({
       name: data.name,
       templateName: data.templateName,
       recipients: data.recipients,
       scheduledAt: data.scheduledAt,
       templateVariables: data.templateVariables,
+      organizationId: orgId === '*' ? undefined : orgId,
       providerType: (data as any).providerType,
       delayMinMs: (data as any).delayMinMs,
       delayMaxMs: (data as any).delayMaxMs,
@@ -81,7 +83,6 @@ export async function POST(request: Request) {
       messageVariants: (data as any).messageVariants,
     })
 
-    // If contacts were provided, add them to campaign_contacts
     if (data.contacts && data.contacts.length > 0) {
       await campaignContactDb.addContacts(
         campaign.id,
@@ -96,9 +97,6 @@ export async function POST(request: Request) {
     return NextResponse.json(campaign, { status: 201 })
   } catch (error) {
     console.error('Failed to create campaign:', error)
-    return NextResponse.json(
-      { error: 'Falha ao criar campanha' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Falha ao criar campanha' }, { status: 500 })
   }
 }

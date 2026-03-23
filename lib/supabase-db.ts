@@ -48,11 +48,13 @@ const generateId = () => Math.random().toString(36).substr(2, 9)
 // ============================================================================
 
 export const campaignDb = {
-    getAll: async (): Promise<Campaign[]> => {
-        const { data, error } = await supabase
+    getAll: async (organizationId?: string): Promise<Campaign[]> => {
+        let query = supabase
             .from('campaigns')
             .select('*')
             .order('created_at', { ascending: false })
+        if (organizationId && organizationId !== '*') query = query.eq('organization_id', organizationId)
+        const { data, error } = await query
 
         if (error) throw error
 
@@ -107,6 +109,7 @@ export const campaignDb = {
         recipients: number
         scheduledAt?: string
         templateVariables?: string[]
+        organizationId?: string
         // Anti-ban (Evolution API)
         providerType?: 'meta' | 'evolution'
         delayMinMs?: number
@@ -141,6 +144,7 @@ export const campaignDb = {
                 simulate_typing: campaign.simulateTyping ?? false,
                 daily_limit: campaign.dailyLimit ?? null,
                 message_variants: campaign.messageVariants ?? [],
+                organization_id: campaign.organizationId || null,
             })
             .select()
             .single()
@@ -266,11 +270,13 @@ export const campaignDb = {
 // ============================================================================
 
 export const contactDb = {
-    getAll: async (): Promise<Contact[]> => {
-        const { data, error } = await supabase
+    getAll: async (organizationId?: string): Promise<Contact[]> => {
+        let query = supabase
             .from('contacts')
             .select('*')
             .order('created_at', { ascending: false })
+        if (organizationId && organizationId !== '*') query = query.eq('organization_id', organizationId)
+        const { data, error } = await query
 
         if (error) throw error
 
@@ -418,7 +424,7 @@ export const contactDb = {
         return ids.length
     },
 
-    import: async (contacts: Omit<Contact, 'id' | 'lastActive'>[]): Promise<number> => {
+    import: async (contacts: Omit<Contact, 'id' | 'lastActive'>[], organizationId?: string): Promise<number> => {
         if (contacts.length === 0) return 0
 
         const now = new Date().toISOString()
@@ -429,6 +435,7 @@ export const contactDb = {
             status: contact.status || ContactStatus.OPT_IN,
             tags: contact.tags || [],
             created_at: now,
+            organization_id: organizationId && organizationId !== '*' ? organizationId : null,
         }))
 
         // Use upsert to handle duplicates (phone is unique)

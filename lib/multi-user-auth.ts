@@ -32,6 +32,8 @@ export interface SmartZapUser {
   name: string
   role: 'admin' | 'user'
   createdAt: string
+  organizationId?: string
+  isSuperAdmin?: boolean
 }
 
 export interface AuthResult {
@@ -330,7 +332,7 @@ export async function getCurrentUser(): Promise<SmartZapUser | null> {
     // Get fresh user data
     const { data: user } = await supabase
       .from('smartzap_users')
-      .select('id, email, name, role, created_at')
+      .select('id, email, name, role, created_at, organization_id, is_super_admin')
       .eq('id', data.user_id)
       .single()
 
@@ -342,6 +344,8 @@ export async function getCurrentUser(): Promise<SmartZapUser | null> {
       name: user.name || '',
       role: user.role as 'admin' | 'user',
       createdAt: user.created_at,
+      organizationId: user.organization_id || undefined,
+      isSuperAdmin: user.is_super_admin || false,
     }
   } catch {
     return null

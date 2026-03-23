@@ -2,16 +2,20 @@ import { NextResponse } from 'next/server'
 import { contactDb } from '@/lib/supabase-db'
 import { ImportContactsSchema, validateBody, formatZodErrors } from '@/lib/api-validation'
 import { ContactStatus } from '@/types'
+import { getRequestOrgId } from '@/lib/org-context'
+
+export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/contacts/import
- * Import multiple contacts from CSV/file
+ * Import multiple contacts from CSV/file — scoped to current org
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const orgId = await getRequestOrgId()
+    if (!orgId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
-    // Validate input
+    const body = await request.json()
     const validation = validateBody(ImportContactsSchema, body)
     if (!validation.success) {
       return NextResponse.json(
@@ -21,8 +25,6 @@ export async function POST(request: Request) {
     }
 
     const { contacts } = validation.data
-
-    // Map to proper format with default status
     const contactsWithDefaults = contacts.map(c => ({
       name: c.name || '',
       phone: c.phone,
@@ -30,7 +32,10 @@ export async function POST(request: Request) {
       tags: c.tags || [],
     }))
 
-    const imported = await contactDb.import(contactsWithDefaults)
+    const imported = await contactDb.import(
+      contactsWithDefaults,
+      orgId === '*' ? undefined : orgId
+    )
 
     return NextResponse.json({
       imported,
@@ -39,9 +44,6 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Failed to import contacts:', error)
-    return NextResponse.json(
-      { error: 'Falha ao importar contatos' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Falha ao importar contatos' }, { status: 500 })
   }
 }

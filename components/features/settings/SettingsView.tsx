@@ -6,7 +6,8 @@ import { AccountLimits } from '../../../lib/meta-limits';
 import { PhoneNumber } from '../../../hooks/useSettings';
 import { AISettings } from './AISettings';
 import { WhatsAppProviderSettings } from './WhatsAppProviderSettings';
-import { UserManagement } from './UserManagement';
+import { UserManagement } from './UserManagement'
+import { OrganizationManagement } from './OrganizationManagement';
 
 interface WebhookStats {
   lastEventAt?: string | null;
@@ -1140,6 +1141,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             Adicione e gerencie os usuarios que podem acessar o SmartZap. Apenas admins podem gerenciar usuarios.
           </p>
           <UserManagement />
+        </div>
+
+        {/* Organizations Section */}
+        <div className="glass-panel rounded-2xl p-8">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <span className="w-1 h-6 bg-orange-500 rounded-full"></span>
+            Organizacoes (Clientes)
+          </h3>
+          <p className="text-sm text-gray-400 mb-6">
+            Crie e gerencie organizacoes isoladas. Cada cliente tera seus proprios dados.
+          </p>
+          <OrganizationManagement />
         </div>
       </div>
     </div>
