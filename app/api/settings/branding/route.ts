@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     .map(k => ({
       key: effectiveOrg + ':' + k,
       value: String(body[k] || ''),
-      organization_id: effectiveOrg !== 'default' ? effectiveOrg : null,
+      organization_id: effectiveOrg,
       updated_at: now,
     }))
 

@@ -1,103 +1,214 @@
 'use client'
-
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
+import { Upload, X, Image } from 'lucide-react'
 
 export function BrandingSettings() {
-  const [form, setForm] = useState({
-    brand_name: 'SmartZap',
-    brand_logo_url: '',
-    brand_primary_color: '#16a34a',
-  })
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
+  const [brandName, setBrandName] = useState('SmartZap')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [primaryColor, setPrimaryColor] = useState('#16a34a')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [preview, setPreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/settings/branding')
-      .then(r => r.json())
-      .then(d => setForm(d))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d) {
+          setBrandName(d.brand_name || 'SmartZap')
+          setLogoUrl(d.brand_logo_url || '')
+          setPrimaryColor(d.brand_primary_color || '#16a34a')
+        }
+      })
       .catch(() => {})
   }, [])
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
-    setSaving(true)
-    setMsg('')
-    const res = await fetch('/api/settings/branding', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-    setMsg(res.ok ? 'Salvo! Recarregue a pagina para ver as mudancas.' : 'Erro ao salvar.')
-    setSaving(false)
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Local preview
+    const reader = new FileReader()
+    reader.onload = (ev) => setPreview(ev.target?.result as string)
+    reader.readAsDataURL(file)
+
+    // Upload
+    setIsUploading(true)
+    setError('')
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/settings/branding/logo', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erro ao fazer upload')
+      setLogoUrl(data.url)
+      setPreview(null)
+      toast.success('Logo carregado com sucesso!')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao fazer upload'
+      setError(msg)
+      setPreview(null)
+      toast.error(msg)
+    } finally {
+      setIsUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
   }
 
-  const isError = msg.startsWith('Erro')
+  const handleRemoveLogo = async () => {
+    setLogoUrl('')
+    setPreview(null)
+    // Save immediately
+    await fetch('/api/settings/branding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand_logo_url: '' }),
+    })
+    toast.success('Logo removido')
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    setError('')
+    try {
+      const res = await fetch('/api/settings/branding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brand_name: brandName,
+          brand_logo_url: logoUrl,
+          brand_primary_color: primaryColor,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar')
+      toast.success('Branding salvo!')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar'
+      setError(msg)
+      toast.error(msg)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const currentLogo = preview || logoUrl
 
   return (
-    <form onSubmit={handleSave} className="space-y-5">
-      {msg && (
-        <div className={`p-3 rounded-lg text-sm border ${isError ? 'bg-red-900/20 text-red-300 border-red-500/30' : 'bg-green-900/20 text-green-300 border-green-500/30'}`}>
-          {msg}
+    <div className=space-y-6>
+      {error && (
+        <div className=bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm>
+          {error}
         </div>
       )}
 
+      {/* Nome */}
       <div>
-        <label className="block text-sm text-gray-400 mb-2">Nome da aplicacao</label>
+        <label className=block text-sm font-medium text-gray-300 mb-2>Nome da aplicacao</label>
         <input
-          type="text"
-          value={form.brand_name}
-          onChange={e => setForm(f => ({ ...f, brand_name: e.target.value }))}
-          className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
-          placeholder="SmartZap"
+          type=text
+          value={brandName}
+          onChange={e => setBrandName(e.target.value)}
+          placeholder=SmartZap
+          className=w-full bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-zinc-500
         />
-        <p className="text-xs text-gray-500 mt-1">Aparece no topo da sidebar e na aba do navegador</p>
+        <p className=text-xs text-gray-500 mt-1>Aparece no topo da sidebar e na aba do navegador</p>
       </div>
 
+      {/* Logo Upload */}
       <div>
-        <label className="block text-sm text-gray-400 mb-2">URL do Logo</label>
-        <input
-          type="url"
-          value={form.brand_logo_url}
-          onChange={e => setForm(f => ({ ...f, brand_logo_url: e.target.value }))}
-          className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:border-primary-500"
-          placeholder="https://seudominio.com/logo.png"
-        />
-        <p className="text-xs text-gray-500 mt-1">PNG ou SVG com fundo transparente. Deixe vazio para usar o icone padrao.</p>
-        {form.brand_logo_url && (
-          <div className="mt-2 p-3 bg-zinc-800 rounded-lg inline-block">
-            <img src={form.brand_logo_url} alt="Preview" className="h-10 object-contain" onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+        <label className=block text-sm font-medium text-gray-300 mb-2>Logo</label>
+        {currentLogo ? (
+          <div className=flex items-center gap-4 p-4 bg-zinc-800 rounded-xl border border-zinc-700>
+            <img src={currentLogo} alt=Logo className=h-12 object-contain max-w-[120px] />
+            <div className=flex-1 min-w-0>
+              <p className=text-xs text-gray-400 truncate>{logoUrl || 'Pré-visualização'}</p>
+              {isUploading && <p className=text-xs text-blue-400 mt-1>Enviando...</p>}
+            </div>
+            <div className=flex gap-2>
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={isUploading}
+                className=p-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-gray-300 transition-colors
+                title=Trocar logo
+              >
+                <Upload size={16} />
+              </button>
+              <button
+                onClick={handleRemoveLogo}
+                disabled={isUploading}
+                className=p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors
+                title=Remover logo
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
+        ) : (
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={isUploading}
+            className=w-full flex flex-col items-center gap-3 p-8 bg-zinc-800 border border-dashed border-zinc-600 rounded-xl hover:border-zinc-400 hover:bg-zinc-700/50 transition-colors text-gray-400 hover:text-gray-200
+          >
+            {isUploading ? (
+              <>
+                <div className=w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin />
+                <span className=text-sm>Enviando...</span>
+              </>
+            ) : (
+              <>
+                <Image size={28} />
+                <span className=text-sm>Clique para carregar logo</span>
+                <span className=text-xs text-gray-600>PNG, JPG, SVG ou WebP — máx 2MB</span>
+              </>
+            )}
+          </button>
         )}
+        <input
+          ref={fileRef}
+          type=file
+          accept=image/png,image/jpeg,image/jpg,image/svg+xml,image/webp
+          className=hidden
+          onChange={handleFileChange}
+        />
       </div>
 
+      {/* Cor Principal */}
       <div>
-        <label className="block text-sm text-gray-400 mb-2">Cor principal</label>
-        <div className="flex items-center gap-3">
+        <label className=block text-sm font-medium text-gray-300 mb-2>Cor principal</label>
+        <div className=flex items-center gap-3>
           <input
-            type="color"
-            value={form.brand_primary_color}
-            onChange={e => setForm(f => ({ ...f, brand_primary_color: e.target.value }))}
-            className="w-12 h-10 rounded-lg border border-zinc-700 bg-zinc-800 cursor-pointer"
+            type=color
+            value={primaryColor}
+            onChange={e => setPrimaryColor(e.target.value)}
+            className=w-12 h-12 rounded-xl border border-zinc-700 bg-transparent cursor-pointer
           />
           <input
-            type="text"
-            value={form.brand_primary_color}
-            onChange={e => setForm(f => ({ ...f, brand_primary_color: e.target.value }))}
-            className="flex-1 px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm font-mono"
-            placeholder="#16a34a"
+            type=text
+            value={primaryColor}
+            onChange={e => setPrimaryColor(e.target.value)}
+            placeholder=#16a34a
+            className=flex-1 bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-zinc-500
           />
-          <div className="w-10 h-10 rounded-lg border border-zinc-700" style={{ backgroundColor: form.brand_primary_color }} />
+          <div
+            className=w-12 h-12 rounded-xl border border-zinc-700 flex-shrink-0
+            style={{ backgroundColor: primaryColor }}
+          />
         </div>
-        <p className="text-xs text-gray-500 mt-1">Cor dos botoes e destaques. Padrao: verde (#16a34a)</p>
+        <p className=text-xs text-gray-500 mt-1>Cor dos botoes e destaques. Padrao: verde (#16a34a)</p>
       </div>
 
       <button
-        type="submit"
-        disabled={saving}
-        className="px-6 py-2.5 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+        onClick={handleSave}
+        disabled={isSaving}
+        className=px-6 py-3 rounded-xl font-semibold text-white transition-colors
+        style={{ backgroundColor: primaryColor, opacity: isSaving ? 0.7 : 1 }}
       >
-        {saving ? 'Salvando...' : 'Salvar Branding'}
+        {isSaving ? 'Salvando...' : 'Salvar Branding'}
       </button>
-    </form>
+    </div>
   )
 }
