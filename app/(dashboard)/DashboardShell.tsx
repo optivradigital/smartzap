@@ -473,6 +473,10 @@ export function DashboardShell({
     // For now we use the prop directly for immediate rendering
 
     const companyName = initialAuthStatus?.company?.name
+    const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#16a34a' })
+    React.useEffect(() => {
+      fetch('/api/settings/branding').then(r => r.ok ? r.json() : null).then(d => { if (d) setBranding(d) }).catch(() => {})
+    }, [])
 
     // Logout handler
     const handleLogout = async () => {
@@ -593,8 +597,12 @@ export function DashboardShell({
                             <Zap className="text-white" size={20} fill="currentColor" />
                         </div>
                         <div>
-                            <span className="text-xl font-bold text-white tracking-tight block">SmartZap</span>
-                            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Workspace</span>
+                            {branding.brand_logo_url ? (
+                              <img src={branding.brand_logo_url} alt={branding.brand_name} className="h-9 object-contain" />
+                            ) : (
+                              <span className="text-xl font-bold text-white tracking-tight block">{branding.brand_name}</span>
+                            )}
+                            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">by Optivra</span>
                         </div>
                         <button
                             className="ml-auto lg:hidden"
@@ -656,6 +664,10 @@ export function DashboardShell({
                                 <LogOut size={16} className="text-gray-500 hover:text-white transition-colors" />
                             )}
                         </button>
+                    </div>
+                    {/* Version */}
+                    <div className="pt-2 pb-1 text-center">
+                      <span className="text-[10px] text-zinc-600 font-mono">v2.0.0</span>
                     </div>
                 </div>
             </aside>

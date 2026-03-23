@@ -7,7 +7,8 @@ import { PhoneNumber } from '../../../hooks/useSettings';
 import { AISettings } from './AISettings';
 import { WhatsAppProviderSettings } from './WhatsAppProviderSettings';
 import { UserManagement } from './UserManagement'
-import { OrganizationManagement } from './OrganizationManagement';
+import { OrganizationManagement } from './OrganizationManagement'
+import { BrandingSettings } from './BrandingSettings';
 
 interface WebhookStats {
   lastEventAt?: string | null;
@@ -333,9 +334,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </>
       )}
 
+      {/* Quick Navigation */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {[{href: "#whatsapp", label: "📱 WhatsApp"}, {href: "#organizacoes", label: "🏢 Organizações"}, {href: "#usuarios", label: "👥 Usuários"}, {href: "#branding", label: "🎨 Branding"}].map(link => (
+          <a key={link.href} href={link.href}
+            className="px-4 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-full border border-zinc-700 transition-colors">
+            {link.label}
+          </a>
+        ))}
+      </div>
+
       <div className="space-y-8">
-        {/* WhatsApp Provider Section — FIRST so users can choose Meta or Evolution */}
-        <div className="glass-panel rounded-2xl p-8">
+        {/* WhatsApp Provider Section */}
+        <div id="whatsapp" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-green-500 rounded-full"></span>
             Conexão WhatsApp
@@ -1132,7 +1143,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         )}
       {/* User Management Section */}
-        <div className="glass-panel rounded-2xl p-8">
+        <div id="usuarios" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
             Gerenciar Usuarios
@@ -1143,8 +1154,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <UserManagement />
         </div>
 
+        {/* Branding Section */}
+        <div id="branding" className="glass-panel rounded-2xl p-8">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <span className="w-1 h-6 bg-pink-500 rounded-full"></span>
+            Identidade Visual (Branding)
+          </h3>
+          <p className="text-sm text-gray-400 mb-6">
+            Personalize o nome, logo e cor principal da aplicacao para cada organizacao.
+          </p>
+          <BrandingSettings />
+        </div>
+
         {/* Organizations Section */}
-        <div className="glass-panel rounded-2xl p-8">
+        <div id="organizacoes" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-orange-500 rounded-full"></span>
             Organizacoes (Clientes)

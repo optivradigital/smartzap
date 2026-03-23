@@ -413,20 +413,19 @@ export const useSettingsController = () => {
             : 'pending',
         icon: React.createElement(MessageSquare, { size: 20, className: 'text-green-400' }),
         errorMessage: health?.services.whatsapp.message,
-        isRequired: true,
+        isRequired: false, // Optional - configure later from Settings page
       },
     ];
   }, [healthQuery.data]);
 
-  // Check if setup is needed (any required step not configured)
+  // Check if setup is needed (only Redis + QStash required - WhatsApp can be configured in Settings)
   const needsSetup = useMemo(() => {
     const health = healthQuery.data;
     if (!health) return false; // Don't show wizard while loading - show settings instead
 
-    // Setup is needed if Redis, QStash OR WhatsApp are not configured
+    // Only block on Redis and QStash - WhatsApp is configured from the Settings page directly
     return health.services.redis.status !== 'ok' ||
-      health.services.qstash.status !== 'ok' ||
-      health.services.whatsapp.status !== 'ok';
+      health.services.qstash.status !== 'ok';
   }, [healthQuery.data]);
 
   // Check if infrastructure is ready (Redis + QStash configured)
