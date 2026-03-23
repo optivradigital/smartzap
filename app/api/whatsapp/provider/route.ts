@@ -1,16 +1,20 @@
 /**
  * API: WhatsApp Provider Settings
- * GET  — retorna config atual
- * POST — salva nova config
+ * GET  — retorna config atual (manager+)
+ * POST — salva nova config (manager+)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { saveProviderConfig, loadProviderConfig } from '@/lib/whatsapp-provider/factory'
+import { requireManager } from '@/lib/role-guard'
 import type { ProviderConfig } from '@/lib/whatsapp-provider/types'
 
 export async function GET() {
+  const { error } = await requireManager()
+  if (error) return error
+
   const config = await loadProviderConfig()
-  // Masca tokens sensíveis antes de retornar
+  // Mask sensitive tokens before returning
   if (config?.accessToken) {
     config.accessToken = config.accessToken.slice(0, 8) + '***'
   }
@@ -21,6 +25,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const { error } = await requireManager()
+  if (error) return error
+
   const body: ProviderConfig = await req.json()
 
   if (!body.type || !['meta', 'evolution'].includes(body.type)) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireSuperAdmin } from '@/lib/role-guard'
 import { supabase } from '@/lib/supabase'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
@@ -149,6 +150,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+    const { error: authError } = await requireSuperAdmin()
+    if (authError) return authError
+
     try {
         const body = await request.json()
         const { apiKey, provider, model } = body
@@ -227,6 +231,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+    const { error: authError } = await requireSuperAdmin()
+    if (authError) return authError
+
     try {
         const { searchParams } = new URL(request.url)
         const provider = searchParams.get('provider')

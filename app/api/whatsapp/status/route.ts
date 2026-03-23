@@ -5,8 +5,12 @@
 
 import { NextResponse } from 'next/server'
 import { createWhatsAppProvider } from '@/lib/whatsapp-provider/factory'
+import { requireManager } from '@/lib/role-guard'
 
 export async function GET() {
+  const { error: authError } = await requireManager()
+  if (authError) return authError
+
   try {
     const provider = await createWhatsAppProvider()
     const status = await provider.getConnectionStatus()

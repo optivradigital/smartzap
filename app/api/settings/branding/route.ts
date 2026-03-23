@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getRequestOrgId } from '@/lib/org-context'
+import { requireManager } from '@/lib/role-guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +36,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const { error: authError } = await requireManager()
+  if (authError) return authError
+
   const orgId = await getRequestOrgId()
   if (!orgId) return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 })
   const effectiveOrg = orgId !== '*' ? orgId : 'default'

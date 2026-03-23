@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireManager } from '@/lib/role-guard'
 
 // Credentials are stored in environment variables (secrets)
 // No Redis dependency - env vars are the source of truth
@@ -13,6 +14,9 @@ interface WhatsAppCredentials {
 
 // GET - Fetch credentials from env (without exposing full token)
 export async function GET() {
+  const { error: authError } = await requireManager()
+  if (authError) return authError
+
   try {
     const phoneNumberId = process.env.WHATSAPP_PHONE_ID
     const businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
@@ -65,6 +69,9 @@ export async function GET() {
 
 // POST - Validate credentials (stored in env vars via setup wizard)
 export async function POST(request: NextRequest) {
+  const { error: authError } = await requireManager()
+  if (authError) return authError
+
   try {
     const body = await request.json()
     const { phoneNumberId, businessAccountId, accessToken } = body

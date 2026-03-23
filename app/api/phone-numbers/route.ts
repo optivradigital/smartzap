@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireManager } from '@/lib/role-guard'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
 
 export async function POST(request: NextRequest) {
+  const { error: authError } = await requireManager()
+  if (authError) return authError
+
   let businessAccountId: string | undefined
   let accessToken: string | undefined
 
@@ -54,6 +58,9 @@ export async function POST(request: NextRequest) {
 
 // Also support GET for simpler access
 export async function GET() {
+  const { error: authError } = await requireManager()
+  if (authError) return authError
+
   const credentials = await getWhatsAppCredentials()
   
   if (!credentials) {

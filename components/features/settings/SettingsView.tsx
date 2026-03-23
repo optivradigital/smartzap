@@ -9,6 +9,7 @@ import { WhatsAppProviderSettings } from './WhatsAppProviderSettings';
 import { UserManagement } from './UserManagement'
 import { OrganizationManagement } from './OrganizationManagement'
 import { BrandingSettings } from './BrandingSettings';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface WebhookStats {
   lastEventAt?: string | null;
@@ -115,6 +116,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   removeTestContact,
   isSavingTestContact,
 }) => {
+  // Role-based access control
+  const { isSuperAdmin, isManager } = useCurrentUser()
+
   // Always start collapsed
   const [isEditing, setIsEditing] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -336,7 +340,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Quick Navigation */}
       <div className="flex flex-wrap gap-2 mb-2">
-        {[{href: "#whatsapp", label: "📱 WhatsApp"}, {href: "#organizacoes", label: "🏢 Organizações"}, {href: "#usuarios", label: "👥 Usuários"}, {href: "#branding", label: "🎨 Branding"}].map(link => (
+        {[
+          {href: "#whatsapp", label: "📱 WhatsApp", show: isManager},
+          {href: "#usuarios", label: "👥 Usuários", show: isManager},
+          {href: "#branding", label: "🎨 Branding", show: isSuperAdmin},
+          {href: "#organizacoes", label: "🏢 Organizações", show: isSuperAdmin},
+        ].filter(l => l.show).map(link => (
           <a key={link.href} href={link.href}
             className="px-4 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-full border border-zinc-700 transition-colors">
             {link.label}
@@ -345,7 +354,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       <div className="space-y-8">
-        {/* WhatsApp Provider Section */}
+        {/* WhatsApp Provider Section — manager+ only */}
+        {isManager && (
         <div id="whatsapp" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-green-500 rounded-full"></span>
@@ -353,6 +363,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </h3>
           <WhatsAppProviderSettings />
         </div>
+        )}
 
         {/* Status Card */}
         <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
@@ -449,8 +460,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
         </div>
 
-        {/* AI Settings Section - New! */}
-        {settings.isConnected && saveAIConfig && (
+        {/* AI Settings Section — super_admin only */}
+        {isSuperAdmin && settings.isConnected && saveAIConfig && (
           <AISettings
             settings={aiSettings}
             isLoading={!!aiSettingsLoading}
@@ -1143,6 +1154,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         )}
       {/* User Management Section */}
+        {isManager && (
         <div id="usuarios" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
@@ -1153,8 +1165,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </p>
           <UserManagement />
         </div>
+        )}
 
-        {/* Branding Section */}
+        {/* Branding Section — super_admin only */}
+        {isSuperAdmin && (
         <div id="branding" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-pink-500 rounded-full"></span>
@@ -1165,8 +1179,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </p>
           <BrandingSettings />
         </div>
+        )}
 
-        {/* Organizations Section */}
+        {/* Organizations Section — super_admin only */}
+        {isSuperAdmin && (
         <div id="organizacoes" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-orange-500 rounded-full"></span>
@@ -1177,6 +1193,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </p>
           <OrganizationManagement />
         </div>
+        )}
       </div>
     </div>
   );
