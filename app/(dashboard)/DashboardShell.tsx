@@ -485,6 +485,8 @@ export function DashboardShell({
         setIsLoggingOut(true)
         try {
             await fetch('/api/auth/logout', { method: 'POST' })
+            // Invalidate role cache so next login gets fresh user data
+            queryClient.removeQueries({ queryKey: ['currentUser'] })
             router.push('/login')
             router.refresh()
         } catch (error) {

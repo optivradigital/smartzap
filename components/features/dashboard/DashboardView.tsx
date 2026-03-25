@@ -15,8 +15,8 @@ interface StatCardProps {
   title: string;
   value: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
-  trend: string;
-  trendUp: boolean;
+  trend?: string;
+  trendUp?: boolean;
   color: string;
 }
 
@@ -37,10 +37,14 @@ const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardP
         <div className={`p-3 rounded-xl ${styles.bg} border border-white/5 group-hover:scale-105 transition-transform duration-300`}>
           <Icon size={20} className={styles.text} />
         </div>
-        <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${trendUp ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
-          {trendUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-          {trend}
-        </div>
+        {trend ? (
+          <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${trendUp ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+            {trendUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+            {trend}
+          </div>
+        ) : (
+          <div className="text-xs text-gray-600 px-2 py-1">—</div>
+        )}
       </div>
       <div>
         <h3 className="text-3xl font-bold text-white mb-1 tracking-tight">{value}</h3>
@@ -132,32 +136,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
               title="Total Enviado" 
               value={stats.sent24h} 
               icon={Send} 
-              trend="12.5%" 
-              trendUp={true} 
               color="bg-blue-500"
             />
             <StatCard 
               title="Taxa de Entrega" 
               value={stats.deliveryRate} 
               icon={CheckCircle2} 
-              trend="1.2%" 
-              trendUp={true} 
               color="bg-emerald-500"
             />
             <StatCard 
               title="Campanhas Ativas" 
               value={stats.activeCampaigns} 
               icon={TrendingUp} 
-              trend="Mesmo" 
-              trendUp={true} 
               color="bg-purple-500"
             />
             <StatCard 
               title="Falhas no Envio" 
               value={stats.failedMessages} 
               icon={AlertCircle} 
-              trend="2.4%" 
-              trendUp={false} 
               color="bg-red-500"
             />
           </>

@@ -25,7 +25,10 @@ export function useCurrentUser() {
   const { data: user, isLoading } = useQuery<CurrentUser | null>({
     queryKey: ['currentUser'],
     queryFn: fetchCurrentUser,
-    staleTime: 5 * 60 * 1000, // 5 min
+    staleTime: 0,          // always refetch — role must be fresh after login/logout
+    gcTime: 0,             // don't cache between sessions
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     retry: false,
   })
 
