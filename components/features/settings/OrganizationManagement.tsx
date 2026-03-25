@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Building2, Plus, Trash2, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { Building2, Plus, Trash2, Loader2, CheckCircle2, AlertCircle, X, UserPlus, ChevronDown } from 'lucide-react'
 
 interface Organization {
   id: string
@@ -16,6 +16,7 @@ export function OrganizationManagement() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [showUserFields, setShowUserFields] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -43,16 +44,34 @@ export function OrganizationManagement() {
     setError('')
     setSuccess('')
 
+    // If user toggle is ON, validate password
+    if (showUserFields && form.adminEmail && form.adminPassword.length < 6) {
+      setError('Senha deve ter pelo menos 6 caracteres')
+      setCreating(false)
+      return
+    }
+
+    const payload = {
+      name: form.name,
+      slug: form.slug,
+      // Only send user fields if toggle is on and email is filled
+      adminEmail: showUserFields ? form.adminEmail : '',
+      adminPassword: showUserFields ? form.adminPassword : '',
+      adminName: showUserFields ? form.adminName : '',
+    }
+
     const res = await fetch('/api/organizations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     })
 
     const data = await res.json()
     if (res.ok) {
-      setSuccess(`Organização "${data.org.name}" criada com sucesso!`)
+      const userMsg = data.user ? ` Manager ${data.user.email} criado.` : ''
+      setSuccess(`Organização "${data.org.name}" criada com sucesso!${userMsg}`)
       setShowForm(false)
+      setShowUserFields(false)
       setForm({ name: '', slug: '', adminEmail: '', adminPassword: '', adminName: '' })
       fetchOrgs()
     } else {
@@ -187,44 +206,69 @@ export function OrganizationManagement() {
             </div>
           </div>
 
-          {/* Manager da org */}
+          {/* Toggle: criar usuário */}
           <div className="pt-1 border-t border-white/5">
-            <p className="text-xs text-gray-500 mb-3 flex items-center gap-1.5">
-              <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-semibold">Manager</span>
-              responsável por esta organização
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Nome</label>
-                <input
-                  type="text"
-                  value={form.adminName}
-                  onChange={e => setForm(f => ({ ...f, adminName: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
-                  placeholder="João Silva"
-                />
+            <button
+              type="button"
+              onClick={() => setShowUserFields(v => !v)}
+              className="flex items-center justify-between w-full text-left group"
+            >
+              <div className="flex items-center gap-2">
+                <UserPlus size={14} className={showUserFields ? 'text-blue-400' : 'text-gray-500'} />
+                <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                  Criar usuário para esta organização
+                </span>
+                <span className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-gray-500">opcional</span>
               </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1.5">E-mail *</label>
-                <input
-                  type="email" required
-                  value={form.adminEmail}
-                  onChange={e => setForm(f => ({ ...f, adminEmail: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
-                  placeholder="manager@empresa.com"
-                />
-              </div>
-            </div>
-            <div className="mt-3">
-              <label className="block text-xs text-gray-400 mb-1.5">Senha *</label>
-              <input
-                type="password" required minLength={6}
-                value={form.adminPassword}
-                onChange={e => setForm(f => ({ ...f, adminPassword: e.target.value }))}
-                className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
-                placeholder="Mínimo 6 caracteres"
+              <ChevronDown
+                size={14}
+                className={`text-gray-500 transition-transform ${showUserFields ? 'rotate-180' : ''}`}
               />
-            </div>
+            </button>
+
+            {showUserFields && (
+              <div className="mt-3 space-y-3 pt-3 border-t border-white/5">
+                <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                  <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-semibold">Manager</span>
+                  responsável por esta organização
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1.5">Nome</label>
+                    <input
+                      type="text"
+                      value={form.adminName}
+                      onChange={e => setForm(f => ({ ...f, adminName: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
+                      placeholder="João Silva"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1.5">E-mail *</label>
+                    <input
+                      type="email"
+                      required={showUserFields}
+                      value={form.adminEmail}
+                      onChange={e => setForm(f => ({ ...f, adminEmail: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
+                      placeholder="manager@empresa.com"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1.5">Senha *</label>
+                  <input
+                    type="password"
+                    required={showUserFields}
+                    minLength={6}
+                    value={form.adminPassword}
+                    onChange={e => setForm(f => ({ ...f, adminPassword: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <button

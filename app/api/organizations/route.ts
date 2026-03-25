@@ -37,7 +37,8 @@ export async function GET() {
 
 /**
  * POST /api/organizations
- * Super admin only: create a new organization + first admin user
+ * Super admin only: create a new organization.
+ * Manager user creation is optional — only created if adminEmail is provided.
  */
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser()
@@ -48,8 +49,13 @@ export async function POST(request: Request) {
   const body = await request.json()
   const { name, slug, adminEmail, adminPassword, adminName } = body
 
-  if (!name || !slug || !adminEmail || !adminPassword) {
-    return NextResponse.json({ error: 'name, slug, adminEmail e adminPassword são obrigatórios' }, { status: 400 })
+  if (!name || !slug) {
+    return NextResponse.json({ error: 'name e slug são obrigatórios' }, { status: 400 })
+  }
+
+  // If email provided, password is required
+  if (adminEmail && !adminPassword) {
+    return NextResponse.json({ error: 'Senha é obrigatória quando e-mail é informado' }, { status: 400 })
   }
 
   // Create org
@@ -71,34 +77,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Erro ao criar organização' }, { status: 500 })
   }
 
-  // Create admin user for the org
-  const passwordHash = hashPassword(adminPassword)
-  const { data: newUser, error: userError } = await supabase
-    .from('smartzap_users')
-    .insert({
-      email: adminEmail.toLowerCase(),
-      name: adminName || 'Admin',
-      password_hash: passwordHash,
-      role: 'manager',
-      organization_id: org.id,
-      is_super_admin: false,
-    })
-    .select('id, email, name, role')
-    .single()
+  // Optionally create manager user for the org
+  if (adminEmail && adminPassword) {
+    const passwordHash = hashPassword(adminPassword)
+    const { data: newUser, error: userError } = await supabase
+      .from('smartzap_users')
+      .insert({
+        email: adminEmail.toLowerCase(),
+        name: adminName || 'Manager',
+        password_hash: passwordHash,
+        role: 'manager',
+        organization_id: org.id,
+        is_super_admin: false,
+      })
+      .select('id, email, name, role')
+      .single()
 
-  if (userError) {
-    // Rollback org
-    await supabase.from('organizations').delete().eq('id', org.id)
-    if (userError.code === '23505') {
-      return NextResponse.json({ error: 'E-mail já cadastrado' }, { status: 409 })
+    if (userError) {
+      // Rollback org
+      await supabase.from('organizations').delete().eq('id', org.id)
+      if (userError.code === '23505') {
+        return NextResponse.json({ error: 'E-mail já cadastrado' }, { status: 409 })
+      }
+      return NextResponse.json({ error: 'Erro ao criar manager da organização' }, { status: 500 })
     }
-    return NextResponse.json({ error: 'Erro ao criar manager da organização' }, { status: 500 })
+
+    // Update org owner to the new manager
+    await supabase.from('organizations').update({ owner_id: newUser.id }).eq('id', org.id)
+
+    return NextResponse.json({ org, user: newUser }, { status: 201 })
   }
 
-  // Update org owner to the new user
-  await supabase.from('organizations').update({ owner_id: newUser.id }).eq('id', org.id)
-
-  return NextResponse.json({ org, user: newUser }, { status: 201 })
+  // No manager created — org managed by super_admin via org switcher
+  return NextResponse.json({ org, user: null }, { status: 201 })
 }
 
 /**
