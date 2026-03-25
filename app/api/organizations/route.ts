@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       email: adminEmail.toLowerCase(),
       name: adminName || 'Admin',
       password_hash: passwordHash,
-      role: 'admin',
+      role: 'manager',
       organization_id: org.id,
       is_super_admin: false,
     })
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     if (userError.code === '23505') {
       return NextResponse.json({ error: 'E-mail já cadastrado' }, { status: 409 })
     }
-    return NextResponse.json({ error: 'Erro ao criar usuário admin' }, { status: 500 })
+    return NextResponse.json({ error: 'Erro ao criar manager da organização' }, { status: 500 })
   }
 
   // Update org owner to the new user

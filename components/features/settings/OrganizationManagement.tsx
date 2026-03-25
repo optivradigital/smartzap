@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { Building2, Plus, Trash2, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react'
 
 interface Organization {
   id: string
@@ -79,53 +80,63 @@ export function OrganizationManagement() {
 
   return (
     <div className="space-y-4">
+
+      {/* Feedback messages */}
       {error && (
-        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          <AlertCircle size={15} className="mt-0.5 shrink-0" />
+          {error}
+        </div>
       )}
       {success && (
-        <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">{success}</div>
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+          <CheckCircle2 size={15} className="mt-0.5 shrink-0" />
+          {success}
+        </div>
       )}
 
       {/* Organization list */}
       {loading ? (
-        <p className="text-sm text-gray-500">Carregando...</p>
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Loader2 size={14} className="animate-spin" /> Carregando...
+        </div>
       ) : (
         <div className="space-y-2">
           {orgs.map(org => (
-            <div key={org.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <div>
-                <p className="font-medium text-gray-800">{org.name}</p>
-                <p className="text-xs text-gray-500">
-                  slug: <span className="font-mono">{org.slug}</span> · plano: {org.plan} · criada em {new Date(org.created_at).toLocaleDateString('pt-BR')}
-                </p>
+            <div key={org.id}
+              className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-orange-500/10">
+                  <Building2 size={16} className="text-orange-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white text-sm">{org.name}</p>
+                  <p className="text-xs text-gray-500 font-mono mt-0.5">
+                    {org.slug} · {org.plan} · {new Date(org.created_at).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
               </div>
               {deleteConfirm === org.id ? (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleDelete(org.id)}
-                    className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-                  >
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleDelete(org.id)}
+                    className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium">
                     Confirmar
                   </button>
-                  <button
-                    onClick={() => setDeleteConfirm(null)}
-                    className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
-                  >
-                    Cancelar
+                  <button onClick={() => setDeleteConfirm(null)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10">
+                    <X size={14} />
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setDeleteConfirm(org.id)}
-                  className="px-3 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
-                >
+                <button onClick={() => setDeleteConfirm(org.id)}
+                  className="px-3 py-1.5 text-xs text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors">
                   Remover
                 </button>
               )}
             </div>
           ))}
           {orgs.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-4">Nenhuma organização cadastrada</p>
+            <p className="text-sm text-gray-500 text-center py-6">Nenhuma organização cadastrada</p>
           )}
         </div>
       )}
@@ -133,89 +144,95 @@ export function OrganizationManagement() {
       {/* Create button */}
       <button
         onClick={() => { setShowForm(!showForm); setError(''); setSuccess('') }}
-        className="w-full py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors"
-      >
-        {showForm ? '✕ Cancelar' : '+ Nova Organização'}
+        className="w-full py-3 px-4 border-2 border-dashed border-white/10 rounded-xl text-sm text-gray-400 hover:border-orange-500/40 hover:text-orange-400 transition-colors flex items-center justify-center gap-2">
+        {showForm
+          ? <><X size={14} /> Cancelar</>
+          : <><Plus size={14} /> Nova Organização</>}
       </button>
 
       {/* Create form */}
       {showForm && (
-        <form onSubmit={handleCreate} className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h4 className="font-medium text-gray-700 text-sm">Nova Organização</h4>
+        <form onSubmit={handleCreate}
+          className="space-y-4 p-5 rounded-xl border border-white/10 bg-zinc-900">
 
+          <h4 className="font-semibold text-white text-sm flex items-center gap-2">
+            <Building2 size={15} className="text-orange-400" />
+            Nova Organização
+          </h4>
+
+          {/* Nome + Slug */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Nome da empresa *</label>
+              <label className="block text-xs text-gray-400 mb-1.5">Nome da empresa *</label>
               <input
-                type="text"
-                required
+                type="text" required
                 value={form.name}
                 onChange={e => {
                   const name = e.target.value
                   setForm(f => ({ ...f, name, slug: autoSlug(name) }))
                 }}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
                 placeholder="Glowforever"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Slug (URL) *</label>
+              <label className="block text-xs text-gray-400 mb-1.5">Slug (URL) *</label>
               <input
-                type="text"
-                required
+                type="text" required
                 value={form.slug}
                 onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md font-mono"
+                className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 font-mono focus:outline-none focus:border-orange-500"
                 placeholder="glowforever"
               />
             </div>
           </div>
 
-          <div className="border-t pt-3">
-            <p className="text-xs text-gray-400 mb-2">Usuário admin desta organização</p>
+          {/* Manager da org */}
+          <div className="pt-1 border-t border-white/5">
+            <p className="text-xs text-gray-500 mb-3 flex items-center gap-1.5">
+              <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-semibold">Manager</span>
+              responsável por esta organização
+            </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Nome</label>
+                <label className="block text-xs text-gray-400 mb-1.5">Nome</label>
                 <input
                   type="text"
                   value={form.adminName}
                   onChange={e => setForm(f => ({ ...f, adminName: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
                   placeholder="João Silva"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">E-mail *</label>
+                <label className="block text-xs text-gray-400 mb-1.5">E-mail *</label>
                 <input
-                  type="email"
-                  required
+                  type="email" required
                   value={form.adminEmail}
                   onChange={e => setForm(f => ({ ...f, adminEmail: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"
-                  placeholder="admin@empresa.com"
+                  className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
+                  placeholder="manager@empresa.com"
                 />
               </div>
             </div>
             <div className="mt-3">
-              <label className="block text-xs text-gray-500 mb-1">Senha *</label>
+              <label className="block text-xs text-gray-400 mb-1.5">Senha *</label>
               <input
-                type="password"
-                required
-                minLength={6}
+                type="password" required minLength={6}
                 value={form.adminPassword}
                 onChange={e => setForm(f => ({ ...f, adminPassword: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
                 placeholder="Mínimo 6 caracteres"
               />
             </div>
           </div>
 
           <button
-            type="submit"
-            disabled={creating}
-            className="w-full py-2 px-4 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50"
-          >
-            {creating ? 'Criando...' : 'Criar Organização'}
+            type="submit" disabled={creating}
+            className="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+            {creating
+              ? <><Loader2 size={14} className="animate-spin" /> Criando...</>
+              : <><Plus size={14} /> Criar Organização</>}
           </button>
         </form>
       )}
