@@ -24,6 +24,8 @@ import {
     Sparkles,
     ExternalLink,
     ChevronRight,
+    ChevronDown,
+    Building2,
     Workflow
 } from 'lucide-react'
 import React from 'react'
@@ -474,7 +476,8 @@ export function DashboardShell({
     // For now we use the prop directly for immediate rendering
 
     const companyName = initialAuthStatus?.company?.name
-    const { user: currentAuthUser, isSuperAdmin: isAuthSuperAdmin } = useCurrentUser()
+    const { user: currentAuthUser, isSuperAdmin: isAuthSuperAdmin, organizations: authOrgs, activeOrgId: authActiveOrgId, switchOrg: authSwitchOrg } = useCurrentUser()
+    const [orgDropdownOpen, setOrgDropdownOpen] = React.useState(false)
     const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#16a34a' })
     React.useEffect(() => {
       fetch('/api/settings/branding').then(r => r.ok ? r.json() : null).then(d => { if (d) setBranding(d) }).catch(() => {})
@@ -698,18 +701,49 @@ export function DashboardShell({
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {/* Org name badge */}
-                        {currentAuthUser?.organizationId && (
+                        {/* Org switcher for super_admin / org badge for others */}
+                        {isAuthSuperAdmin && authOrgs.length > 0 ? (
+                          <div className="relative hidden sm:block">
+                            <button
+                              onClick={() => setOrgDropdownOpen(o => !o)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:border-zinc-500 transition-colors"
+                            >
+                              <Building2 size={13} className="text-purple-400" />
+                              <span className="text-xs text-gray-300 font-medium max-w-[120px] truncate">
+                                {authOrgs.find(o => o.id === authActiveOrgId)?.name || 'Selecionar org'}
+                              </span>
+                              <ChevronDown size={12} className="text-gray-500" />
+                              <span className="text-xs px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 font-semibold">Admin</span>
+                            </button>
+                            {orgDropdownOpen && (
+                              <div className="absolute right-0 top-full mt-1 w-56 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                                <div className="px-3 py-2 border-b border-zinc-800">
+                                  <p className="text-xs text-gray-500 uppercase tracking-wide">Organização ativa</p>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto">
+                                  {authOrgs.map(org => (
+                                    <button
+                                      key={org.id}
+                                      onClick={() => { authSwitchOrg(org.id); setOrgDropdownOpen(false) }}
+                                      className={`w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-zinc-800 transition-colors ${org.id === authActiveOrgId ? 'bg-zinc-800/60' : ''}`}
+                                    >
+                                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${org.id === authActiveOrgId ? 'bg-green-500' : 'bg-zinc-600'}`}></span>
+                                      <span className="text-sm text-gray-300 truncate">{org.name}</span>
+                                      {org.id === authActiveOrgId && <span className="ml-auto text-xs text-green-400">✓</span>}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : currentAuthUser?.organizationId ? (
                           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700">
                             <span className="w-2 h-2 rounded-full bg-green-500"></span>
                             <span className="text-xs text-gray-300 font-medium">
                               {branding.brand_name !== 'SmartZap' ? branding.brand_name : (currentAuthUser?.name || 'Organização')}
                             </span>
-                            {isAuthSuperAdmin && (
-                              <span className="text-xs px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 font-semibold ml-0.5">Admin</span>
-                            )}
                           </div>
-                        )}
+                        ) : null}
                         <div className="relative group">
                             <Bell size={20} className="text-gray-500 group-hover:text-white transition-colors cursor-pointer" />
                             <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary-500 rounded-full border-2 border-zinc-950"></span>

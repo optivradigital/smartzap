@@ -17,6 +17,7 @@ import { pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto'
 // ============================================================================
 
 const SESSION_COOKIE_NAME = 'smartzap_session'
+const ACTIVE_ORG_COOKIE = 'smartzap_active_org'
 const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7 // 7 days
 const PBKDF2_ITERATIONS = 100_000
 const PBKDF2_KEYLEN = 64
@@ -338,15 +339,38 @@ export async function getCurrentUser(): Promise<SmartZapUser | null> {
 
     if (!user) return null
 
+    const isSuperAdmin = user.is_super_admin || false
+
+    // For super_admin: use the active org cookie if set
+    let effectiveOrgId: string | undefined = user.organization_id || undefined
+    if (isSuperAdmin) {
+      const activeOrgCookie = cookieStore.get(ACTIVE_ORG_COOKIE)?.value
+      if (activeOrgCookie) {
+        effectiveOrgId = activeOrgCookie
+      }
+    }
+
     return {
       id: user.id,
       email: user.email,
       name: user.name || '',
       role: user.role as 'admin' | 'user',
       createdAt: user.created_at,
-      organizationId: user.organization_id || undefined,
-      isSuperAdmin: user.is_super_admin || false,
+      organizationId: effectiveOrgId,
+      isSuperAdmin,
     }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Get the active org ID from the cookie (super_admin org switcher)
+ */
+export async function getActiveOrgId(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies()
+    return cookieStore.get(ACTIVE_ORG_COOKIE)?.value || null
   } catch {
     return null
   }
