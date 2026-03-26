@@ -6,7 +6,7 @@
 import { MetaProvider } from './meta'
 import { EvolutionProvider } from './evolution'
 import type { IWhatsAppProvider, ProviderConfig, WhatsAppProviderType } from './types'
-import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { getWhatsAppCredentials, saveWhatsAppCredentials } from '@/lib/whatsapp-credentials'
 import { redis } from '@/lib/redis'
 
 const PROVIDER_CONFIG_KEY = 'whatsapp:provider:config'
@@ -15,6 +15,15 @@ const PROVIDER_CONFIG_KEY = 'whatsapp:provider:config'
 
 export async function saveProviderConfig(config: ProviderConfig): Promise<void> {
   await redis.set(PROVIDER_CONFIG_KEY, JSON.stringify(config))
+
+  // Keep settings:whatsapp:credentials in sync so all consumers see the new token
+  if (config.type === 'meta' && config.phoneNumberId && config.accessToken) {
+    await saveWhatsAppCredentials({
+      phoneNumberId: config.phoneNumberId,
+      businessAccountId: config.businessAccountId || '',
+      accessToken: config.accessToken,
+    })
+  }
 }
 
 export async function loadProviderConfig(): Promise<ProviderConfig | null> {

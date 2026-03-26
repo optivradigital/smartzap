@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { Smartphone, Wifi, WifiOff, RefreshCw, CheckCircle2, AlertCircle, Loader2, Save, QrCode, Zap, Shield } from 'lucide-react'
+import { Smartphone, Wifi, WifiOff, RefreshCw, CheckCircle2, AlertCircle, Loader2, Save, QrCode, Zap, Shield, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 
 type ProviderType = 'meta' | 'evolution'
@@ -15,8 +15,11 @@ interface ProviderConfig {
   type: ProviderType
   phoneNumberId?: string
   accessToken?: string
+  tokenSaved?: boolean
+  tokenPreview?: string
   evolutionUrl?: string
   evolutionApiKey?: string
+  evolutionKeySaved?: boolean
   evolutionInstance?: string
 }
 
@@ -36,7 +39,6 @@ export function WhatsAppProviderSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [refreshingQR, setRefreshingQR] = useState(false)
-  const [pooling, setPooling] = useState(false)
 
   const fetchConfig = useCallback(async () => {
     const res = await fetch('/api/whatsapp/provider')
@@ -61,7 +63,6 @@ export function WhatsAppProviderSettings() {
   useEffect(() => {
     if (config.type !== 'evolution' || status?.connected) return
     if (!status?.qrCode) return
-
     const interval = setInterval(() => fetchStatus(true), 5000)
     return () => clearInterval(interval)
   }, [config.type, status?.connected, status?.qrCode, fetchStatus])
@@ -69,14 +70,17 @@ export function WhatsAppProviderSettings() {
   const handleSave = async () => {
     setSaving(true)
     try {
+      // Only send accessToken if user typed a new one (not empty)
+      const payload: ProviderConfig = { ...config }
+
       const res = await fetch('/api/whatsapp/provider', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
+        body: JSON.stringify(payload),
       })
       if (res.ok) {
         toast.success('Configuração salva!')
-        await fetchStatus()
+        await Promise.all([fetchConfig(), fetchStatus()])
       } else {
         const err = await res.json()
         toast.error(err.error || 'Erro ao salvar')
@@ -159,13 +163,20 @@ export function WhatsAppProviderSettings() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Access Token</label>
+              <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+                Access Token
+                {config.tokenSaved && (
+                  <span className="flex items-center gap-1 text-green-400 text-xs font-normal">
+                    <KeyRound size={11} /> Token salvo — deixe vazio para manter o atual
+                  </span>
+                )}
+              </label>
               <input
                 type="password"
                 value={config.accessToken || ''}
                 onChange={e => setConfig(c => ({ ...c, accessToken: e.target.value }))}
-                placeholder="EAAxxxxxx..."
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+                placeholder={config.tokenSaved ? `Token atual: ${config.tokenPreview} (cole um novo para substituir)` : 'EAAxxxxxx...'}
+                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
@@ -188,13 +199,20 @@ export function WhatsAppProviderSettings() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">API Key</label>
+              <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+                API Key
+                {config.evolutionKeySaved && (
+                  <span className="flex items-center gap-1 text-green-400 text-xs font-normal">
+                    <KeyRound size={11} /> Chave salva — deixe vazio para manter
+                  </span>
+                )}
+              </label>
               <input
                 type="password"
                 value={config.evolutionApiKey || ''}
                 onChange={e => setConfig(c => ({ ...c, evolutionApiKey: e.target.value }))}
-                placeholder="Chave de autenticação do Evolution"
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500"
+                placeholder={config.evolutionKeySaved ? 'Chave atual salva (cole nova para substituir)' : 'Chave de autenticação do Evolution'}
+                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
               />
             </div>
             <div>

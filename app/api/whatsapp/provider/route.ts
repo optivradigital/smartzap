@@ -14,21 +14,34 @@ export async function GET() {
   if (error) return error
 
   const config = await loadProviderConfig()
-  // Mask sensitive tokens before returning
-  if (config?.accessToken) {
-    config.accessToken = config.accessToken.slice(0, 8) + '***'
-  }
-  if (config?.evolutionApiKey) {
-    config.evolutionApiKey = config.evolutionApiKey.slice(0, 6) + '***'
-  }
-  return NextResponse.json(config || { type: 'meta' })
+
+  if (!config) return NextResponse.json({ type: 'meta' })
+
+  // IMPORTANT: never return the real token — return a flag + preview only
+  // This prevents the masked version from being re-saved on next Save click
+  const hasToken = !!(config.accessToken)
+  const hasEvolutionKey = !!(config.evolutionApiKey)
+
+  return NextResponse.json({
+    type: config.type || 'meta',
+    phoneNumberId: config.phoneNumberId || '',
+    businessAccountId: config.businessAccountId || '',
+    // Don't return accessToken — use tokenSaved flag instead
+    accessToken: '',
+    tokenSaved: hasToken,
+    tokenPreview: hasToken ? config.accessToken!.slice(0, 8) + '••••••' : '',
+    evolutionUrl: config.evolutionUrl || '',
+    evolutionInstance: config.evolutionInstance || '',
+    evolutionApiKey: '',
+    evolutionKeySaved: hasEvolutionKey,
+  })
 }
 
 export async function POST(req: NextRequest) {
   const { error } = await requireManager()
   if (error) return error
 
-  const body: ProviderConfig = await req.json()
+  const body: ProviderConfig & { tokenSaved?: boolean; evolutionKeySaved?: boolean } = await req.json()
 
   if (!body.type || !['meta', 'evolution'].includes(body.type)) {
     return NextResponse.json({ error: 'type deve ser "meta" ou "evolution"' }, { status: 400 })
@@ -36,10 +49,36 @@ export async function POST(req: NextRequest) {
 
   if (body.type === 'evolution') {
     if (!body.evolutionUrl) return NextResponse.json({ error: 'evolutionUrl é obrigatório' }, { status: 400 })
-    if (!body.evolutionApiKey) return NextResponse.json({ error: 'evolutionApiKey é obrigatório' }, { status: 400 })
     if (!body.evolutionInstance) return NextResponse.json({ error: 'evolutionInstance é obrigatório' }, { status: 400 })
+    // If no new key provided, keep existing
+    if (!body.evolutionApiKey) {
+      const existing = await loadProviderConfig()
+      body.evolutionApiKey = existing?.evolutionApiKey || ''
+      if (!body.evolutionApiKey) return NextResponse.json({ error: 'evolutionApiKey é obrigatório' }, { status: 400 })
+    }
   }
 
-  await saveProviderConfig(body)
+  if (body.type === 'meta') {
+    if (!body.phoneNumberId) return NextResponse.json({ error: 'phoneNumberId é obrigatório' }, { status: 400 })
+    // If no new token provided, keep the existing one from Redis
+    if (!body.accessToken) {
+      const existing = await loadProviderConfig()
+      body.accessToken = existing?.accessToken || ''
+      if (!body.accessToken) return NextResponse.json({ error: 'accessToken é obrigatório' }, { status: 400 })
+    }
+  }
+
+  // Save (also syncs to settings:whatsapp:credentials)
+  const configToSave: ProviderConfig = {
+    type: body.type,
+    phoneNumberId: body.phoneNumberId,
+    businessAccountId: body.businessAccountId,
+    accessToken: body.accessToken,
+    evolutionUrl: body.evolutionUrl,
+    evolutionApiKey: body.evolutionApiKey,
+    evolutionInstance: body.evolutionInstance,
+  }
+
+  await saveProviderConfig(configToSave)
   return NextResponse.json({ success: true })
 }

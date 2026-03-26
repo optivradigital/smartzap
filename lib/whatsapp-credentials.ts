@@ -99,3 +99,19 @@ export async function getCredentialsSource(): Promise<'redis' | 'env' | 'none'> 
 
   return 'none'
 }
+
+/**
+ * Save WhatsApp credentials to Redis
+ * Used to keep settings:whatsapp:credentials in sync with whatsapp:provider:config
+ */
+export async function saveWhatsAppCredentials(credentials: Partial<WhatsAppCredentials>): Promise<void> {
+  if (!isRedisAvailable() || !redis) return
+  try {
+    // Merge with existing to preserve fields not being updated
+    const existing = await getWhatsAppCredentials()
+    const merged = { ...existing, ...credentials }
+    await redis.set(CREDENTIALS_KEY, JSON.stringify(merged))
+  } catch (error) {
+    console.error('Error saving credentials to Redis:', error)
+  }
+}
