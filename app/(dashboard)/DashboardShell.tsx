@@ -752,12 +752,12 @@ export function DashboardShell({
                 </header>
 
                 {/* Page Content */}
-                <main className={`flex-1 ${pathname?.includes('/campaigns/new') || (pathname?.includes('/templates/') && pathname !== '/templates')
+                <main className={`flex-1 ${pathname?.includes('/campaigns/new') || (pathname?.includes('/templates/') && pathname !== '/templates' && !pathname?.endsWith('/templates/new'))
                     ? 'overflow-hidden'
                     : 'overflow-auto p-6 lg:p-10'
                     }`}>
                     <div className={
-                        pathname?.includes('/campaigns/new') || (pathname?.includes('/templates/') && pathname !== '/templates')
+                        pathname?.includes('/campaigns/new') || (pathname?.includes('/templates/') && pathname !== '/templates' && !pathname?.endsWith('/templates/new'))
                             ? 'h-full'
                             : 'max-w-7xl mx-auto'
                     }>
