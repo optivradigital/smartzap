@@ -70,7 +70,6 @@ export function WhatsAppProviderSettings() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      // Only send accessToken if user typed a new one (not empty)
       const payload: ProviderConfig = { ...config }
 
       const res = await fetch('/api/whatsapp/provider', {
@@ -179,6 +178,44 @@ export function WhatsAppProviderSettings() {
                 className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
               />
             </div>
+          </div>
+
+          {/* Meta Connection Status */}
+          <div className="pt-3 border-t border-white/10">
+            {loading ? (
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <Loader2 size={13} className="animate-spin" />
+                Verificando conexão...
+              </div>
+            ) : status?.connected ? (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs text-green-400 font-medium">Conectado</span>
+                {status.name && <span className="text-xs text-gray-400">· {status.name}</span>}
+                {status.phone && <span className="text-xs text-gray-400">· {status.phone}</span>}
+                <button
+                  onClick={() => fetchStatus()}
+                  className="ml-auto text-gray-500 hover:text-white transition-colors"
+                  title="Atualizar status"
+                >
+                  <RefreshCw size={11} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-400" />
+                <span className="text-xs text-red-400 font-medium">
+                  {status?.error || 'Não conectado — verifique as credenciais'}
+                </span>
+                <button
+                  onClick={() => fetchStatus()}
+                  className="ml-auto text-gray-500 hover:text-white transition-colors"
+                  title="Tentar novamente"
+                >
+                  <RefreshCw size={11} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

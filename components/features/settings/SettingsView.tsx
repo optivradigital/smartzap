@@ -439,15 +439,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {settings.isConnected && (
             <div className="flex flex-col gap-3 min-w-[140px]">
               <button
-                onClick={() => setIsEditing(!isEditing)}
-                className={`group relative overflow-hidden rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2
-                  ${isEditing
-                    ? 'bg-white text-black shadow-lg hover:bg-gray-100'
-                    : 'bg-white/5 text-white hover:bg-white/10 border border-white/10 hover:border-white/20'
-                  }`}
+                onClick={() => {
+                  if (isManager) {
+                    document.getElementById('whatsapp')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  } else {
+                    setIsEditing(!isEditing)
+                  }
+                }}
+                className="group relative overflow-hidden rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 bg-white/5 text-white hover:bg-white/10 border border-white/10 hover:border-white/20"
               >
-                <Edit2 size={14} className={`transition-transform duration-500 ${isEditing ? 'rotate-45' : 'group-hover:scale-110'}`} />
-                {isEditing ? 'Cancelar' : 'Editar'}
+                <Edit2 size={14} className="transition-transform duration-500 group-hover:scale-110" />
+                Editar
               </button>
 
               <button
@@ -472,7 +474,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         )}
 
         {/* Form - Only visible if disconnected OR editing */}
-        {(!settings.isConnected || isEditing) && (
+        {(!settings.isConnected || isEditing) && !isManager && (
           <div className="glass-panel rounded-2xl p-8 animate-in slide-in-from-top-4 duration-300">
             <h3 className="text-lg font-semibold text-white mb-8 flex items-center gap-2">
               <span className="w-1 h-6 bg-primary-500 rounded-full"></span>
