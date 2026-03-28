@@ -1,46 +1,145 @@
-import { Redis } from '@upstash/redis'
+import Redis from 'ioredis'
 
-// Check if Redis is configured
 export function isRedisAvailable(): boolean {
-  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+  return !!process.env.REDIS_URL
 }
 
-// Initialize Redis client
-// We use a proxy to handle "connection" errors gracefully if env vars are missing
-const redisClient = isRedisAvailable()
-  ? new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-  })
-  : null
+let ioredisClient: Redis | null = null
 
-// Export a robust redis object that handles missing configuration
-// This acts as a proxy to the real Redis client if available
-export const redis = redisClient || {
-  get: async () => null,
-  set: async () => null,
-  del: async () => 0,
-  hget: async () => null,
-  hset: async () => 0,
-  hdel: async () => 0,
-  hgetall: async () => null,
-  incr: async () => 0,
-  expire: async () => 0,
-  exists: async () => 0,
-  keys: async () => [],
-  mget: async () => [],
-  scan: async () => [0, []],
-  ping: async () => { throw new Error('Redis not configured') },
-  dbsize: async () => 0,
-  type: async () => 'none',
-  ttl: async () => -2,
-  setex: async () => null,
-  lpush: async () => 0,
-  rpush: async () => 0,
-  lrange: async () => [],
-  llen: async () => 0,
-  hincrby: async () => 0,
-} as unknown as Redis
+if (isRedisAvailable()) {
+  ioredisClient = new Redis(process.env.REDIS_URL!, {
+    maxRetriesPerRequest: 3,
+    enableReadyCheck: false,
+    lazyConnect: false,
+  })
+
+  ioredisClient.on('error', (err) => {
+    console.error('[Redis] Connection error:', err.message)
+  })
+}
+
+function serialize(value: unknown): string {
+  if (typeof value === 'string') return value
+  return JSON.stringify(value)
+}
+
+function deserialize<T>(value: string | null): T | null {
+  if (value === null) return null
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return value as unknown as T
+  }
+}
+
+export const redis = {
+  get: async <T = unknown>(key: string): Promise<T | null> => {
+    if (!ioredisClient) return null
+    const val = await ioredisClient.get(key)
+    return deserialize<T>(val)
+  },
+  set: async (key: string, value: unknown, options?: { ex?: number }): Promise<string | null> => {
+    if (!ioredisClient) return null
+    const serialized = serialize(value)
+    if (options?.ex) {
+      return ioredisClient.set(key, serialized, 'EX', options.ex)
+    }
+    return ioredisClient.set(key, serialized)
+  },
+  setex: async (key: string, seconds: number, value: unknown): Promise<string> => {
+    if (!ioredisClient) return 'OK'
+    return ioredisClient.setex(key, seconds, serialize(value))
+  },
+  del: async (key: string): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.del(key)
+  },
+  hget: async (key: string, field: string): Promise<string | null> => {
+    if (!ioredisClient) return null
+    return ioredisClient.hget(key, field)
+  },
+  hset: async (key: string, obj: Record<string, unknown>): Promise<number> => {
+    if (!ioredisClient) return 0
+    const args: (string | number | Buffer)[] = []
+    for (const [field, value] of Object.entries(obj)) {
+      args.push(field, serialize(value))
+    }
+    return ioredisClient.hset(key, ...args)
+  },
+  hdel: async (key: string, ...fields: string[]): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.hdel(key, ...fields)
+  },
+  hgetall: async <T = Record<string, string>>(key: string): Promise<T | null> => {
+    if (!ioredisClient) return null
+    const result = await ioredisClient.hgetall(key)
+    if (!result || Object.keys(result).length === 0) return null
+    return result as unknown as T
+  },
+  incr: async (key: string): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.incr(key)
+  },
+  expire: async (key: string, seconds: number): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.expire(key, seconds)
+  },
+  exists: async (...keys: string[]): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.exists(...keys)
+  },
+  keys: async (pattern: string): Promise<string[]> => {
+    if (!ioredisClient) return []
+    return ioredisClient.keys(pattern)
+  },
+  scan: async (cursor: number | string, matchPattern?: string, count?: number): Promise<[string, string[]]> => {
+    if (!ioredisClient) return ['0', []]
+    const args: (string | number)[] = [String(cursor)]
+    if (matchPattern) { args.push('MATCH', matchPattern) }
+    if (count) { args.push('COUNT', count) }
+    return ioredisClient.scan(...(args as Parameters<typeof ioredisClient.scan>))
+  },
+  ping: async (): Promise<string> => {
+    if (!ioredisClient) throw new Error('Redis not configured')
+    return ioredisClient.ping()
+  },
+  dbsize: async (): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.dbsize()
+  },
+  type: async (key: string): Promise<string> => {
+    if (!ioredisClient) return 'none'
+    return ioredisClient.type(key)
+  },
+  ttl: async (key: string): Promise<number> => {
+    if (!ioredisClient) return -2
+    return ioredisClient.ttl(key)
+  },
+  lpush: async (key: string, ...values: unknown[]): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.lpush(key, ...values.map(serialize))
+  },
+  rpush: async (key: string, ...values: unknown[]): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.rpush(key, ...values.map(serialize))
+  },
+  lrange: async (key: string, start: number, stop: number): Promise<string[]> => {
+    if (!ioredisClient) return []
+    return ioredisClient.lrange(key, start, stop)
+  },
+  llen: async (key: string): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.llen(key)
+  },
+  hincrby: async (key: string, field: string, increment: number): Promise<number> => {
+    if (!ioredisClient) return 0
+    return ioredisClient.hincrby(key, field, increment)
+  },
+  mget: async (...keys: string[]): Promise<(string | null)[]> => {
+    if (!ioredisClient) return keys.map(() => null)
+    return ioredisClient.mget(...keys)
+  },
+}
 
 // =============================================================================
 // CONVERSATION STATE
@@ -57,17 +156,17 @@ export interface ConversationState {
 }
 
 export async function getConversationState(conversationId: string): Promise<ConversationState | null> {
-  if (!redisClient) return null
-  return await redis.get(`conversation:${conversationId}`)
+  if (!ioredisClient) return null
+  return await redis.get<ConversationState>(`conversation:${conversationId}`)
 }
 
 export async function setConversationState(state: ConversationState): Promise<void> {
-  if (!redisClient) return
+  if (!ioredisClient) return
   await redis.set(`conversation:${state.conversationId}`, state)
 }
 
 export async function deleteConversationState(conversationId: string): Promise<void> {
-  if (!redisClient) return
+  if (!ioredisClient) return
   await redis.del(`conversation:${conversationId}`)
 }
 
@@ -76,18 +175,18 @@ export async function deleteConversationState(conversationId: string): Promise<v
 // =============================================================================
 
 export async function getConversationVariables(conversationId: string): Promise<Record<string, string> | null> {
-  if (!redisClient) return null
-  return await redis.hgetall(`conversation:${conversationId}:vars`)
+  if (!ioredisClient) return null
+  return await redis.hgetall<Record<string, string>>(`conversation:${conversationId}:vars`)
 }
 
 export async function setConversationVariables(conversationId: string, variables: Record<string, string>): Promise<void> {
-  if (!redisClient) return
+  if (!ioredisClient) return
   if (Object.keys(variables).length === 0) return
   await redis.hset(`conversation:${conversationId}:vars`, variables)
 }
 
 export async function setConversationVariable(conversationId: string, key: string, value: string): Promise<void> {
-  if (!redisClient) return
+  if (!ioredisClient) return
   await redis.hset(`conversation:${conversationId}:vars`, { [key]: value })
 }
 
@@ -96,7 +195,7 @@ export async function setConversationVariable(conversationId: string, key: strin
 // =============================================================================
 
 export async function checkPairRateLimit(phoneNumberId: string, recipientPhone: string): Promise<boolean> {
-  if (!redisClient) return true // Allow if Redis off
+  if (!ioredisClient) return true
 
   const key = `ratelimit:${phoneNumberId}:${recipientPhone}`
   const exists = await redis.exists(key)
@@ -104,15 +203,14 @@ export async function checkPairRateLimit(phoneNumberId: string, recipientPhone: 
 }
 
 export async function setPairRateLimit(phoneNumberId: string, recipientPhone: string): Promise<void> {
-  if (!redisClient) return
+  if (!ioredisClient) return
 
   const key = `ratelimit:${phoneNumberId}:${recipientPhone}`
-  // 5 seconds rate limit between messages to same user
   await redis.set(key, '1', { ex: 5 })
 }
 
 export async function getPairRateLimitTTL(phoneNumberId: string, recipientPhone: string): Promise<number> {
-  if (!redisClient) return 0
+  if (!ioredisClient) return 0
   const key = `ratelimit:${phoneNumberId}:${recipientPhone}`
   return await redis.ttl(key)
 }
@@ -122,7 +220,7 @@ export async function getPairRateLimitTTL(phoneNumberId: string, recipientPhone:
 // =============================================================================
 
 export async function checkCSW(phoneNumberId: string, recipientPhone: string): Promise<boolean> {
-  if (!redisClient) return false
+  if (!ioredisClient) return false
 
   const key = `csw:${phoneNumberId}:${recipientPhone}`
   const exists = await redis.exists(key)
@@ -130,22 +228,21 @@ export async function checkCSW(phoneNumberId: string, recipientPhone: string): P
 }
 
 export async function setCSW(phoneNumberId: string, recipientPhone: string): Promise<void> {
-  if (!redisClient) return
+  if (!ioredisClient) return
 
   const key = `csw:${phoneNumberId}:${recipientPhone}`
   const now = new Date().toISOString()
-  // 24 hours = 86400 seconds
   await redis.set(key, now, { ex: 86400 })
 }
 
 export async function getCSWStartTime(phoneNumberId: string, recipientPhone: string): Promise<string | null> {
-  if (!redisClient) return null
+  if (!ioredisClient) return null
   const key = `csw:${phoneNumberId}:${recipientPhone}`
   return await redis.get<string>(key)
 }
 
 export async function getCSWTimeRemaining(phoneNumberId: string, recipientPhone: string): Promise<number> {
-  if (!redisClient) return 0
+  if (!ioredisClient) return 0
   const key = `csw:${phoneNumberId}:${recipientPhone}`
   return await redis.ttl(key)
 }
@@ -155,16 +252,16 @@ export async function getCSWTimeRemaining(phoneNumberId: string, recipientPhone:
 // =============================================================================
 
 export async function getFlowFromCache(flowId: string): Promise<unknown | null> {
-  if (!redisClient) return null
+  if (!ioredisClient) return null
   return await redis.get(`flow:${flowId}`)
 }
 
 export async function setFlowInCache(flowId: string, flow: unknown): Promise<void> {
-  if (!redisClient) return
-  await redis.set(`flow:${flowId}`, flow, { ex: 3600 }) // Cache for 1 hour
+  if (!ioredisClient) return
+  await redis.set(`flow:${flowId}`, flow, { ex: 3600 })
 }
 
 export async function invalidateFlowCache(flowId: string): Promise<void> {
-  if (!redisClient) return
+  if (!ioredisClient) return
   await redis.del(`flow:${flowId}`)
 }

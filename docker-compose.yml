@@ -9,5 +9,12 @@ services:
       - "127.0.0.1:3002:3002"
     env_file:
       - .env
+    networks:
+      - smartzap_default
+      - evolution-net
 
-volumes: {}
+networks:
+  smartzap_default:
+    driver: bridge
+  evolution-net:
+    external: true
