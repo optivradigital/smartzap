@@ -2,6 +2,9 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   // Next.js 16 uses Turbopack by default
+  // External packages that should not be bundled (server-only Node.js modules)
+  serverExternalPackages: ['ioredis'],
+
   reactStrictMode: true,
 
   // Standalone output for Docker
