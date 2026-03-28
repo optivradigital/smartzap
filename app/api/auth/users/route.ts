@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
   const targetRole: string = role || 'user'
   const allowedRoles = user!.isSuperAdmin
     ? ['super_admin', 'manager', 'user']
-    : ['user']
+    : ['manager', 'user']
 
   if (!allowedRoles.includes(targetRole)) {
     return NextResponse.json(

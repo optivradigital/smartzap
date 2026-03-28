@@ -1,38 +1,41 @@
 /**
  * WhatsApp Credentials Helper
- * 
+ *
  * Centralizes credential management with Redis-first strategy
  * and fallback to environment variables.
+ * Supports multi-org: credentials are scoped by orgId.
  */
 
-import { redis, isRedisAvailable } from './redis'
+import { redis, isRedisAvailable } from "./redis";
 
-const CREDENTIALS_KEY = 'settings:whatsapp:credentials'
+function credentialsKey(orgId?: string | null): string {
+  if (orgId && orgId !== "*") return `settings:whatsapp:credentials:${orgId}`;
+  return "settings:whatsapp:credentials"; // fallback global
+}
 
 export interface WhatsAppCredentials {
-  phoneNumberId: string
-  businessAccountId: string
-  accessToken: string
-  displayPhoneNumber?: string
-  verifiedName?: string
+  phoneNumberId: string;
+  businessAccountId: string;
+  accessToken: string;
+  displayPhoneNumber?: string;
+  verifiedName?: string;
 }
 
 /**
- * Get WhatsApp credentials from Redis (primary) or env vars (fallback)
- * 
- * Priority:
- * 1. Redis (user-configured via Settings UI)
- * 2. Environment variables (Vercel/deployment configured)
- * 
- * @returns Credentials or null if not configured
+ * Get WhatsApp credentials scoped by org.
+ * Priority: Redis (org-scoped) → Redis (global fallback) → env vars
  */
-export async function getWhatsAppCredentials(): Promise<WhatsAppCredentials | null> {
-  // 1. Try Redis first
+export async function getWhatsAppCredentials(
+  orgId?: string | null
+): Promise<WhatsAppCredentials | null> {
   if (isRedisAvailable() && redis) {
     try {
-      const stored = await redis.get(CREDENTIALS_KEY)
+      // 1. Try org-scoped key
+      const key = credentialsKey(orgId);
+      const stored = await redis.get(key);
       if (stored) {
-        const credentials = typeof stored === 'string' ? JSON.parse(stored) : stored
+        const credentials =
+          typeof stored === "string" ? JSON.parse(stored) : stored;
         if (credentials.phoneNumberId && credentials.accessToken) {
           return {
             phoneNumberId: credentials.phoneNumberId,
@@ -40,78 +43,65 @@ export async function getWhatsAppCredentials(): Promise<WhatsAppCredentials | nu
             accessToken: credentials.accessToken,
             displayPhoneNumber: credentials.displayPhoneNumber,
             verifiedName: credentials.verifiedName,
-          }
+          };
         }
       }
     } catch (error) {
-      console.error('Error reading credentials from Redis:', error)
+      console.error("Error reading credentials from Redis:", error);
     }
   }
 
-  // 2. Fallback to env vars
-  const phoneNumberId = process.env.WHATSAPP_PHONE_ID
-  const businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
-  const accessToken = process.env.WHATSAPP_TOKEN
+  // 2. Fallback to env vars (only if no orgId or global request)
+  const phoneNumberId = process.env.WHATSAPP_PHONE_ID;
+  const businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
+  const accessToken = process.env.WHATSAPP_TOKEN;
 
   if (phoneNumberId && businessAccountId && accessToken) {
-    return {
-      phoneNumberId,
-      businessAccountId,
-      accessToken,
-    }
+    return { phoneNumberId, businessAccountId, accessToken };
   }
 
-  // Not configured
-  return null
+  return null;
 }
 
-/**
- * Check if WhatsApp is configured (either in Redis or env vars)
- */
-export async function isWhatsAppConfigured(): Promise<boolean> {
-  const credentials = await getWhatsAppCredentials()
-  return credentials !== null
+export async function isWhatsAppConfigured(
+  orgId?: string | null
+): Promise<boolean> {
+  const credentials = await getWhatsAppCredentials(orgId);
+  return credentials !== null;
 }
 
-/**
- * Get credentials source (for debugging/UI)
- */
-export async function getCredentialsSource(): Promise<'redis' | 'env' | 'none'> {
-  // Check Redis first
+export async function getCredentialsSource(
+  orgId?: string | null
+): Promise<"redis" | "env" | "none"> {
   if (isRedisAvailable() && redis) {
     try {
-      const stored = await redis.get(CREDENTIALS_KEY)
+      const stored = await redis.get(credentialsKey(orgId));
       if (stored) {
-        const credentials = typeof stored === 'string' ? JSON.parse(stored) : stored
-        if (credentials.phoneNumberId && credentials.accessToken) {
-          return 'redis'
-        }
+        const credentials =
+          typeof stored === "string" ? JSON.parse(stored) : stored;
+        if (credentials.phoneNumberId && credentials.accessToken) return "redis";
       }
     } catch {
-      // Fall through to env check
+      // fall through
     }
   }
-
-  // Check env vars
-  if (process.env.WHATSAPP_PHONE_ID && process.env.WHATSAPP_TOKEN) {
-    return 'env'
-  }
-
-  return 'none'
+  if (process.env.WHATSAPP_PHONE_ID && process.env.WHATSAPP_TOKEN) return "env";
+  return "none";
 }
 
 /**
- * Save WhatsApp credentials to Redis
- * Used to keep settings:whatsapp:credentials in sync with whatsapp:provider:config
+ * Save WhatsApp credentials to Redis, scoped by org.
  */
-export async function saveWhatsAppCredentials(credentials: Partial<WhatsAppCredentials>): Promise<void> {
-  if (!isRedisAvailable() || !redis) return
+export async function saveWhatsAppCredentials(
+  credentials: Partial<WhatsAppCredentials>,
+  orgId?: string | null
+): Promise<void> {
+  if (!isRedisAvailable() || !redis) return;
   try {
-    // Merge with existing to preserve fields not being updated
-    const existing = await getWhatsAppCredentials()
-    const merged = { ...existing, ...credentials }
-    await redis.set(CREDENTIALS_KEY, JSON.stringify(merged))
+    const existing = await getWhatsAppCredentials(orgId);
+    const merged = { ...existing, ...credentials };
+    await redis.set(credentialsKey(orgId), JSON.stringify(merged));
   } catch (error) {
-    console.error('Error saving credentials to Redis:', error)
+    console.error("Error saving credentials to Redis:", error);
   }
 }
