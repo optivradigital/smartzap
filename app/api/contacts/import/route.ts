@@ -113,10 +113,10 @@ export async function POST(request: NextRequest) {
       created_at: now,
     }));
 
-    await supabase
+    const { error: upsertError } = await supabase
       .from("contacts")
-      .upsert(contactRows, { onConflict: "phone,organization_id" })
-      .catch((e: unknown) => console.error("[contacts/import] upsert error:", e));
+      .upsert(contactRows, { onConflict: "phone,organization_id" });
+    if (upsertError) console.error("[contacts/import] upsert error:", upsertError);
 
     // Vincula à campanha se fornecida
     if (campaignId) {
@@ -129,10 +129,10 @@ export async function POST(request: NextRequest) {
         created_at: now,
       }));
 
-      await supabase
+      const { error: ccError } = await supabase
         .from("campaign_contacts")
-        .upsert(ccRows, { onConflict: "campaign_id,phone" })
-        .catch((e: unknown) => console.error("[contacts/import] campaign_contacts error:", e));
+        .upsert(ccRows, { onConflict: "campaign_id,phone" });
+      if (ccError) console.error("[contacts/import] campaign_contacts error:", ccError);
     }
   }
 
