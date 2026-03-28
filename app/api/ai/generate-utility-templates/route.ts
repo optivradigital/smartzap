@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase'
 // ============================================================================
 
 // Schema de entrada
-export const GenerateUtilityTemplatesSchema = z.object({
+const GenerateUtilityTemplatesSchema = z.object({
   prompt: z.string()
     .min(10, 'Descreva melhor o que você precisa (mínimo 10 caracteres)')
     .max(2000, 'Descrição muito longa'),
