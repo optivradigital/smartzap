@@ -29,6 +29,22 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
 
+
+  // Resolve Node.js built-in modules for browser bundles (used by ioredis server-side only)
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        net: false,
+        dns: false,
+        fs: false,
+        tls: false,
+        crypto: false,
+      }
+    }
+    return config
+  },
+
   // Image optimization
   images: {
     remotePatterns: [
