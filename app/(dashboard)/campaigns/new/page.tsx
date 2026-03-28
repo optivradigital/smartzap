@@ -22,6 +22,8 @@ export default function NewCampaignPage() {
       selectedContacts={controller.selectedContacts}
       selectedContactIds={controller.selectedContactIds}
       toggleContact={controller.toggleContact}
+      excelContacts={controller.excelContacts}
+      setExcelContacts={controller.setExcelContacts}
       availableTemplates={controller.availableTemplates}
       selectedTemplate={controller.selectedTemplate}
       handleNext={controller.handleNext}

@@ -14,6 +14,7 @@ type ProviderType = 'meta' | 'evolution'
 interface ProviderConfig {
   type: ProviderType
   phoneNumberId?: string
+  businessAccountId?: string
   accessToken?: string
   tokenSaved?: boolean
   tokenPreview?: string
@@ -160,6 +161,17 @@ export function WhatsAppProviderSettings() {
                 placeholder="Ex: 123456789012345"
                 className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
               />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">WhatsApp Business Account ID (WABA)</label>
+              <input
+                type="text"
+                value={config.businessAccountId || ''}
+                onChange={e => setConfig(c => ({ ...c, businessAccountId: e.target.value }))}
+                placeholder="Ex: 100093114169276"
+                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Encontre em: Meta Business Manager → Contas → WhatsApp</p>
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">

@@ -24,6 +24,7 @@ export interface ProviderConfig {
   type: WhatsAppProviderType
   // Meta
   phoneNumberId?: string
+  businessAccountId?: string
   accessToken?: string
   // Evolution
   evolutionUrl?: string

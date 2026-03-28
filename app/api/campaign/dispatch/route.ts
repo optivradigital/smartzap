@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Client } from '@upstash/workflow'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
 import { supabase } from '@/lib/supabase'
-import { flowDb } from '@/lib/supabase-db'
-
-import { ContactStatus } from '@/types'
 
 interface DispatchContact {
   phone: string
@@ -23,18 +19,16 @@ export async function POST(request: NextRequest) {
   // Get template variables from campaign if not provided directly
   let resolvedTemplateVariables: string[] = templateVariables || []
   if (!resolvedTemplateVariables.length) {
-    const { data: campaign, error } = await supabase
+    const { data: campaign } = await supabase
       .from('campaigns')
       .select('template_variables')
       .eq('id', campaignId)
       .single()
 
     if (campaign && campaign.template_variables) {
-      // Supabase JSONB columns return native JavaScript arrays, no JSON.parse needed
       if (Array.isArray(campaign.template_variables)) {
         resolvedTemplateVariables = campaign.template_variables
       } else if (typeof campaign.template_variables === 'string') {
-        // Fallback for legacy string storage (should not happen with JSONB)
         try {
           resolvedTemplateVariables = JSON.parse(campaign.template_variables)
         } catch {
@@ -46,7 +40,7 @@ export async function POST(request: NextRequest) {
     console.log(`[Dispatch] Loaded template_variables from database:`, resolvedTemplateVariables)
   }
 
-  // If no contacts provided, fetch from campaign_contacts (for cloned/scheduled campaigns)
+  // If no contacts provided, fetch from campaign_contacts
   if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
     const { data: existingContacts, error } = await supabase
       .from('campaign_contacts')
@@ -69,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Dispatch] Loaded ${contacts.length} contacts from database for campaign ${campaignId}`)
   } else {
-    // Save contacts to campaign_contacts table in Supabase (Bulk Upsert)
+    // Save contacts to campaign_contacts table
     try {
       const dbContacts = (contacts as DispatchContact[]).map(c => ({
         id: generateId(),
@@ -84,18 +78,16 @@ export async function POST(request: NextRequest) {
         .upsert(dbContacts, { onConflict: 'campaign_id, phone' })
 
       if (error) throw error
-
       console.log(`[Dispatch] Saved ${contacts.length} contacts for campaign ${campaignId}`)
     } catch (error) {
       console.error('Failed to save campaign contacts:', error)
     }
   }
 
-  // Get credentials: Body (if valid) > Redis > Env
+  // Get credentials: Body > Redis > Env
   let phoneNumberId: string | undefined
   let accessToken: string | undefined
 
-  // Try from body first (only if not masked)
   if (whatsappCredentials?.phoneNumberId &&
     whatsappCredentials?.accessToken &&
     !whatsappCredentials.accessToken.includes('***')) {
@@ -103,7 +95,6 @@ export async function POST(request: NextRequest) {
     accessToken = whatsappCredentials.accessToken
   }
 
-  // Fallback to Redis credentials
   if (!phoneNumberId || !accessToken) {
     const redisCredentials = await getWhatsAppCredentials()
     if (redisCredentials) {
@@ -112,7 +103,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Final fallback to env vars
   if (!phoneNumberId) phoneNumberId = process.env.WHATSAPP_PHONE_ID
   if (!accessToken) accessToken = process.env.WHATSAPP_TOKEN
 
@@ -123,94 +113,38 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // =========================================================================
-  // FLOW ENGINE DISPATCH (if flowId is provided)
-  // =========================================================================
+  // Build the base URL for the workflow endpoint
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL?.trim())
+    || 'http://localhost:3000'
 
-  // =========================================================================
-  // FLOW ENGINE DISPATCH (Disabled in Template)
-  // =========================================================================
-
-  if (flowId) {
-    console.log('[Dispatch] Flow Engine is disabled in this template. Using legacy workflow.')
-    // Fallthrough to legacy workflow
+  const workflowPayload = {
+    campaignId,
+    templateName,
+    contacts: contacts as DispatchContact[],
+    templateVariables: resolvedTemplateVariables,
+    phoneNumberId,
+    accessToken,
   }
 
-  // =========================================================================
-  // LEGACY WORKFLOW DISPATCH (for template-based campaigns)
-  // =========================================================================
+  console.log(`[Dispatch] Firing workflow in background: ${baseUrl}/api/campaign/process`)
+  console.log(`[Dispatch] Contacts: ${(contacts as DispatchContact[]).length}, Template: ${templateName}`)
 
-  // Check if Upstash Workflow is configured
-  if (!process.env.QSTASH_TOKEN) {
-    return NextResponse.json(
-      { error: 'Serviço de workflow não configurado. Configure QSTASH_TOKEN.' },
-      { status: 503 }
-    )
-  }
+  // Fire-and-forget: call workflow endpoint directly in background.
+  // On self-hosted EC2/Node.js there is no 10s request timeout (unlike Vercel),
+  // so the workflow runs to completion without needing QStash.
+  const workflowUrl = `${baseUrl}/api/campaign/process`
+  fetch(workflowUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(workflowPayload),
+  }).then(r => {
+    if (!r.ok) r.text().then(t => console.error('[Dispatch] Workflow error response:', t))
+    else console.log('[Dispatch] Workflow completed successfully')
+  }).catch(err => console.error('[Dispatch] Workflow fetch error:', err))
 
-  try {
-    // Priority: NEXT_PUBLIC_APP_URL > VERCEL_PROJECT_PRODUCTION_URL > VERCEL_URL > localhost
-    // VERCEL_PROJECT_PRODUCTION_URL is auto-set by Vercel to the production domain (stable)
-    // VERCEL_URL changes with each deployment (not ideal for QStash callbacks)
-    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL?.trim())
-      || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.trim()}` : null)
-      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.trim()}` : null)
-      || 'http://localhost:3000'
-
-    const isLocalhost = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')
-
-    console.log(`[Dispatch] Triggering workflow at: ${baseUrl}/api/campaign/workflow`)
-    console.log(`[Dispatch] Template variables: ${JSON.stringify(resolvedTemplateVariables)}`)
-    console.log(`[Dispatch] Is localhost: ${isLocalhost}`)
-
-    const workflowPayload = {
-      campaignId,
-      templateName,
-      contacts: contacts as DispatchContact[],
-      templateVariables: resolvedTemplateVariables,
-      phoneNumberId,
-      accessToken,
-    }
-
-    if (isLocalhost) {
-      // DEV: Call workflow endpoint directly (QStash can't reach localhost)
-      console.log('[Dispatch] Localhost detected - calling workflow directly (bypassing QStash)')
-
-      const response = await fetch(`${baseUrl}/api/campaign/workflow`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(workflowPayload),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Workflow failed with status ${response.status}`)
-      }
-    } else {
-      // PROD: Use QStash for reliable async execution
-      const workflowClient = new Client({ token: process.env.QSTASH_TOKEN })
-      await workflowClient.trigger({
-        url: `${baseUrl}/api/campaign/workflow`,
-        body: workflowPayload,
-      })
-    }
-
-    return NextResponse.json({
-      status: 'queued',
-      count: contacts.length,
-      message: `${contacts.length} mensagens enfileiradas com sucesso`
-    }, { status: 202 })
-
-  } catch (error) {
-    console.error('Error triggering workflow:', error)
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    return NextResponse.json(
-      {
-        error: 'Falha ao iniciar workflow da campanha',
-        details: errorMessage,
-        baseUrl: process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'not-set'
-      },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json({
+    status: 'queued',
+    count: (contacts as DispatchContact[]).length,
+    message: `${(contacts as DispatchContact[]).length} mensagens enfileiradas com sucesso`
+  }, { status: 202 })
 }

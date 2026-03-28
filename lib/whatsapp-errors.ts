@@ -747,10 +747,10 @@ export const WHATSAPP_ERRORS: Record<number, WhatsAppError> = {
   },
   133010: {
     code: 133010,
-    category: 'media',
-    title: 'Media URL invalid',
-    userMessage: 'URL da mídia inválida.',
-    action: 'Verifique se a URL está correta e acessível.',
+    category: 'registration',
+    title: 'Account not registered',
+    userMessage: 'Número não registrado na Cloud API. Registre o número em developers.facebook.com → WhatsApp → Configuração.',
+    action: 'Acesse Meta for Developers, abra o app, vá em WhatsApp > Configuração e clique em Registrar número.',
     retryable: false,
   },
   133015: {

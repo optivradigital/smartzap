@@ -23,7 +23,8 @@ export const useCampaignWizardController = () => {
   // Anti-ban config for Evolution API campaigns
   const [antiBanConfig, setAntiBanConfig] = useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
   const [providerType, setProviderType] = useState<'meta' | 'evolution'>('meta');
-  const [recipientSource, setRecipientSource] = useState<'all' | 'specific' | 'test' | null>(null);
+  const [recipientSource, setRecipientSource] = useState<'all' | 'specific' | 'test' | 'excel' | null>(null);
+  const [excelContacts, setExcelContacts] = useState<{ name: string; phone: string }[]>([]);
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   
   // Template Variables State - for {{2}}, {{3}}, etc. ({{1}} is always the contact name)
@@ -76,6 +77,8 @@ export const useCampaignWizardController = () => {
       setSelectedContactIds([]);
     } else if (recipientSource === 'test') {
       // Test mode doesn't use contact IDs - handled separately
+      setSelectedContactIds([]);
+    } else if (recipientSource === 'excel') {
       setSelectedContactIds([]);
     }
   }, [recipientSource, contactsQuery.data]);
@@ -155,12 +158,14 @@ export const useCampaignWizardController = () => {
   const selectedContacts = allContacts.filter(c => selectedContactIds.includes(c.id));
   
   // Calculate recipient count - 1 for test mode, otherwise selected contacts
-  const recipientCount = recipientSource === 'test' && testContact ? 1 : selectedContacts.length;
+  const recipientCount = recipientSource === 'test' && testContact ? 1 : recipientSource === 'excel' ? excelContacts.length : selectedContacts.length;
   
   // Get contacts for sending - test contact or selected contacts
   const contactsForSending = recipientSource === 'test' && testContact 
     ? [{ name: testContact.name || testContact.phone, phone: testContact.phone }]
-    : selectedContacts.map(c => ({ name: c.name || c.phone, phone: c.phone }));
+    : recipientSource === 'excel'
+      ? excelContacts
+      : selectedContacts.map(c => ({ name: c.name || c.phone, phone: c.phone }));
   
   const availableTemplates = templatesQuery.data || [];
   const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateId);
@@ -277,6 +282,10 @@ export const useCampaignWizardController = () => {
         toast.error('Por favor selecione pelo menos um contato');
         return;
       }
+      if (recipientSource === 'excel' && excelContacts.length === 0) {
+        toast.error('Por favor importe um arquivo com contatos válidos');
+        return;
+      }
       if (recipientSource === 'test' && !testContact) {
         toast.error('Contato de teste não configurado. Configure em Ajustes.');
         return;
@@ -360,6 +369,8 @@ export const useCampaignWizardController = () => {
     selectedContacts,
     selectedContactIds,
     toggleContact,
+    excelContacts,
+    setExcelContacts,
     availableTemplates,
     selectedTemplate,
     handleNext,

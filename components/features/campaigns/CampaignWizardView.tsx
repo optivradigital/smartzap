@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronRight, ChevronLeft, Upload, Users, Smartphone, Check, MessageSquare, Eye, Zap, AlertCircle, Sparkles, RefreshCw, ShieldAlert, ExternalLink, TrendingUp, XCircle, CheckCircle, Circle, Clock, Calendar, FlaskConical, UserCheck, Search, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Upload, Users, Smartphone, Check, MessageSquare, Eye, Zap, AlertCircle, Sparkles, RefreshCw, ShieldAlert, ExternalLink, TrendingUp, XCircle, CheckCircle, Circle, Clock, Calendar, FlaskConical, UserCheck, Search, X, FileSpreadsheet, FileUp } from 'lucide-react';
 import { PrefetchLink } from '@/components/ui/PrefetchLink';
 import { Template, Contact, TestContact } from '../../../types';
 import { getPricingBreakdown } from '../../../lib/whatsapp-pricing';
@@ -20,8 +20,10 @@ interface CampaignWizardViewProps {
   setName: (name: string) => void;
   selectedTemplateId: string;
   setSelectedTemplateId: (id: string) => void;
-  recipientSource: 'all' | 'specific' | 'test' | null;
-  setRecipientSource: (source: 'all' | 'specific' | 'test' | null) => void;
+  recipientSource: 'all' | 'specific' | 'test' | 'excel' | null;
+  excelContacts: { name: string; phone: string }[];
+  setExcelContacts: (contacts: { name: string; phone: string }[]) => void;
+  setRecipientSource: (source: 'all' | 'specific' | 'test' | 'excel' | null) => void;
   totalContacts: number;
   recipientCount: number;
   allContacts: Contact[];
@@ -62,6 +64,157 @@ interface CampaignWizardViewProps {
   providerType?: 'meta' | 'evolution';
   setProviderType?: (t: 'meta' | 'evolution') => void;
 }
+
+
+// ---------------------------------------------------------------------------
+// ExcelUploader — parses CSV and XLSX files into { name, phone }[] contacts
+// ---------------------------------------------------------------------------
+interface ExcelUploaderProps {
+  excelContacts: { name: string; phone: string }[];
+  setExcelContacts: (contacts: { name: string; phone: string }[]) => void;
+}
+
+const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelContacts }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const normalizePhone = (raw: string): string => {
+    let digits = raw.replace(/\D/g, '');
+    if (digits.length <= 11 && !digits.startsWith('55')) {
+      digits = '55' + digits;
+    }
+    return digits;
+  };
+
+  const processRows = (rows: Record<string, string>[]) => {
+    setParseError(null);
+    const results: { name: string; phone: string }[] = [];
+    const phoneKeys = ['telefone', 'phone', 'celular', 'mobile', 'numero', 'número', 'tel', 'whatsapp'];
+    const nameKeys = ['nome', 'name', 'contato', 'contact', 'cliente', 'client'];
+
+    for (const row of rows) {
+      const rawKeys = Object.keys(row);
+      const phoneKey = rawKeys.find(k => phoneKeys.includes(k.toLowerCase().trim()));
+      const nameKey = rawKeys.find(k => nameKeys.includes(k.toLowerCase().trim()));
+      if (!phoneKey) continue;
+      const rawPhone = String(row[phoneKey] || '').trim();
+      const name = nameKey ? String(row[nameKey] || '').trim() : '';
+      const phone = normalizePhone(rawPhone);
+      if (phone.length >= 10) {
+        results.push({ name: name || phone, phone });
+      }
+    }
+
+    if (results.length === 0) {
+      setParseError('Nenhum contato válido encontrado. Verifique se o arquivo tem colunas "nome" e "telefone" (ou variantes em inglês).');
+    } else {
+      setExcelContacts(results);
+    }
+  };
+
+  const handleFile = async (file: File) => {
+    setFileName(file.name);
+    setParseError(null);
+    const ext = file.name.split('.').pop()?.toLowerCase();
+
+    if (ext === 'csv') {
+      const text = await file.text();
+      const Papa = (await import('papaparse')).default;
+      const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
+      processRows(result.data);
+    } else if (ext === 'xlsx' || ext === 'xls') {
+      const buffer = await file.arrayBuffer();
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: '' });
+      processRows(rows);
+    } else {
+      setParseError('Formato não suportado. Use .xlsx, .xls ou .csv');
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  return (
+    <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+      {excelContacts.length === 0 ? (
+        <div
+          onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
+          className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-all duration-200 ${
+            isDragging ? 'border-emerald-400 bg-emerald-500/10' : 'border-white/20 hover:border-white/40 bg-zinc-900/50'
+          }`}
+        >
+          <div className="p-3 rounded-full bg-emerald-500/20">
+            <FileUp size={24} className="text-emerald-400" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-white">Arraste um arquivo aqui ou clique para selecionar</p>
+            <p className="text-xs text-gray-500 mt-1">Suporta .xlsx, .xls e .csv</p>
+          </div>
+          <div className="bg-black/30 rounded-lg px-4 py-2 text-xs text-gray-400 text-center">
+            O arquivo deve ter colunas <span className="text-white font-mono">nome</span> e <span className="text-white font-mono">telefone</span>
+          </div>
+          <input ref={inputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleChange} />
+        </div>
+      ) : (
+        <div className="bg-zinc-900/50 border border-emerald-500/30 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet size={16} className="text-emerald-400" />
+              <span className="text-sm font-medium text-white">{fileName}</span>
+              <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">{excelContacts.length} contatos</span>
+            </div>
+            <button
+              onClick={() => { setExcelContacts([]); setFileName(null); }}
+              className="text-gray-500 hover:text-white transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="space-y-1.5 max-h-[220px] overflow-y-auto custom-scrollbar">
+            {excelContacts.slice(0, 50).map((c, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800/50">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-xs text-emerald-400 font-bold flex-shrink-0">
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white truncate">{c.name}</p>
+                  <p className="text-xs text-gray-500 font-mono">+{c.phone}</p>
+                </div>
+              </div>
+            ))}
+            {excelContacts.length > 50 && (
+              <p className="text-xs text-gray-500 text-center py-2">... e mais {excelContacts.length - 50} contatos</p>
+            )}
+          </div>
+        </div>
+      )}
+      {parseError && (
+        <div className="mt-3 flex items-start gap-2 text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+          <p className="text-xs">{parseError}</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Modal de bloqueio quando campanha excede limites da conta
 const CampaignBlockModal: React.FC<{
@@ -371,6 +524,8 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
   selectedContacts,
   selectedContactIds,
   toggleContact,
+  excelContacts,
+  setExcelContacts,
   availableTemplates,
   selectedTemplate,
   handleNext,
@@ -972,7 +1127,43 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                       )}
                     </div>
                   </button>
+
+                  {/* Excel / CSV Upload */}
+                  <button
+                    onClick={() => setRecipientSource('excel')}
+                    className={`relative p-6 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center gap-4 md:col-span-2 ${recipientSource === 'excel'
+                      ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.1)] scale-105'
+                      : 'bg-zinc-900/50 border-white/10 hover:bg-zinc-900 hover:border-white/20 text-gray-300'
+                      }`}
+                  >
+                    {recipientSource === 'excel' && (
+                      <div className="absolute top-3 right-3 text-black">
+                        <CheckCircleFilled size={20} />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4 w-full justify-center">
+                      <div className={`p-4 rounded-full ${recipientSource === 'excel' ? 'bg-gray-200 text-black' : 'bg-zinc-800 text-emerald-400'}`}>
+                        <FileSpreadsheet size={24} />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-bold text-sm">Importar Excel / CSV</h3>
+                        <p className={`text-xs mt-0.5 ${recipientSource === 'excel' ? 'text-gray-600' : 'text-gray-500'}`}>
+                          {recipientSource === 'excel' && excelContacts.length > 0
+                            ? `${excelContacts.length} contatos importados`
+                            : 'Carregue uma planilha com nome e telefone'}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
                 </div>
+
+                {/* Excel File Uploader */}
+                {recipientSource === 'excel' && (
+                  <ExcelUploader
+                    excelContacts={excelContacts}
+                    setExcelContacts={setExcelContacts}
+                  />
+                )}
 
                 {/* Contact Selection List */}
                 {recipientSource === 'specific' && (
