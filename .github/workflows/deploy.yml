@@ -7,14 +7,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Build & Deploy no EC2
+  build:
+    name: Build Docker Image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
 
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push da imagem
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/optivradigital/smartzap:latest
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+  deploy:
+    name: Deploy no EC2
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
       - name: Deploy via SSH no EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -22,10 +49,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
+          envs: GHCR_TOKEN
           script: |
             set -e
-            echo '=== Limpando cache Docker (anti-disco-cheio) ==='
-            docker builder prune -f || true
+            echo '=== Limpando imagens antigas ==='
             docker image prune -f || true
 
             echo '=== Entrando na pasta ==='
@@ -36,8 +63,11 @@ jobs:
             git checkout main 2>/dev/null || git checkout -b main optivra/main
             git reset --hard optivra/main
 
-            echo '=== Build Docker ==='
-            docker compose build --no-cache
+            echo '=== Login no GHCR ==='
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u optivradigital --password-stdin
+
+            echo '=== Baixando nova imagem ==='
+            docker pull ghcr.io/optivradigital/smartzap:latest
 
             echo '=== Reiniciando container ==='
             docker compose up -d --force-recreate
@@ -54,3 +84,5 @@ jobs:
               docker logs smartzap --tail 50
               exit 1
             fi
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}

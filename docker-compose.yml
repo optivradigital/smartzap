@@ -3,7 +3,7 @@ version: "3.8"
 services:
   smartzap:
     container_name: smartzap
-    build: .
+    image: ghcr.io/optivradigital/smartzap:latest
     restart: always
     ports:
       - "127.0.0.1:3002:3002"
