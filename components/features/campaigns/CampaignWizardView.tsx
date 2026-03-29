@@ -115,6 +115,15 @@ const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelCo
       setParseError('Nenhum contato válido encontrado. Verifique se o arquivo tem colunas "nome" e "telefone" (ou variantes em inglês).');
     } else {
       setExcelContacts(results);
+      // Persiste no Supabase (contacts table) em background — não bloqueia o fluxo
+      fetch('/api/contacts/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contacts: results }),
+      })
+        .then(r => r.json())
+        .then(d => console.log(`[CSV] ${d.imported ?? 0} contatos sincronizados com Supabase`))
+        .catch(e => console.warn('[CSV] Falha ao sincronizar contatos:', e));
     }
   };
 
