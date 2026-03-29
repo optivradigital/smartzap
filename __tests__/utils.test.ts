@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectDelimiter, generateImportReport } from '../lib/csv-parser'
+import { detectDelimiter, generateImportReport, type ParseResult } from '../lib/csv-parser'
 import {
   isPaymentError,
   isRateLimitError,
@@ -31,31 +31,34 @@ describe('detectDelimiter', () => {
   })
 })
 
+function makeResult(overrides: Partial<ParseResult> = {}): ParseResult {
+  return {
+    success: true,
+    contacts: [],
+    invalidRows: [],
+    duplicates: [],
+    totalRows: 0,
+    validRows: 0,
+    ...overrides,
+  }
+}
+
 describe('generateImportReport', () => {
   it('gera relatório sem erros', () => {
-    const result = {
-      validRows: 10,
-      invalidRows: [],
-      duplicates: [],
-      totalRows: 10,
-      contacts: [],
-    }
-    const report = generateImportReport(result)
+    const report = generateImportReport(makeResult({ validRows: 10, totalRows: 10 }))
     expect(report).toContain('10')
     expect(report).toContain('Relatório')
   })
 
   it('inclui erros no relatório quando existem', () => {
-    const result = {
+    const result = makeResult({
       validRows: 8,
+      totalRows: 10,
       invalidRows: [
         { row: 2, reason: 'telefone inválido', data: 'abc' },
         { row: 5, reason: 'telefone inválido', data: '123' },
       ],
-      duplicates: [],
-      totalRows: 10,
-      contacts: [],
-    }
+    })
     const report = generateImportReport(result)
     expect(report).toContain('Linha 2')
     expect(report).toContain('telefone inválido')
@@ -67,8 +70,7 @@ describe('generateImportReport', () => {
       reason: 'erro',
       data: 'x',
     }))
-    const result = { validRows: 0, invalidRows, duplicates: [], totalRows: 15, contacts: [] }
-    const report = generateImportReport(result)
+    const report = generateImportReport(makeResult({ invalidRows, totalRows: 15 }))
     expect(report).toContain('mais 5 erros')
   })
 })
@@ -76,7 +78,7 @@ describe('generateImportReport', () => {
 // ─── whatsapp-errors ─────────────────────────────────────────────────────────
 
 describe('isPaymentError', () => {
-  it('identifica erro de pagamento (131026)', () => {
+  it('identifica erro de pagamento (131042)', () => {
     expect(isPaymentError(131042)).toBe(true)
   })
 
@@ -97,7 +99,6 @@ describe('isRateLimitError', () => {
 
 describe('isRetryableError', () => {
   it('erros de sistema são retentáveis', () => {
-    // 500xx são erros de sistema (retentáveis)
     expect(isRetryableError(500)).toBe(true)
   })
 })
