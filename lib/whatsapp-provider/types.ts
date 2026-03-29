@@ -30,6 +30,11 @@ export interface ProviderConfig {
   evolutionUrl?: string
   evolutionApiKey?: string
   evolutionInstance?: string
+  // GPT Maker integration
+  gptmakerAgentId?: string
+  gptmakerJwtToken?: string
+  gptmakerJwtTokenSaved?: boolean
+  gptmakerJwtTokenPreview?: string
 }
 
 export interface SendMessageOptions {

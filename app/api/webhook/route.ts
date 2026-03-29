@@ -9,6 +9,7 @@ import {
   getErrorCategory
 } from '@/lib/whatsapp-errors'
 import { botDb, botConversationDb, botMessageDb, settingsDb } from '@/lib/supabase-db'
+import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
 
 // Fixed ID for Demi (GPT Maker) bot — created in Supabase bots table
 const DEMI_BOT_ID = 'demi-gptmaker-v1'
@@ -17,16 +18,33 @@ const DEMI_BOT_ID = 'demi-gptmaker-v1'
 const DEFAULT_TRANSFER_MSG =
   'Sua solicitação foi registrada! Nossa equipe não estará disponível hoje (sexta-feira, 27/03), mas retornará seu contato na segunda-feira (30/03). Obrigado pela compreensão! 😊'
 
-// Get WhatsApp Access Token from settings or env
-async function getWhatsAppAccessToken(): Promise<string | null> {
+// Get WhatsApp Access Token — tries per-org config, falls back to global env
+async function getWhatsAppAccessToken(orgId?: string | null): Promise<string | null> {
+  // 1. Try per-org config from Redis
+  if (orgId) {
+    try {
+      const cfg = await loadProviderConfig(orgId)
+      if (cfg?.accessToken) return cfg.accessToken
+    } catch { /* fall through */ }
+  }
+  // 2. Global settings (legacy)
   try {
     const token = await settingsDb.get('whatsapp_access_token')
     if (token) return token
-    if (process.env.WHATSAPP_TOKEN) return process.env.WHATSAPP_TOKEN
-    return null
-  } catch {
-    return process.env.WHATSAPP_TOKEN || null
+  } catch { /* fall through */ }
+  // 3. Env var fallback
+  return process.env.WHATSAPP_TOKEN || null
+}
+
+// Get phone number ID per-org from Redis config
+async function getPhoneNumberId(orgId?: string | null): Promise<string | null> {
+  if (orgId) {
+    try {
+      const cfg = await loadProviderConfig(orgId)
+      if (cfg?.phoneNumberId) return cfg.phoneNumberId
+    } catch { /* fall through */ }
   }
+  return process.env.WHATSAPP_PHONE_NUMBER_ID || null
 }
 
 // Get or generate webhook verify token

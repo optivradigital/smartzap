@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { campaignDb, botConversationDb, botMessageDb } from "@/lib/supabase-db";
 import { CampaignStatus } from "@/types";
 import { getUserFriendlyMessage } from "@/lib/whatsapp-errors";
+import { loadProviderConfig } from "@/lib/whatsapp-provider/factory";
 
 const DEMI_BOT_ID = "demi-gptmaker-v1";
 
@@ -78,14 +79,45 @@ async function updateContactStatus(
 async function registerInGptMaker(
   phone: string,
   templateName: string,
-  contactName: string
+  contactName: string,
+  orgId?: string | null
 ) {
-  const agentId = process.env.GPTMAKER_AGENT_ID;
-  const token = process.env.GPTMAKER_JWT_TOKEN;
-  if (!agentId || !token) return;
+  // Load per-org credentials first, fall back to global env
+  let agentId = process.env.GPTMAKER_AGENT_ID;
+  let token = process.env.GPTMAKER_JWT_TOKEN;
+
+  if (orgId) {
+    try {
+      const orgConfig = await loadProviderConfig(orgId);
+      if (orgConfig?.gptmakerAgentId) agentId = orgConfig.gptmakerAgentId;
+      if (orgConfig?.gptmakerJwtToken) token = orgConfig.gptmakerJwtToken;
+    } catch {
+      // fall through to global env
+    }
+  }
+
+  if (!agentId || !token) {
+    console.log("[GPTMaker] No credentials configured — skipping registration");
+    return;
+  }
+
+  // Fetch actual template body text from DB for richer context
+  let templateText = `[Campanha enviada] Template: "${templateName}" para ${contactName || phone}`;
+  try {
+    const { data: tpl } = await supabase
+      .from("templates")
+      .select("body")
+      .eq("name", templateName)
+      .single();
+    if (tpl?.body) {
+      templateText = tpl.body.replace(/{{\d+}}/g, contactName || phone);
+    }
+  } catch {
+    // use fallback text
+  }
 
   try {
-    await fetch(
+    const res = await fetch(
       `https://api.gptmaker.ai/v2/agent/${agentId}/conversation`,
       {
         method: "POST",
@@ -95,11 +127,14 @@ async function registerInGptMaker(
         },
         body: JSON.stringify({
           contextId: phone,
-          prompt: `[Campanha enviada] Template: "${templateName}" para ${contactName || phone}`,
+          prompt: templateText,
           role: "assistant",
         }),
       }
     );
+    if (!res.ok) {
+      console.warn("[GPTMaker] API returned", res.status, await res.text().catch(() => ''));
+    }
   } catch (e) {
     console.error("[GPTMaker] Failed to register campaign message:", e);
   }
@@ -318,7 +353,7 @@ export async function POST(request: NextRequest) {
             });
 
             // Registra no GPT Maker para que o agente reconheça a conversa
-            await registerInGptMaker(contact.phone, chosenTemplate, contact.name);
+            await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId);
           } catch (e) {
             console.error("[Campaign] Failed to log template dispatch:", e);
           }

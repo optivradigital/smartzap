@@ -22,6 +22,10 @@ interface ProviderConfig {
   evolutionApiKey?: string
   evolutionKeySaved?: boolean
   evolutionInstance?: string
+  gptmakerAgentId?: string
+  gptmakerJwtToken?: string
+  gptmakerJwtTokenSaved?: boolean
+  gptmakerJwtTokenPreview?: string
 }
 
 interface ConnectionStatus {
@@ -344,6 +348,45 @@ export function WhatsAppProviderSettings() {
           </div>
         </div>
       )}
+
+      {/* GPT Maker Integration */}
+      <div className="space-y-3 p-4 rounded-xl bg-white/5 border border-white/10">
+        <div className="flex items-center gap-2 mb-1">
+          <Zap size={15} className="text-amber-400" />
+          <h4 className="text-sm font-semibold text-white">Integração GPT Maker</h4>
+          <span className="text-xs text-gray-500 bg-zinc-800 px-2 py-0.5 rounded-full">opcional</span>
+        </div>
+        <p className="text-xs text-gray-500">
+          Após cada disparo de campanha, registra a mensagem no agente para que ele reconheça a conversa quando o cliente responder.
+        </p>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Agent ID</label>
+          <input
+            type="text"
+            value={config.gptmakerAgentId || ''}
+            onChange={e => setConfig(c => ({ ...c, gptmakerAgentId: e.target.value }))}
+            placeholder="Ex: abc123def456"
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+            JWT Token
+            {config.gptmakerJwtTokenSaved && (
+              <span className="flex items-center gap-1 text-green-400 text-xs font-normal">
+                <KeyRound size={11} /> Token salvo — deixe vazio para manter
+              </span>
+            )}
+          </label>
+          <input
+            type="password"
+            value={config.gptmakerJwtToken || ''}
+            onChange={e => setConfig(c => ({ ...c, gptmakerJwtToken: e.target.value }))}
+            placeholder={config.gptmakerJwtTokenSaved ? `Token atual: ${config.gptmakerJwtTokenPreview} (cole novo para substituir)` : 'eyJhbGci...'}
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
+          />
+        </div>
+      </div>
 
       {/* Save button */}
       <button

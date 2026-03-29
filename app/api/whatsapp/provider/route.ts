@@ -23,6 +23,8 @@ export async function GET() {
   const hasToken = !!(config.accessToken)
   const hasEvolutionKey = !!(config.evolutionApiKey)
 
+  const hasGptToken = !!(config.gptmakerJwtToken)
+
   return NextResponse.json({
     type: config.type || 'meta',
     phoneNumberId: config.phoneNumberId || '',
@@ -34,6 +36,10 @@ export async function GET() {
     evolutionInstance: config.evolutionInstance || '',
     evolutionApiKey: '',
     evolutionKeySaved: hasEvolutionKey,
+    gptmakerAgentId: config.gptmakerAgentId || '',
+    gptmakerJwtToken: '',
+    gptmakerJwtTokenSaved: hasGptToken,
+    gptmakerJwtTokenPreview: hasGptToken ? config.gptmakerJwtToken!.slice(0, 8) + '••••••' : '',
   })
 }
 
@@ -69,6 +75,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // GPT Maker: keep existing token if not sent
+  if (!body.gptmakerJwtToken) {
+    const existing = await loadProviderConfig(orgId)
+    body.gptmakerJwtToken = existing?.gptmakerJwtToken || ''
+  }
+
   const configToSave: ProviderConfig = {
     type: body.type,
     phoneNumberId: body.phoneNumberId,
@@ -77,6 +89,8 @@ export async function POST(req: NextRequest) {
     evolutionUrl: body.evolutionUrl,
     evolutionApiKey: body.evolutionApiKey,
     evolutionInstance: body.evolutionInstance,
+    gptmakerAgentId: body.gptmakerAgentId || '',
+    gptmakerJwtToken: body.gptmakerJwtToken || '',
   }
 
   await saveProviderConfig(configToSave, orgId)
