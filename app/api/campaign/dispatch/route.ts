@@ -103,7 +103,11 @@ export async function POST(request: NextRequest) {
   if (!phoneNumberId) phoneNumberId = process.env.WHATSAPP_PHONE_ID;
   if (!accessToken) accessToken = process.env.WHATSAPP_TOKEN;
 
-  if (!phoneNumberId || !accessToken) {
+  // For Evolution orgs, phoneNumberId/accessToken are not needed
+  const orgProviderConfig = await loadProviderConfig(orgId).catch(() => null)
+  const isEvolutionOrg = orgProviderConfig?.type === 'evolution'
+
+  if (!isEvolutionOrg && (!phoneNumberId || !accessToken)) {
     return NextResponse.json(
       { error: "Credenciais WhatsApp não configuradas. Configure em Configurações." },
       { status: 401 }

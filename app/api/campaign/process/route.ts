@@ -10,6 +10,7 @@ import { campaignDb, botConversationDb, botMessageDb } from "@/lib/supabase-db";
 import { CampaignStatus } from "@/types";
 import { getUserFriendlyMessage } from "@/lib/whatsapp-errors";
 import { loadProviderConfig } from "@/lib/whatsapp-provider/factory";
+import { EvolutionProvider } from "@/lib/whatsapp-provider/evolution";
 
 const DEMI_BOT_ID = "demi-gptmaker-v1";
 
@@ -141,6 +142,31 @@ async function registerInGptMaker(
 }
 
 
+
+/** Renders a template body from DB, replacing {{1}}, {{2}}... with actual values */
+async function renderTemplateText(
+  templateName: string,
+  contactName: string,
+  templateVariables: string[]
+): Promise<string> {
+  try {
+    const { data: tpl } = await supabase
+      .from("templates")
+      .select("body")
+      .eq("name", templateName)
+      .single();
+    if (tpl?.body) {
+      const vars = [contactName || "Cliente", ...templateVariables];
+      let body: string = tpl.body;
+      vars.forEach((v, i) => {
+        body = body.replace(new RegExp(`\\{\\{${i + 1}\\}\\}`, "g"), v);
+      });
+      return body;
+    }
+  } catch { /* fall through */ }
+  return `[Campanha] Template: ${templateName} para ${contactName || "cliente"}`;
+}
+
 /** Validates which contacts have active WhatsApp accounts via Meta Cloud API.
  *  Returns a Set of valid phone numbers. Numbers not in the set should be skipped.
  */
@@ -212,8 +238,14 @@ export async function POST(request: NextRequest) {
     maxIntervalSeconds = 63,
   } = payload;
 
-  if (!campaignId || !contacts?.length || !phoneNumberId || !accessToken) {
+  const orgConfig = payload.orgId ? await loadProviderConfig(payload.orgId).catch(() => null) : null;
+  const isEvolution = orgConfig?.type === "evolution";
+
+  if (!campaignId || !contacts?.length) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+  if (!isEvolution && (!phoneNumberId || !accessToken)) {
+    return NextResponse.json({ error: "phoneNumberId and accessToken required for Meta Cloud API" }, { status: 400 });
   }
 
   // Lista de templates para sortear (pode ser 1 ou vários)
@@ -231,9 +263,11 @@ export async function POST(request: NextRequest) {
     `🚀 [Process] Campaign ${campaignId} — ${contacts.length} contacts, templates: [${allTemplates.join(", ")}], delay: ${minIntervalSeconds}-${maxIntervalSeconds}s`
   );
 
-  // Validate WhatsApp numbers before sending
+  // Validate WhatsApp numbers before sending (Meta Cloud API only)
   const allPhones = contacts.map(c => c.phone)
-  const validPhones = await validateWhatsAppNumbers(allPhones, phoneNumberId, accessToken)
+  const validPhones = isEvolution
+    ? new Set(allPhones)  // Evolution: skip pre-validation (send directly, errors handled per contact)
+    : await validateWhatsAppNumbers(allPhones, phoneNumberId, accessToken)
 
   // Mark invalid contacts immediately
   const invalidContacts = contacts.filter(c => {
@@ -295,38 +329,63 @@ export async function POST(request: NextRequest) {
       // Sorteia template aleatório para este contato (anti-ban por variação)
       const chosenTemplate = pickTemplate(allTemplates);
 
-      const templateObj: Record<string, unknown> = {
-        name: chosenTemplate,
-        language: { code: "pt_BR" },
-      };
+      let messageId: string | undefined;
+      let sendError: string | undefined;
 
-      if (templateVariables.length > 0) {
-        const bodyParameters = buildBodyParameters(contact.name, templateVariables);
-        templateObj.components = [{ type: "body", parameters: bodyParameters }];
+      if (isEvolution) {
+        // ── Evolution API: send free-text rendered from template body ────────
+        const text = await renderTemplateText(chosenTemplate, contact.name, templateVariables);
+        const evoProvider = new EvolutionProvider(
+          orgConfig!.evolutionUrl || process.env.EVOLUTION_API_URL || "http://evolution_api:8080",
+          orgConfig!.evolutionApiKey || process.env.EVOLUTION_API_KEY || "",
+          orgConfig!.evolutionInstance || process.env.EVOLUTION_INSTANCE || "SmartZap"
+        );
+        const result = await evoProvider.sendText({
+          phone: contact.phone,
+          text,
+          simulateTyping: true,
+          typingDurationMs: randomBetween(800, 2500),
+        });
+        if (result.success) {
+          messageId = result.messageId;
+        } else {
+          sendError = result.error || "Erro desconhecido (Evolution)";
+        }
+      } else {
+        // ── Meta Cloud API: send approved template ───────────────────────────
+        const templateObj: Record<string, unknown> = {
+          name: chosenTemplate,
+          language: { code: "pt_BR" },
+        };
+        if (templateVariables.length > 0) {
+          const bodyParameters = buildBodyParameters(contact.name, templateVariables);
+          templateObj.components = [{ type: "body", parameters: bodyParameters }];
+        }
+        const apiUrl = `https://graph.facebook.com/v24.0/${phoneNumberId}/messages`;
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: contact.phone,
+            type: "template",
+            template: templateObj,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.messages?.[0]?.id) {
+          messageId = data.messages[0].id;
+        } else {
+          const errorCode = data.error?.code || 0;
+          sendError = `(#${errorCode}) ${getUserFriendlyMessage(errorCode) || data.error?.message || "Unknown error"}`;
+        }
       }
 
-      const apiUrl = `https://graph.facebook.com/v24.0/${phoneNumberId}/messages`;
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: contact.phone,
-          type: "template",
-          template: templateObj,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.messages?.[0]?.id) {
-        const messageId = data.messages[0].id;
+      if (messageId) {
         await updateContactStatus(campaignId, contact.phone, "sent", messageId);
         sentCount++;
-        console.log(`✅ Sent to ${contact.phone} (template: ${chosenTemplate}) — msgId: ${messageId}`);
+        const channel = isEvolution ? "Evolution" : "Meta";
+        console.log(`✅ [${channel}] Sent to ${contact.phone} (template: ${chosenTemplate}) — msgId: ${messageId}`);
 
         // Salva no histórico de conversas + registra no GPT Maker
         ;(async () => {
@@ -351,21 +410,15 @@ export async function POST(request: NextRequest) {
               },
               status: "sent",
             });
-
-            // Registra no GPT Maker para que o agente reconheça a conversa
             await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId);
           } catch (e) {
             console.error("[Campaign] Failed to log template dispatch:", e);
           }
         })();
       } else {
-        const errorCode = data.error?.code || 0;
-        const translated =
-          getUserFriendlyMessage(errorCode) || data.error?.message || "Unknown error";
-        const errMsg = `(#${errorCode}) ${translated}`;
-        await updateContactStatus(campaignId, contact.phone, "failed", undefined, errMsg);
+        await updateContactStatus(campaignId, contact.phone, "failed", undefined, sendError);
         failedCount++;
-        console.log(`❌ Failed ${contact.phone}: ${errMsg}`);
+        console.log(`❌ Failed ${contact.phone}: ${sendError}`);
       }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Erro desconhecido";
@@ -374,7 +427,7 @@ export async function POST(request: NextRequest) {
       console.error(`❌ Exception ${contact.phone}:`, err);
     }
 
-    // ✅ Anti-ban: delay aleatório entre 7 e 63 segundos
+    // ✅ Anti-ban: delay aleatório (Evolution usa intervalos maiores para evitar ban)
     const delaySec = randomBetween(minIntervalSeconds, maxIntervalSeconds);
     console.log(`⏳ Aguardando ${delaySec}s antes do próximo envio...`);
     await new Promise((resolve) => setTimeout(resolve, delaySec * 1000));
