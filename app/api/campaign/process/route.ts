@@ -10,6 +10,7 @@ import { campaignDb, botConversationDb, botMessageDb } from "@/lib/supabase-db";
 import { CampaignStatus } from "@/types";
 import { getUserFriendlyMessage } from "@/lib/whatsapp-errors";
 import { loadProviderConfig } from "@/lib/whatsapp-provider/factory";
+import { getWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import { EvolutionProvider } from "@/lib/whatsapp-provider/evolution";
 
 const DEMI_BOT_ID = "demi-gptmaker-v1";
@@ -244,7 +245,21 @@ export async function POST(request: NextRequest) {
   if (!campaignId || !contacts?.length) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
-  if (!isEvolution && (!phoneNumberId || !accessToken)) {
+
+  // Load Meta credentials from Redis if not passed (e.g. called by scheduler)
+  let resolvedPhoneId = phoneNumberId;
+  let resolvedToken = accessToken;
+  if (!isEvolution && (!resolvedPhoneId || !resolvedToken) && payload.orgId) {
+    const redisCreds = await getWhatsAppCredentials(payload.orgId).catch(() => null);
+    if (redisCreds) {
+      resolvedPhoneId = resolvedPhoneId || redisCreds.phoneNumberId;
+      resolvedToken = resolvedToken || redisCreds.accessToken;
+    }
+  }
+  if (!resolvedPhoneId) resolvedPhoneId = process.env.WHATSAPP_PHONE_ID || "";
+  if (!resolvedToken) resolvedToken = process.env.WHATSAPP_TOKEN || "";
+
+  if (!isEvolution && (!resolvedPhoneId || !resolvedToken)) {
     return NextResponse.json({ error: "phoneNumberId and accessToken required for Meta Cloud API" }, { status: 400 });
   }
 
@@ -267,7 +282,7 @@ export async function POST(request: NextRequest) {
   const allPhones = contacts.map(c => c.phone)
   const validPhones = isEvolution
     ? new Set(allPhones)  // Evolution: skip pre-validation (send directly, errors handled per contact)
-    : await validateWhatsAppNumbers(allPhones, phoneNumberId, accessToken)
+    : await validateWhatsAppNumbers(allPhones, resolvedPhoneId, resolvedToken)
 
   // Mark invalid contacts immediately
   const invalidContacts = contacts.filter(c => {
@@ -361,10 +376,10 @@ export async function POST(request: NextRequest) {
           const bodyParameters = buildBodyParameters(contact.name, templateVariables);
           templateObj.components = [{ type: "body", parameters: bodyParameters }];
         }
-        const apiUrl = `https://graph.facebook.com/v24.0/${phoneNumberId}/messages`;
+        const apiUrl = `https://graph.facebook.com/v24.0/${resolvedPhoneId}/messages`;
         const res = await fetch(apiUrl, {
           method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          headers: { Authorization: `Bearer ${resolvedToken}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             messaging_product: "whatsapp",
             to: contact.phone,
