@@ -117,7 +117,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   isSavingTestContact,
 }) => {
   // Role-based access control
-  const { isSuperAdmin, isManager } = useCurrentUser()
+  const { isSuperAdmin, isManager, activeOrgId } = useCurrentUser()
 
   // Always start collapsed
   const [isEditing, setIsEditing] = useState(false);
@@ -361,7 +361,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="w-1 h-6 bg-green-500 rounded-full"></span>
             Conexão WhatsApp
           </h3>
-          <WhatsAppProviderSettings />
+          <WhatsAppProviderSettings key={activeOrgId ?? 'default'} />
         </div>
         )}
 
@@ -465,6 +465,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* AI Settings Section — super_admin only */}
         {isSuperAdmin && settings.isConnected && saveAIConfig && (
           <AISettings
+            key={activeOrgId ?? 'default'}
             settings={aiSettings}
             isLoading={!!aiSettingsLoading}
             onSave={saveAIConfig}

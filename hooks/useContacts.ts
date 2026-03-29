@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useCurrentUser } from './useCurrentUser'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { contactService } from '../services';
@@ -29,7 +30,7 @@ export const useContactsController = () => {
 
   // --- Queries ---
   const contactsQuery = useQuery({
-    queryKey: ['contacts'],
+    queryKey: ['contacts', useCurrentUser().activeOrgId ?? 'default'],
     queryFn: contactService.getAll,
     staleTime: 30 * 1000,  // 30 segundos
     select: (data) => {
