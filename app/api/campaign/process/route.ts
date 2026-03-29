@@ -105,6 +105,57 @@ async function registerInGptMaker(
   }
 }
 
+
+/** Validates which contacts have active WhatsApp accounts via Meta Cloud API.
+ *  Returns a Set of valid phone numbers. Numbers not in the set should be skipped.
+ */
+async function validateWhatsAppNumbers(
+  phones: string[],
+  phoneNumberId: string,
+  accessToken: string
+): Promise<Set<string>> {
+  if (!phones.length) return new Set()
+
+  try {
+    const apiUrl = `https://graph.facebook.com/v24.0/${phoneNumberId}/contacts`
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        blocking: 'wait',
+        contacts: phones.map(p => (p.startsWith('+') ? p : `+${p}`)),
+        force_check: true,
+      }),
+    })
+
+    if (!res.ok) {
+      console.warn(`[Validation] Meta API returned ${res.status} — skipping validation, treating all as valid`)
+      return new Set(phones)
+    }
+
+    const data = await res.json()
+    const validSet = new Set<string>()
+
+    for (const entry of data.contacts ?? []) {
+      if (entry.status === 'valid' && entry.input) {
+        // normalize: remove leading +
+        const normalized = entry.input.replace(/^\+/, '')
+        validSet.add(normalized)
+        validSet.add(entry.input) // also keep with +
+      }
+    }
+
+    console.log(`[Validation] ${validSet.size}/${phones.length} numbers have WhatsApp`)
+    return validSet
+  } catch (e) {
+    console.warn('[Validation] Failed to validate numbers — treating all as valid:', e)
+    return new Set(phones)
+  }
+}
+
 export async function POST(request: NextRequest) {
   let payload: ProcessPayload;
 
@@ -145,6 +196,44 @@ export async function POST(request: NextRequest) {
     `🚀 [Process] Campaign ${campaignId} — ${contacts.length} contacts, templates: [${allTemplates.join(", ")}], delay: ${minIntervalSeconds}-${maxIntervalSeconds}s`
   );
 
+  // Validate WhatsApp numbers before sending
+  const allPhones = contacts.map(c => c.phone)
+  const validPhones = await validateWhatsAppNumbers(allPhones, phoneNumberId, accessToken)
+
+  // Mark invalid contacts immediately
+  const invalidContacts = contacts.filter(c => {
+    const normalized = c.phone.replace(/^\+/, '')
+    return !validPhones.has(c.phone) && !validPhones.has(normalized) && !validPhones.has(`+${normalized}`)
+  })
+  if (invalidContacts.length > 0) {
+    console.log(`[Validation] Marking ${invalidContacts.length} contacts as invalid`)
+    for (const inv of invalidContacts) {
+      await supabase
+        .from('campaign_contacts')
+        .update({ status: 'invalid', sent_at: new Date().toISOString(), error: 'Número sem WhatsApp ativo' })
+        .eq('campaign_id', campaignId)
+        .eq('phone', inv.phone)
+    }
+  }
+
+  // Filter to only valid contacts
+  const validContacts = contacts.filter(c => {
+    const normalized = c.phone.replace(/^\+/, '')
+    return validPhones.has(c.phone) || validPhones.has(normalized) || validPhones.has(`+${normalized}`)
+  })
+
+  if (validContacts.length === 0) {
+    await campaignDb.updateStatus(campaignId, {
+      sent: 0,
+      failed: 0,
+      status: CampaignStatus.COMPLETED,
+      completedAt: new Date().toISOString(),
+    })
+    return NextResponse.json({ sent: 0, failed: 0, invalid: invalidContacts.length })
+  }
+
+  console.log(`[Validation] Sending to ${validContacts.length}/${contacts.length} valid contacts`)
+
   // Mark as SENDING
   await campaignDb.updateStatus(campaignId, {
     status: CampaignStatus.SENDING,
@@ -154,7 +243,7 @@ export async function POST(request: NextRequest) {
   let sentCount = 0;
   let failedCount = 0;
 
-  for (const contact of contacts) {
+  for (const contact of validContacts) {
     try {
       // Check if paused
       const { data: camp } = await supabase
