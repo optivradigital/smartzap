@@ -1,73 +1,86 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireManager } from '@/lib/role-guard'
+import { getCurrentUser } from '@/lib/multi-user-auth'
+import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
 
-// Credentials are stored in environment variables (secrets)
-// No Redis dependency - env vars are the source of truth
-
-interface WhatsAppCredentials {
-  phoneNumberId: string
-  businessAccountId: string
-  accessToken: string
-  displayPhoneNumber?: string
-  verifiedName?: string
-}
-
-// GET - Fetch credentials from env (without exposing full token)
+/**
+ * GET /api/settings/credentials
+ * Returns WhatsApp connection info scoped to the current org.
+ * Reads from per-org Redis config (not global env vars).
+ */
 export async function GET() {
   const { error: authError } = await requireManager()
   if (authError) return authError
 
   try {
-    const phoneNumberId = process.env.WHATSAPP_PHONE_ID
-    const businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
-    const accessToken = process.env.WHATSAPP_TOKEN
+    const user = await getCurrentUser()
+    const orgId = user?.organizationId
+    const config = await loadProviderConfig(orgId)
 
-    if (phoneNumberId && businessAccountId && accessToken) {
-      // Fetch display phone number from Meta API
-      let displayPhoneNumber: string | undefined
-      let verifiedName: string | undefined
+    if (!config || (!config.phoneNumberId && !config.evolutionUrl)) {
+      return NextResponse.json({ source: 'none', isConnected: false })
+    }
 
-      try {
-        const metaResponse = await fetch(
-          `https://graph.facebook.com/v24.0/${phoneNumberId}?fields=display_phone_number,verified_name`,
-          { headers: { 'Authorization': `Bearer ${accessToken}` } }
-        )
-        if (metaResponse.ok) {
-          const metaData = await metaResponse.json()
-          displayPhoneNumber = metaData.display_phone_number
-          verifiedName = metaData.verified_name
-        }
-      } catch {
-        // Ignore errors, just won't have display number
-      }
-
+    if (config.type === 'evolution') {
       return NextResponse.json({
-        source: 'env',
-        phoneNumberId,
-        businessAccountId,
-        displayPhoneNumber,
-        verifiedName,
-        hasToken: true,
-        tokenPreview: '••••••••••',
+        source: 'redis',
         isConnected: true,
+        providerType: 'evolution',
+        evolutionUrl: config.evolutionUrl || '',
+        evolutionInstance: config.evolutionInstance || '',
       })
     }
 
-    // Not configured
+    // Meta Cloud API — fetch display info from Meta
+    const phoneNumberId = config.phoneNumberId || ''
+    const accessToken = config.accessToken || ''
+
+    if (!phoneNumberId || !accessToken) {
+      return NextResponse.json({ source: 'none', isConnected: false })
+    }
+
+    let displayPhoneNumber: string | undefined
+    let verifiedName: string | undefined
+    let qualityRating: string | undefined
+    let messagingLimit: string | undefined
+
+    try {
+      const metaRes = await fetch(
+        `https://graph.facebook.com/v24.0/${phoneNumberId}?fields=display_phone_number,verified_name,quality_rating,messaging_limit_tier`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+      if (metaRes.ok) {
+        const d = await metaRes.json()
+        displayPhoneNumber = d.display_phone_number
+        verifiedName = d.verified_name
+        qualityRating = d.quality_rating
+        messagingLimit = d.messaging_limit_tier
+      }
+    } catch { /* ignore — just won't have display details */ }
+
     return NextResponse.json({
-      source: 'none',
-      isConnected: false,
+      source: 'redis',
+      isConnected: true,
+      providerType: 'meta',
+      phoneNumberId,
+      businessAccountId: config.businessAccountId || '',
+      displayPhoneNumber,
+      verifiedName,
+      qualityRating,
+      messagingLimit,
+      hasToken: true,
+      tokenPreview: accessToken.slice(0, 8) + '••••••',
     })
   } catch (error) {
-    console.error('Error fetching credentials:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch credentials' },
-      { status: 500 }
-    )
+    console.error('[settings/credentials] GET error:', error)
+    return NextResponse.json({ error: 'Failed to fetch credentials' }, { status: 500 })
   }
 }
 
-// POST - Validate credentials (stored in env vars via setup wizard)
+/**
+ * POST /api/settings/credentials
+ * Validates credentials (legacy — now handled via /api/whatsapp/provider)
+ */
 export async function POST(request: NextRequest) {
   const { error: authError } = await requireManager()
   if (authError) return authError
@@ -77,59 +90,46 @@ export async function POST(request: NextRequest) {
     const { phoneNumberId, businessAccountId, accessToken } = body
 
     if (!phoneNumberId || !businessAccountId || !accessToken) {
-      return NextResponse.json(
-        { error: 'Missing required fields: phoneNumberId, businessAccountId, accessToken' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Campos obrigatórios: phoneNumberId, businessAccountId, accessToken' }, { status: 400 })
     }
 
-    // Validate token by making a test call to Meta API
-    const testResponse = await fetch(
-      `https://graph.facebook.com/v24.0/${phoneNumberId}?fields=display_phone_number,verified_name,quality_rating`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }
+    // Validate against Meta API
+    const metaRes = await fetch(
+      `https://graph.facebook.com/v24.0/${phoneNumberId}?fields=display_phone_number,verified_name`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     )
 
-    if (!testResponse.ok) {
-      const error = await testResponse.json()
-      return NextResponse.json(
-        {
-          error: 'Invalid credentials - Meta API rejected the token',
-          details: error.error?.message || 'Unknown error'
-        },
-        { status: 401 }
-      )
+    if (!metaRes.ok) {
+      const err = await metaRes.json().catch(() => ({}))
+      return NextResponse.json({ error: 'Credenciais inválidas', details: err }, { status: 400 })
     }
 
-    const phoneData = await testResponse.json()
-
-    // Note: Credentials are stored in Vercel env vars via the setup wizard
-    // This endpoint only validates them
+    const metaData = await metaRes.json()
     return NextResponse.json({
-      success: true,
-      phoneNumberId,
-      businessAccountId,
-      displayPhoneNumber: phoneData.display_phone_number,
-      verifiedName: phoneData.verified_name,
-      qualityRating: phoneData.quality_rating,
-      message: 'Credentials validated. Store them in environment variables.'
+      valid: true,
+      display_phone_number: metaData.display_phone_number,
+      verified_name: metaData.verified_name,
     })
   } catch (error) {
-    console.error('Error validating credentials:', error)
-    return NextResponse.json(
-      { error: 'Failed to validate credentials' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to validate credentials' }, { status: 500 })
   }
 }
 
-// DELETE - No-op since credentials are in env vars
+/**
+ * DELETE /api/settings/credentials
+ * Disconnects WhatsApp for the current org.
+ */
 export async function DELETE() {
-  return NextResponse.json({
-    success: true,
-    message: 'To remove credentials, update environment variables in Vercel dashboard.'
-  })
+  const { error: authError } = await requireManager()
+  if (authError) return authError
+
+  try {
+    const user = await getCurrentUser()
+    const orgId = user?.organizationId
+    const { saveProviderConfig } = await import('@/lib/whatsapp-provider/factory')
+    await saveProviderConfig({ type: 'meta', phoneNumberId: '', accessToken: '', businessAccountId: '' }, orgId)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to disconnect' }, { status: 500 })
+  }
 }
