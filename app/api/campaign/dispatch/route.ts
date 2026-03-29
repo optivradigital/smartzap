@@ -12,7 +12,7 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { campaignId, templateName, whatsappCredentials, templateVariables, flowId } = body;
+  const { campaignId, templateName, templateNames, whatsappCredentials, templateVariables, flowId } = body;
   let { contacts } = body;
 
   // Get current user for org-scoped credentials
@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
   const workflowPayload = {
     campaignId,
     templateName,
+    templateNames: templateNames || (templateName ? [templateName] : undefined),
     contacts: contacts as DispatchContact[],
     templateVariables: resolvedTemplateVariables,
     phoneNumberId,

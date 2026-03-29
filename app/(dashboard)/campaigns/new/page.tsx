@@ -49,6 +49,9 @@ export default function NewCampaignPage() {
       setAntiBanConfig={controller.setAntiBanConfig}
       providerType={controller.providerType}
       setProviderType={controller.setProviderType}
+      additionalTemplateIds={controller.additionalTemplateIds}
+      setAdditionalTemplateIds={controller.setAdditionalTemplateIds}
+      additionalTemplates={controller.additionalTemplates}
     />
   )
 }

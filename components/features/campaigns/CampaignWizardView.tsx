@@ -63,6 +63,10 @@ interface CampaignWizardViewProps {
   setAntiBanConfig?: (config: AntiBanConfig) => void;
   providerType?: 'meta' | 'evolution';
   setProviderType?: (t: 'meta' | 'evolution') => void;
+  // Multi-template (anti-ban rotation)
+  additionalTemplateIds?: string[];
+  setAdditionalTemplateIds?: (ids: string[]) => void;
+  additionalTemplates?: Template[];
 }
 
 
@@ -550,6 +554,9 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
   antiBanConfig: antiBanConfigProp,
   setAntiBanConfig: setAntiBanConfigProp,
   providerType: providerTypeProp,
+  additionalTemplateIds = [],
+  setAdditionalTemplateIds,
+  additionalTemplates = [],
 }) => {
   // Anti-ban internal state (fallback when not provided as props)
   const [antiBanConfigInternal, setAntiBanConfigInternal] = React.useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
@@ -964,7 +971,61 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
               </div>
             )}
 
-            {/* Anti-Ban Settings (shown in Step 1) */}
+
+            {/* Multi-Template Section (anti-ban rotation) — shown only when primary template is selected */}
+            {step === 1 && selectedTemplateId && setAdditionalTemplateIds && (
+              <div className=px-6 pb-2>
+                <div className=border border-white/10 rounded-xl p-4 bg-zinc-900/40>
+                  <div className=flex items-center justify-between mb-3>
+                    <div className=flex items-center gap-2>
+                      <Zap size={14} className=text-amber-400 />
+                      <span className=text-sm font-medium text-white>Templates adicionais</span>
+                      <span className=text-[10px] text-gray-500 bg-zinc-800 px-2 py-0.5 rounded-full>anti-ban</span>
+                    </div>
+                    <span className=text-xs text-gray-500>O sistema sorteia um por contato</span>
+                  </div>
+
+                  {/* Chips of selected additional templates */}
+                  {additionalTemplates.length > 0 && (
+                    <div className=flex flex-wrap gap-2 mb-3>
+                      {additionalTemplates.map(t => t && (
+                        <div key={t.id} className=flex items-center gap-1.5 bg-primary-500/15 border border-primary-500/30 rounded-lg px-2.5 py-1 text-xs text-primary-300>
+                          <span className=truncate max-w-[150px]>{t.name}</span>
+                          <button
+                            onClick={() => setAdditionalTemplateIds(additionalTemplateIds.filter(id => id !== t.id))}
+                            className=hover:text-red-400 transition-colors flex-shrink-0
+                          >
+                            <X size={11} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Dropdown to add template */}
+                  <select
+                    className=w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-primary-500/50
+                    value=
+                    onChange={e => {
+                      const id = e.target.value;
+                      if (id && id !== selectedTemplateId && !additionalTemplateIds.includes(id)) {
+                        setAdditionalTemplateIds([...additionalTemplateIds, id]);
+                      }
+                    }}
+                  >
+                    <option value=>+ Adicionar template para rotação...</option>
+                    {availableTemplates
+                      .filter(t => t.id !== selectedTemplateId && !additionalTemplateIds.includes(t.id))
+                      .map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Anti-Ban Settings (shown in Step 1) */
             {step === 1 && (
               <div className="px-6 pb-6">
                 <AntiBanSettings

@@ -19,6 +19,7 @@ export const useCampaignWizardController = () => {
   // Form State
   const [name, setName] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [additionalTemplateIds, setAdditionalTemplateIds] = useState<string[]>([]); // Extra templates for rotation
 
   // Anti-ban config for Evolution API campaigns
   const [antiBanConfig, setAntiBanConfig] = useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
@@ -169,6 +170,11 @@ export const useCampaignWizardController = () => {
   
   const availableTemplates = templatesQuery.data || [];
   const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateId);
+  const additionalTemplates = additionalTemplateIds.map(id => availableTemplates.find(t => t.id === id)).filter(Boolean) as typeof availableTemplates;
+  const allSelectedTemplateNames: string[] = [
+    ...(selectedTemplate ? [selectedTemplate.name] : []),
+    ...additionalTemplates.map(t => t.name),
+  ];
   
   // Calculate all template variables with detailed info about where each is used
   const templateVariableInfo = useMemo(() => {
@@ -361,6 +367,10 @@ export const useCampaignWizardController = () => {
     setName,
     selectedTemplateId,
     setSelectedTemplateId,
+    additionalTemplateIds,
+    setAdditionalTemplateIds,
+    additionalTemplates,
+    allSelectedTemplateNames,
     recipientSource,
     setRecipientSource,
     totalContacts,
