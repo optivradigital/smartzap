@@ -972,28 +972,26 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
             )}
 
 
-            {/* Multi-Template Section (anti-ban rotation) — shown only when primary template is selected */}
+            {/* Multi-Template Section (anti-ban rotation) */}
             {step === 1 && selectedTemplateId && setAdditionalTemplateIds && (
-              <div className=px-6 pb-2>
-                <div className=border border-white/10 rounded-xl p-4 bg-zinc-900/40>
-                  <div className=flex items-center justify-between mb-3>
-                    <div className=flex items-center gap-2>
-                      <Zap size={14} className=text-amber-400 />
-                      <span className=text-sm font-medium text-white>Templates adicionais</span>
-                      <span className=text-[10px] text-gray-500 bg-zinc-800 px-2 py-0.5 rounded-full>anti-ban</span>
+              <div className="px-6 pb-2">
+                <div className="border border-white/10 rounded-xl p-4 bg-zinc-900/40">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Zap size={14} className="text-amber-400" />
+                      <span className="text-sm font-medium text-white">Templates adicionais</span>
+                      <span className="text-[10px] text-gray-500 bg-zinc-800 px-2 py-0.5 rounded-full">anti-ban</span>
                     </div>
-                    <span className=text-xs text-gray-500>O sistema sorteia um por contato</span>
+                    <span className="text-xs text-gray-500">Sorteia 1 por contato</span>
                   </div>
-
-                  {/* Chips of selected additional templates */}
                   {additionalTemplates.length > 0 && (
-                    <div className=flex flex-wrap gap-2 mb-3>
+                    <div className="flex flex-wrap gap-2 mb-3">
                       {additionalTemplates.map(t => t && (
-                        <div key={t.id} className=flex items-center gap-1.5 bg-primary-500/15 border border-primary-500/30 rounded-lg px-2.5 py-1 text-xs text-primary-300>
-                          <span className=truncate max-w-[150px]>{t.name}</span>
+                        <div key={t.id} className="flex items-center gap-1.5 bg-primary-500/15 border border-primary-500/30 rounded-lg px-2.5 py-1 text-xs text-primary-300">
+                          <span className="truncate max-w-[150px]">{t.name}</span>
                           <button
                             onClick={() => setAdditionalTemplateIds(additionalTemplateIds.filter(id => id !== t.id))}
-                            className=hover:text-red-400 transition-colors flex-shrink-0
+                            className="hover:text-red-400 transition-colors flex-shrink-0"
                           >
                             <X size={11} />
                           </button>
@@ -1001,11 +999,9 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                       ))}
                     </div>
                   )}
-
-                  {/* Dropdown to add template */}
                   <select
-                    className=w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-primary-500/50
-                    value=
+                    className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-primary-500/50"
+                    value=""
                     onChange={e => {
                       const id = e.target.value;
                       if (id && id !== selectedTemplateId && !additionalTemplateIds.includes(id)) {
@@ -1013,7 +1009,7 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                       }
                     }}
                   >
-                    <option value=>+ Adicionar template para rotação...</option>
+                    <option value="">+ Adicionar template para rotação...</option>
                     {availableTemplates
                       .filter(t => t.id !== selectedTemplateId && !additionalTemplateIds.includes(t.id))
                       .map(t => (
@@ -1025,7 +1021,7 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
               </div>
             )}
 
-            {/* Anti-Ban Settings (shown in Step 1) */
+                        {/* Anti-Ban Settings (shown in Step 1) */}
             {step === 1 && (
               <div className="px-6 pb-6">
                 <AntiBanSettings
