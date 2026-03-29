@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -23,26 +24,30 @@ jobs:
           script_stop: true
           script: |
             set -e
-            echo "=== Entrando na pasta ==="
+            echo '=== Limpando cache Docker (anti-disco-cheio) ==='
+            docker builder prune -f || true
+            docker image prune -f || true
+
+            echo '=== Entrando na pasta ==='
             cd /home/ubuntu/apps/smartzap
 
-            echo "=== Puxando código novo do GitHub ==="
+            echo '=== Puxando código novo do GitHub ==='
             git fetch optivra
             git checkout main 2>/dev/null || git checkout -b main optivra/main
             git reset --hard optivra/main
 
-            echo "=== Build Docker ==="
+            echo '=== Build Docker ==='
             docker compose build --no-cache
 
-            echo "=== Reiniciando container ==="
+            echo '=== Reiniciando container ==='
             docker compose up -d --force-recreate
 
-            echo "=== Aguardando subir ==="
+            echo '=== Aguardando subir ==='
             sleep 15
 
-            echo "=== Health check ==="
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002/api/health || echo "000")
-            if [ "$STATUS" = "200" ] || [ "$STATUS" = "307" ] || [ "$STATUS" = "401" ]; then
+            echo '=== Health check ==='
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3002/api/health || echo '000')
+            if [ "$STATUS" = '200' ] || [ "$STATUS" = '307' ] || [ "$STATUS" = '401' ]; then
               echo "✅ SmartZap OK (HTTP $STATUS)"
             else
               echo "❌ SmartZap não respondeu (HTTP $STATUS)"
