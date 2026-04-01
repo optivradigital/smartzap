@@ -165,9 +165,8 @@ async function handleIncomingMessage(
       })
 
     // 4. Call GPT Maker
-    const gptConvId = phone + '-' + Date.now()
     const gptRes = await fetch(
-      `https://api.gptmaker.ai/assistants/${agentId}/conversation-test`,
+      `https://api.gptmaker.ai/v2/agent/${agentId}/conversation`,
       {
         method: 'POST',
         headers: {
@@ -175,9 +174,9 @@ async function handleIncomingMessage(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message,
-          conversationId: gptConvId,
-          context: contextMessages,
+          contextId: phone,
+          prompt: message,
+          role: 'user',
         }),
       }
     )
@@ -187,8 +186,11 @@ async function handleIncomingMessage(
 
     if (gptRes.ok) {
       const gptData = await gptRes.json().catch(() => null)
-      isHumanTransfer = gptData?.projetion?.humanize === true
-      reply = gptData?.projetion?.content || gptData?.projetion?.originalMessage || null
+      // v2 response: {success, data: {response, humanize}} or legacy {projetion: {content}}
+      const proj = gptData?.data || gptData?.projetion || gptData
+      isHumanTransfer = proj?.humanize === true
+      reply = proj?.response || proj?.content || proj?.originalMessage || null
+      if (gptData) console.log('[Agent] GPT Maker response:', JSON.stringify(gptData).slice(0, 300))
       if (isHumanTransfer && !reply) {
         reply = await settingsDb.get('demi_transfer_message') || DEFAULT_TRANSFER_MSG
         console.log('[Agent] Human transfer triggered for', phone)
