@@ -4,7 +4,7 @@
  * Used for Evolution (QR code) orgs — templates are free-form text.
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { requireManager } from '@/lib/multi-user-auth'
+import { requireManager } from '@/lib/role-guard'
 import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {

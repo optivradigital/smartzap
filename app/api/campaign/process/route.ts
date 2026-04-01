@@ -111,8 +111,12 @@ async function registerInGptMaker(
       .select("components")
       .eq("name", templateName)
       .single();
-    if (tpl?.body) {
-      templateText = tpl.body.replace(/{{\d+}}/g, contactName || phone);
+    if (tpl?.components) {
+      const comps = Array.isArray(tpl.components) ? tpl.components : [];
+      const bodyComp = comps.find((x: { type: string; text?: string }) => x.type === 'BODY');
+      if (bodyComp?.text) {
+        templateText = bodyComp.text.replace(/{{\d+}}/g, contactName || phone);
+      }
     }
   } catch {
     // use fallback text
