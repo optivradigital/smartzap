@@ -166,7 +166,6 @@ async function renderTemplateText(
         body = body.replace(new RegExp(`\\{\\{${i + 1}\\}\\}`, "g"), v);
       });
       return body;
-      }
     }
   } catch { /* fall through */ }
   return `[Campanha] Template: ${templateName} para ${contactName || "cliente"}`;
