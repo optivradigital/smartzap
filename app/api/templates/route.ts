@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { getCurrentUser } from '@/lib/multi-user-auth'
+import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
+import { supabase } from '@/lib/supabase'
 
 interface MetaTemplateComponent {
   type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS'
@@ -17,30 +20,23 @@ interface MetaTemplate {
   last_updated_time: string
 }
 
-// Helper to fetch ALL templates from Meta API (with pagination)
 async function fetchTemplatesFromMeta(businessAccountId: string, accessToken: string) {
   const allTemplates: MetaTemplate[] = []
   let nextUrl: string | null = `https://graph.facebook.com/v24.0/${businessAccountId}/message_templates?fields=name,status,language,category,components,last_updated_time&limit=100`
-  
-  // Paginate through all results
+
   while (nextUrl) {
     const res: Response = await fetch(nextUrl, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     })
-
     if (!res.ok) {
       const error = await res.json()
       throw new Error(error.error?.message || 'Failed to fetch templates')
     }
-
     const data = await res.json()
     allTemplates.push(...(data.data || []))
-    
-    // Check for next page
     nextUrl = data.paging?.next || null
   }
 
-  // Transform Meta format to our App format
   return allTemplates.map((t: MetaTemplate) => {
     const bodyComponent = t.components.find((c: MetaTemplateComponent) => c.type === 'BODY')
     return {
@@ -52,60 +48,85 @@ async function fetchTemplatesFromMeta(businessAccountId: string, accessToken: st
       content: bodyComponent?.text || 'No content',
       preview: bodyComponent?.text || '',
       lastUpdated: t.last_updated_time,
-      components: t.components
+      components: t.components,
+      source: 'meta' as const,
     }
   })
 }
 
-// GET /api/templates - Fetch templates using Redis credentials
+// GET /api/templates
 export async function GET() {
   try {
-    const credentials = await getWhatsAppCredentials()
-    
+    const user = await getCurrentUser()
+    const orgId = user?.organizationId || null
+    const orgConfig = orgId ? await loadProviderConfig(orgId).catch(() => null) : null
+    const isEvolution = orgConfig?.type === 'evolution'
+
+    // Evolution orgs: return templates from Supabase (no Meta approval needed)
+    if (isEvolution) {
+      const { data: rows, error } = await supabase
+        .from('templates')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return NextResponse.json(
+        (rows || []).map(row => {
+          const components = Array.isArray(row.components) ? row.components : []
+          const bodyComp = components.find((c: MetaTemplateComponent) => c.type === 'BODY')
+          const bodyText = bodyComp?.text || ''
+          return {
+            id: row.name,
+            name: row.name,
+            category: row.category || 'UTILITY',
+            language: row.language || 'pt_BR',
+            status: row.status || 'APPROVED',
+            content: bodyText,
+            preview: bodyText,
+            lastUpdated: row.updated_at || row.created_at,
+            components: row.components,
+            source: 'local' as const,
+          }
+        })
+      )
+    }
+
+    // Meta orgs: fetch from Meta API
+    const credentials = await getWhatsAppCredentials(orgId)
     if (!credentials?.businessAccountId || !credentials?.accessToken) {
       return NextResponse.json(
-        { error: 'Credenciais não configuradas. Configure em Configurações.' }, 
+        { error: 'Credenciais não configuradas. Configure em Configurações.' },
         { status: 401 }
       )
     }
 
-    const templates = await fetchTemplatesFromMeta(
-      credentials.businessAccountId, 
-      credentials.accessToken
-    )
-    
+    const templates = await fetchTemplatesFromMeta(credentials.businessAccountId, credentials.accessToken)
     return NextResponse.json(templates, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
-      }
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
     })
   } catch (error) {
-    console.error('Meta API Error:', error)
+    console.error('Templates API Error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal Server Error' }, 
+      { error: error instanceof Error ? error.message : 'Internal Server Error' },
       { status: 500 }
     )
   }
 }
 
-// POST /api/templates - Fetch templates (with optional body credentials, fallback to Redis)
+// POST /api/templates — fetch with body credentials (Meta only, legacy)
 export async function POST(request: NextRequest) {
   let businessAccountId: string | undefined
   let accessToken: string | undefined
 
-  // Try to get from request body first
   try {
     const body = await request.json()
-    // Only use if they look like real credentials (not masked)
     if (body.businessAccountId && body.accessToken && !body.accessToken.includes('***')) {
       businessAccountId = body.businessAccountId
       accessToken = body.accessToken
     }
-  } catch {
-    // Empty body, will use Redis
-  }
+  } catch { /* empty body */ }
 
-  // Fallback to Redis credentials
   if (!businessAccountId || !accessToken) {
     const credentials = await getWhatsAppCredentials()
     if (credentials) {
@@ -116,7 +137,7 @@ export async function POST(request: NextRequest) {
 
   if (!businessAccountId || !accessToken) {
     return NextResponse.json(
-      { error: 'Credenciais não configuradas. Configure em Configurações.' }, 
+      { error: 'Credenciais não configuradas. Configure em Configurações.' },
       { status: 401 }
     )
   }
@@ -127,7 +148,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Meta API Error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal Server Error' }, 
+      { error: error instanceof Error ? error.message : 'Internal Server Error' },
       { status: 500 }
     )
   }

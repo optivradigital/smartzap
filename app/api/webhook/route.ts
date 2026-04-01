@@ -4,57 +4,61 @@ import { redis } from '@/lib/redis'
 import {
   mapWhatsAppError,
   isCriticalError,
-  isOptOutError,
   getUserFriendlyMessage,
-  getErrorCategory
 } from '@/lib/whatsapp-errors'
 import { botDb, botConversationDb, botMessageDb, settingsDb } from '@/lib/supabase-db'
 import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
 
-// Fixed ID for Demi (GPT Maker) bot — created in Supabase bots table
-const DEMI_BOT_ID = 'demi-gptmaker-v1'
+// Fixed ID for the AI bot — created in Supabase bots table
+const AI_BOT_ID = 'demi-gptmaker-v1'
 
-// Default human transfer message (used when GPT Maker returns humanize:true with no content)
+// Default human transfer message
 const DEFAULT_TRANSFER_MSG =
-  'Sua solicitação foi registrada! Nossa equipe não estará disponível hoje (sexta-feira, 27/03), mas retornará seu contato na segunda-feira (30/03). Obrigado pela compreensão! 😊'
+  'Sua solicitação foi registrada! Nossa equipe entrará em contato em breve. Obrigado!'
 
-// Get WhatsApp Access Token — tries per-org config, falls back to global env
+// ── Provider type for reply routing ──────────────────────────────────────────
+type ReplyProvider =
+  | { type: 'meta'; phoneNumberId: string; accessToken: string }
+  | { type: 'evolution'; evolutionUrl: string; evolutionApiKey: string; instanceName: string }
+
+// ── Find orgId by Evolution instance name (scan Redis) ───────────────────────
+async function findOrgByEvolutionInstance(instanceName: string): Promise<string | null> {
+  try {
+    const keys = await redis.keys('whatsapp:provider:config:*')
+    for (const key of keys) {
+      const raw = await redis.get(key)
+      if (!raw) continue
+      const config = JSON.parse(typeof raw === 'string' ? raw : JSON.stringify(raw))
+      if (config.evolutionInstance === instanceName) {
+        return key.replace('whatsapp:provider:config:', '')
+      }
+    }
+  } catch { /* non-fatal */ }
+  return null
+}
+
+// ── Helper: get WhatsApp access token (Meta) ──────────────────────────────────
 async function getWhatsAppAccessToken(orgId?: string | null): Promise<string | null> {
-  // 1. Try per-org config from Redis
   if (orgId) {
     try {
       const cfg = await loadProviderConfig(orgId)
       if (cfg?.accessToken) return cfg.accessToken
     } catch { /* fall through */ }
   }
-  // 2. Global settings (legacy)
   try {
     const token = await settingsDb.get('whatsapp_access_token')
     if (token) return token
   } catch { /* fall through */ }
-  // 3. Env var fallback
   return process.env.WHATSAPP_TOKEN || null
 }
 
-// Get phone number ID per-org from Redis config
-async function getPhoneNumberId(orgId?: string | null): Promise<string | null> {
-  if (orgId) {
-    try {
-      const cfg = await loadProviderConfig(orgId)
-      if (cfg?.phoneNumberId) return cfg.phoneNumberId
-    } catch { /* fall through */ }
-  }
-  return process.env.WHATSAPP_PHONE_NUMBER_ID || null
-}
-
-// Get or generate webhook verify token
+// ── Webhook verify token ──────────────────────────────────────────────────────
 async function getVerifyToken(): Promise<string> {
   try {
     const storedToken = await settingsDb.get('webhook_verify_token')
     if (storedToken) return storedToken
     const newToken = crypto.randomUUID()
     await settingsDb.set('webhook_verify_token', newToken)
-    console.log('🔑 Generated new webhook verify token:', newToken)
     return newToken
   } catch {
     if (process.env.WEBHOOK_VERIFY_TOKEN) return process.env.WEBHOOK_VERIFY_TOKEN.trim()
@@ -62,7 +66,7 @@ async function getVerifyToken(): Promise<string> {
   }
 }
 
-// Meta Webhook Verification
+// ── Meta Webhook Verification (GET) ──────────────────────────────────────────
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const mode = searchParams.get('hub.mode')
@@ -80,51 +84,58 @@ export async function GET(request: NextRequest) {
   return new Response('Forbidden', { status: 403 })
 }
 
-// ── Demi (GPT Maker) conversation handler ────────────────────────────────────
-async function handleDemiConversation(
+// ── AI Agent conversation handler ─────────────────────────────────────────────
+async function handleIncomingMessage(
   phone: string,
   message: string,
   waMessageId: string | undefined,
-  phoneNumberId: string,
-  accessToken: string
+  provider: ReplyProvider,
+  orgId?: string | null
 ): Promise<void> {
-  const gptToken = process.env.GPTMAKER_JWT_TOKEN
-  const agentId  = process.env.GPTMAKER_AGENT_ID
+  // Load per-org GPT Maker credentials from Redis, fall back to global env
+  let agentId = process.env.GPTMAKER_AGENT_ID
+  let gptToken = process.env.GPTMAKER_JWT_TOKEN
+
+  if (orgId) {
+    try {
+      const orgConfig = await loadProviderConfig(orgId)
+      if (orgConfig?.gptmakerAgentId) agentId = orgConfig.gptmakerAgentId
+      if (orgConfig?.gptmakerJwtToken) gptToken = orgConfig.gptmakerJwtToken
+    } catch { /* fall through to env */ }
+  }
+
   if (!gptToken || !agentId) {
-    console.error('[Demi] Missing GPTMAKER_JWT_TOKEN or GPTMAKER_AGENT_ID')
+    console.error('[Agent] Missing GPT Maker credentials for org', orgId)
     return
   }
 
-  // ── 0. Deduplication: skip if this wamid was already processed ────────────
+  // ── Deduplication ──────────────────────────────────────────────────────────
   if (waMessageId) {
     try {
-      const dupKey = 'demi:processed:' + waMessageId
+      const dupKey = 'agent:processed:' + waMessageId
       const already = await redis.get(dupKey)
       if (already) {
-        console.log('[Demi] Duplicate wamid', waMessageId, '— skipping')
+        console.log('[Agent] Duplicate message', waMessageId, '— skipping')
         return
       }
-      // Mark as processed for 10 minutes
       await redis.set(dupKey, '1', { ex: 600 })
-    } catch {
-      // Redis failure — proceed anyway (better to risk a dup than to drop messages)
-    }
+    } catch { /* proceed anyway */ }
   }
 
   try {
-    // 1. Get or create bot_conversation for this phone number
-    let conversation = await botConversationDb.getByContact(DEMI_BOT_ID, phone)
+    // 1. Get or create conversation
+    let conversation = await botConversationDb.getByContact(AI_BOT_ID, phone)
     if (!conversation) {
       conversation = await botConversationDb.create({
-        botId: DEMI_BOT_ID,
+        botId: AI_BOT_ID,
         contactPhone: phone,
         contactName: undefined,
       })
-      console.log('[Demi] Created new conversation:', conversation.id, 'for', phone)
+      console.log('[Agent] New conversation:', conversation.id, 'for', phone)
     }
     const conversationId = conversation.id
 
-    // 2. Store the incoming message
+    // 2. Store incoming message
     await botMessageDb.create({
       conversationId,
       waMessageId,
@@ -134,36 +145,29 @@ async function handleDemiConversation(
       content: { text: message },
       status: 'delivered',
     })
-    console.log('[Demi] Stored inbound message from', phone)
 
-    // 3. Build context array from recent history
-    //    → clean 'message' field so limitSubjects classifier works correctly
-    //    → history goes in 'context' array (OpenAI-compatible format)
+    // 3. Build conversation context (last 6 turns)
     const history = await botMessageDb.getByConversation(conversationId, 10)
-    const recentHistory = history
+    const contextMessages = history
       .filter(m => m.type === 'text' || m.type === 'template')
-      .slice(0, -1)   // exclude the message just stored (current)
-      .slice(-6)      // last 6 turns for context
-
-    const contextMessages = recentHistory.map(m => {
-      if (m.type === 'template') {
-        const name = (m.content as Record<string, unknown>).templateName as string || ''
-        return { role: 'assistant' as const, content: `[Template "${name}" enviado ao cliente]` }
-      }
-      const text = (m.content as Record<string, unknown>).text as string || ''
-      return {
-        role: m.direction === 'inbound' ? 'user' as const : 'assistant' as const,
-        content: text,
-      }
-    })
+      .slice(0, -1)
+      .slice(-6)
+      .map(m => {
+        if (m.type === 'template') {
+          const name = (m.content as Record<string, unknown>).templateName as string || ''
+          return { role: 'assistant' as const, content: `[Template "${name}" enviado ao cliente]` }
+        }
+        const text = (m.content as Record<string, unknown>).text as string || ''
+        return {
+          role: m.direction === 'inbound' ? 'user' as const : 'assistant' as const,
+          content: text,
+        }
+      })
 
     // 4. Call GPT Maker
-    //    - 'message'  = clean customer message (limitSubjects classifier sees this)
-    //    - 'context'  = conversation history (AI uses for continuity)
-    //    - unique conversationId per call to avoid GPT Maker session NPE
     const gptConvId = phone + '-' + Date.now()
     const gptRes = await fetch(
-      'https://api.gptmaker.ai/assistants/' + agentId + '/conversation-test',
+      `https://api.gptmaker.ai/assistants/${agentId}/conversation-test`,
       {
         method: 'POST',
         headers: {
@@ -171,7 +175,7 @@ async function handleDemiConversation(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: message,
+          message,
           conversationId: gptConvId,
           context: contextMessages,
         }),
@@ -184,28 +188,22 @@ async function handleDemiConversation(
     if (gptRes.ok) {
       const gptData = await gptRes.json().catch(() => null)
       isHumanTransfer = gptData?.projetion?.humanize === true
-      reply =
-        gptData?.projetion?.content ||
-        gptData?.projetion?.originalMessage ||
-        null
-
-      // If GPT Maker triggered human transfer but returned no text,
-      // use the configured transfer message (or default)
+      reply = gptData?.projetion?.content || gptData?.projetion?.originalMessage || null
       if (isHumanTransfer && !reply) {
         reply = await settingsDb.get('demi_transfer_message') || DEFAULT_TRANSFER_MSG
-        console.log('[Demi] Human transfer triggered for', phone)
+        console.log('[Agent] Human transfer triggered for', phone)
       }
     } else {
       const errText = await gptRes.text()
-      console.error('[Demi] API error', gptRes.status, errText.slice(0, 200))
+      console.error('[Agent] GPT Maker error', gptRes.status, errText.slice(0, 200))
     }
 
     if (!reply) {
-      console.log('[Demi] No reply for', phone)
+      console.log('[Agent] No reply for', phone)
       return
     }
 
-    // 5. Store Demi's response in bot_messages
+    // 5. Store outbound message
     await botMessageDb.create({
       conversationId,
       direction: 'outbound',
@@ -215,47 +213,100 @@ async function handleDemiConversation(
       status: 'pending',
     })
 
-    // 6. Send response via WhatsApp
-    const sendRes = await fetch(
-      'https://graph.facebook.com/v24.0/' + phoneNumberId + '/messages',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + accessToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: phone,
-          type: 'text',
-          text: { body: reply },
-        }),
+    // 6. Send response via the correct provider
+    if (provider.type === 'evolution') {
+      const instanceEncoded = encodeURIComponent(provider.instanceName)
+      const sendRes = await fetch(
+        `${provider.evolutionUrl}/message/sendText/${instanceEncoded}`,
+        {
+          method: 'POST',
+          headers: { apikey: provider.evolutionApiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ number: phone, text: reply, delay: 0 }),
+        }
+      )
+      if (!sendRes.ok) {
+        console.error('[Agent] Evolution send error:', await sendRes.text())
+      } else {
+        console.log('[Agent] →', phone + ':', reply.substring(0, 80))
       }
-    )
-
-    if (!sendRes.ok) {
-      console.error('[Demi] Send error:', await sendRes.text())
     } else {
-      const sendData = await sendRes.json()
-      const sentMsgId = sendData.messages?.[0]?.id
-      console.log('[Demi] Demi →', phone + ':', reply.substring(0, 80))
-      if (sentMsgId) {
-        await botMessageDb.updateStatus(sentMsgId, 'sent')
+      // Meta Cloud API
+      const sendRes = await fetch(
+        `https://graph.facebook.com/v24.0/${provider.phoneNumberId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + provider.accessToken,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: phone,
+            type: 'text',
+            text: { body: reply },
+          }),
+        }
+      )
+      if (!sendRes.ok) {
+        console.error('[Agent] Meta send error:', await sendRes.text())
+      } else {
+        const d = await sendRes.json()
+        console.log('[Agent] →', phone + ':', reply.substring(0, 80))
+        const sentMsgId = d.messages?.[0]?.id
+        if (sentMsgId) await botMessageDb.updateStatus(sentMsgId, 'sent')
       }
     }
   } catch (e) {
-    console.error('[Demi] Exception:', e instanceof Error ? e.message : String(e))
+    console.error('[Agent] Exception:', e instanceof Error ? e.message : String(e))
   }
 }
 
+// ── Main POST handler ─────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   const body = await request.json()
 
+  // ── Evolution API webhook ─────────────────────────────────────────────────
+  if (body.event === 'messages.upsert') {
+    const msg = body.data
+    if (!msg || msg.key?.fromMe) return NextResponse.json({ status: 'ok' })
+
+    const remoteJid: string = msg.key?.remoteJid || ''
+    if (remoteJid.endsWith('@g.us')) return NextResponse.json({ status: 'ok' }) // ignore groups
+
+    const phone = remoteJid.replace('@s.whatsapp.net', '')
+    const text: string =
+      msg.message?.conversation ||
+      msg.message?.extendedTextMessage?.text ||
+      msg.message?.imageMessage?.caption || ''
+
+    if (!phone || !text) return NextResponse.json({ status: 'ok' })
+
+    const instanceName: string = body.instance || ''
+    console.log(`📩 [Evolution] Incoming from ${phone} (${instanceName}): "${text.substring(0, 60)}"`)
+
+    const orgId = await findOrgByEvolutionInstance(instanceName)
+    if (!orgId) {
+      console.warn('[Agent] No org found for Evolution instance:', instanceName)
+      return NextResponse.json({ status: 'ok' })
+    }
+
+    const orgConfig = await loadProviderConfig(orgId).catch(() => null)
+    const evolutionUrl = orgConfig?.evolutionUrl || process.env.EVOLUTION_API_URL || ''
+    const evolutionApiKey = orgConfig?.evolutionApiKey || process.env.EVOLUTION_API_KEY || ''
+
+    handleIncomingMessage(phone, text, msg.key?.id, {
+      type: 'evolution', evolutionUrl, evolutionApiKey, instanceName,
+    }, orgId).catch(e => console.error('[Agent/Evolution]', e))
+
+    return NextResponse.json({ status: 'ok' })
+  }
+
+  // ── Meta Cloud API webhook ────────────────────────────────────────────────
   if (body.object !== 'whatsapp_business_account') {
     return NextResponse.json({ status: 'ignored' })
   }
 
-  console.log('📨 Webhook received:', JSON.stringify(body))
+  console.log('📨 Meta webhook received')
 
   try {
     const entries = body.entry || []
@@ -264,14 +315,11 @@ export async function POST(request: NextRequest) {
       const changes = entry.changes || []
 
       for (const change of changes) {
+        // ── Campaign status updates ─────────────────────────────────────────
         const statuses = change.value?.statuses || []
 
         for (const statusUpdate of statuses) {
-          const {
-            id: messageId,
-            status: msgStatus,
-            errors
-          } = statusUpdate
+          const { id: messageId, status: msgStatus, errors } = statusUpdate
 
           const { data: existingUpdate } = await supabase
             .from('campaign_contacts')
@@ -285,10 +333,7 @@ export async function POST(request: NextRequest) {
           const currentOrder = statusOrder[existingUpdate.status as keyof typeof statusOrder] ?? 0
           const newOrder = statusOrder[msgStatus as keyof typeof statusOrder] ?? 0
 
-          if (newOrder <= currentOrder && msgStatus !== 'failed') {
-            console.log(`⏭️ Skipping: ${messageId} already at ${existingUpdate.status}, ignoring ${msgStatus}`)
-            continue
-          }
+          if (newOrder <= currentOrder && msgStatus !== 'failed') continue
 
           const { data: contactInfo } = await supabase
             .from('campaign_contacts')
@@ -303,7 +348,7 @@ export async function POST(request: NextRequest) {
 
           switch (msgStatus) {
             case 'sent':
-              console.log(`📤 Sent confirmed: ${phone} (campaign: ${campaignId})`)
+              console.log(`📤 Sent: ${phone} (campaign: ${campaignId})`)
               break
 
             case 'delivered':
@@ -318,34 +363,13 @@ export async function POST(request: NextRequest) {
                   .neq('status', 'delivered')
                   .neq('status', 'read')
                   .select('id')
-
                 if (updateError) throw updateError
-
-                if (updatedRows && updatedRows.length > 0) {
-                  const { data: campaign } = await supabase
-                    .from('campaigns')
-                    .select('delivered')
-                    .eq('id', campaignId)
-                    .single()
-
-                  if (campaign) {
-                    await supabase
-                      .from('campaigns')
-                      .update({ delivered: (campaign.delivered || 0) + 1 })
-                      .eq('id', campaignId)
-                  }
-
-                  console.log(`✅ Delivered count incremented for campaign ${campaignId}`)
-
-                  await supabase
-                    .from('account_alerts')
-                    .update({ dismissed: true })
-                    .eq('type', 'payment')
-                    .eq('dismissed', false)
+                if (updatedRows?.length) {
+                  const { data: campaign } = await supabase.from('campaigns').select('delivered').eq('id', campaignId).single()
+                  if (campaign) await supabase.from('campaigns').update({ delivered: (campaign.delivered || 0) + 1 }).eq('id', campaignId)
+                  await supabase.from('account_alerts').update({ dismissed: true }).eq('type', 'payment').eq('dismissed', false)
                 }
-              } catch (e) {
-                console.error('Update failed (delivered):', e)
-              }
+              } catch (e) { console.error('Update failed (delivered):', e) }
               break
 
             case 'read':
@@ -359,28 +383,12 @@ export async function POST(request: NextRequest) {
                   .eq('phone', phone)
                   .neq('status', 'read')
                   .select('id')
-
                 if (updateErrorRead) throw updateErrorRead
-
-                if (updatedRowsRead && updatedRowsRead.length > 0) {
-                  const { data: campaign } = await supabase
-                    .from('campaigns')
-                    .select('read')
-                    .eq('id', campaignId)
-                    .single()
-
-                  if (campaign) {
-                    await supabase
-                      .from('campaigns')
-                      .update({ read: (campaign.read || 0) + 1 })
-                      .eq('id', campaignId)
-                  }
-
-                  console.log(`✅ Read count incremented for campaign ${campaignId}`)
+                if (updatedRowsRead?.length) {
+                  const { data: campaign } = await supabase.from('campaigns').select('read').eq('id', campaignId).single()
+                  if (campaign) await supabase.from('campaigns').update({ read: (campaign.read || 0) + 1 }).eq('id', campaignId)
                 }
-              } catch (e) {
-                console.error('Update failed (read):', e)
-              }
+              } catch (e) { console.error('Update failed (read):', e) }
               break
 
             case 'failed':
@@ -388,68 +396,54 @@ export async function POST(request: NextRequest) {
               const errorTitle = errors?.[0]?.title || 'Unknown error'
               const errorDetails = errors?.[0]?.error_data?.details || errors?.[0]?.message || ''
               const mappedError = mapWhatsAppError(errorCode)
-              const failureReason = mappedError.userMessage
-
               console.log(`❌ Failed: ${phone} - [${errorCode}] ${errorTitle} (campaign: ${campaignId})`)
-
               try {
                 const nowFailed = new Date().toISOString()
                 const { data: updatedRowsFailed, error: updateErrorFailed } = await supabase
                   .from('campaign_contacts')
-                  .update({
-                    status: 'failed',
-                    failed_at: nowFailed,
-                    failure_code: errorCode,
-                    failure_reason: failureReason
-                  })
+                  .update({ status: 'failed', failed_at: nowFailed, failure_code: errorCode, failure_reason: mappedError.userMessage })
                   .eq('campaign_id', campaignId)
                   .eq('phone', phone)
                   .neq('status', 'failed')
                   .select('id')
-
                 if (updateErrorFailed) throw updateErrorFailed
-
-                if (updatedRowsFailed && updatedRowsFailed.length > 0) {
-                  const { data: campaign } = await supabase
-                    .from('campaigns')
-                    .select('failed')
-                    .eq('id', campaignId)
-                    .single()
-
-                  if (campaign) {
-                    await supabase
-                      .from('campaigns')
-                      .update({ failed: (campaign.failed || 0) + 1 })
-                      .eq('id', campaignId)
-                  }
+                if (updatedRowsFailed?.length) {
+                  const { data: campaign } = await supabase.from('campaigns').select('failed').eq('id', campaignId).single()
+                  if (campaign) await supabase.from('campaigns').update({ failed: (campaign.failed || 0) + 1 }).eq('id', campaignId)
                 }
-
                 if (isCriticalError(errorCode)) {
-                  await supabase
-                    .from('account_alerts')
-                    .upsert({
-                      id: `alert_${errorCode}_${Date.now()}`,
-                      type: mappedError.category,
-                      code: errorCode,
-                      message: mappedError.userMessage,
-                      details: JSON.stringify({ title: errorTitle, details: errorDetails, action: mappedError.action }),
-                      created_at: nowFailed
-                    })
+                  await supabase.from('account_alerts').upsert({
+                    id: `alert_${errorCode}_${Date.now()}`,
+                    type: mappedError.category,
+                    code: errorCode,
+                    message: mappedError.userMessage,
+                    details: JSON.stringify({ title: errorTitle, details: errorDetails, action: mappedError.action }),
+                    created_at: nowFailed,
+                  })
                 }
-
-              } catch (e) {
-                console.error('Update failed (failed):', e)
-              }
+              } catch (e) { console.error('Update failed (failed):', e) }
               break
           }
         }
 
-        // ── Incoming messages: GPT Maker handles AI responses ────────────────
-        // SmartZap is Opção A: campaigns + status tracking only.
-        // GPT Maker's native WhatsApp channel is the sole AI responder.
+        // ── Incoming messages → AI Agent (Meta Cloud API) ───────────────────
         const messages = change.value?.messages || []
         for (const message of messages) {
-          console.log(`📩 Incoming from ${message.from}: ${message.type} (handled by GPT Maker)`)
+          if (message.type !== 'text' || !message.text?.body) continue
+
+          const phoneNumberId: string = change.value?.metadata?.phone_number_id || ''
+          const accessToken = await getWhatsAppAccessToken()
+          if (!phoneNumberId || !accessToken) continue
+
+          console.log(`📩 [Meta] Incoming from ${message.from}: "${message.text.body.substring(0, 60)}"`)
+
+          handleIncomingMessage(
+            message.from,
+            message.text.body,
+            message.id,
+            { type: 'meta', phoneNumberId, accessToken },
+            null
+          ).catch(e => console.error('[Agent/Meta]', e))
         }
       }
     }

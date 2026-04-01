@@ -108,7 +108,7 @@ async function registerInGptMaker(
   try {
     const { data: tpl } = await supabase
       .from("templates")
-      .select("body")
+      .select("components")
       .eq("name", templateName)
       .single();
     if (tpl?.body) {
@@ -153,16 +153,20 @@ async function renderTemplateText(
   try {
     const { data: tpl } = await supabase
       .from("templates")
-      .select("body")
+      .select("components")
       .eq("name", templateName)
       .single();
-    if (tpl?.body) {
+    if (tpl?.components) {
+      const comps = Array.isArray(tpl.components) ? tpl.components : [];
+      const bodyComp = comps.find((x) => x.type === 'BODY');
+      if (!bodyComp?.text) throw new Error('no body');
       const vars = [contactName || "Cliente", ...templateVariables];
-      let body: string = tpl.body;
+      let body: string = bodyComp.text;
       vars.forEach((v, i) => {
         body = body.replace(new RegExp(`\\{\\{${i + 1}\\}\\}`, "g"), v);
       });
       return body;
+      }
     }
   } catch { /* fall through */ }
   return `[Campanha] Template: ${templateName} para ${contactName || "cliente"}`;
