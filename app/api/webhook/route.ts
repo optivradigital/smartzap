@@ -189,7 +189,7 @@ async function handleIncomingMessage(
       // v2 response: {success, data: {response, humanize}} or legacy {projetion: {content}}
       const proj = gptData?.data || gptData?.projetion || gptData
       isHumanTransfer = proj?.humanize === true
-      reply = proj?.response || proj?.content || proj?.originalMessage || null
+      reply = proj?.message || proj?.response || proj?.content || proj?.originalMessage || null
       if (gptData) console.log('[Agent] GPT Maker response:', JSON.stringify(gptData).slice(0, 300))
       if (isHumanTransfer && !reply) {
         reply = await settingsDb.get('demi_transfer_message') || DEFAULT_TRANSFER_MSG
