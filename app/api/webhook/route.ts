@@ -175,6 +175,7 @@ async function handleIncomingMessage(
         },
         body: JSON.stringify({
           contextId: phone,
+          phone: phone,
           prompt: message,
           role: 'user',
         }),

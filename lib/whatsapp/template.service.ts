@@ -11,9 +11,9 @@ export class TemplateService {
     /**
      * Creates a WhatsApp Template (orchestrates Validation, Transformation, Sending, and DB Update)
      */
-    async create(data: CreateTemplateInput): Promise<TemplateCreationResult> {
+    async create(data: CreateTemplateInput, orgId?: string | null): Promise<TemplateCreationResult> {
         // 1. Authenticate / Get Credentials
-        const credentials = await getWhatsAppCredentials()
+        const credentials = await getWhatsAppCredentials(orgId)
         if (!credentials) {
             throw new Error('WhatsApp credentials not found')
         }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentUser } from '@/lib/multi-user-auth'
 import { z } from 'zod'
 import { CreateTemplateSchema } from '@/lib/whatsapp/validators/template.schema'
 import { templateService } from '@/lib/whatsapp/template.service'
@@ -6,6 +7,8 @@ import { MetaAPIError } from '@/lib/whatsapp/errors'
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getCurrentUser()
+    const orgId = user?.organizationId || null
     const body = await request.json()
     console.log('[API CREATE TEMPLATE] Incoming Payload Category:', body.category);
 
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
         const parsed = CreateTemplateSchema.parse(temp)
 
         // Chama Serviço ("A Fábrica")
-        const result = await templateService.create(parsed)
+        const result = await templateService.create(parsed, orgId)
         results.push(result)
 
       } catch (err: any) {
