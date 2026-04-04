@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { requireAnyUser } from '@/lib/role-guard'
 
 // Tier limits mapping
 const TIER_LIMITS: Record<string, number> = {
@@ -69,7 +70,11 @@ async function fetchLimitsFromMeta(phoneNumberId: string, accessToken: string) {
 
 // GET /api/account/limits - Fetch limits using Redis credentials
 export async function GET() {
-  const credentials = await getWhatsAppCredentials()
+  const { error: authError, user } = await requireAnyUser()
+  if (authError) return authError
+  const orgId = user.organizationId || null
+
+  const credentials = await getWhatsAppCredentials(orgId)
   
   if (!credentials?.phoneNumberId || !credentials?.accessToken) {
     return NextResponse.json({ 
@@ -93,6 +98,10 @@ export async function GET() {
 
 // POST /api/account/limits - Fetch limits (with optional body credentials, fallback to Redis)
 export async function POST(request: NextRequest) {
+  const { error: authError, user } = await requireAnyUser()
+  if (authError) return authError
+  const orgId = user.organizationId || null
+
   let phoneNumberId: string | undefined
   let accessToken: string | undefined
 
@@ -110,7 +119,7 @@ export async function POST(request: NextRequest) {
 
   // Fallback to Redis credentials if not provided
   if (!phoneNumberId || !accessToken) {
-    const credentials = await getWhatsAppCredentials()
+    const credentials = await getWhatsAppCredentials(orgId)
     if (credentials) {
       phoneNumberId = credentials.phoneNumberId
       accessToken = credentials.accessToken

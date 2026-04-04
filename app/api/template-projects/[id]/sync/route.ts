@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { templateProjectDb } from '@/lib/supabase-db'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { requireManager } from '@/lib/role-guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,13 +11,17 @@ export async function POST(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { error: authError, user } = await requireManager()
+        if (authError) return authError
+        const orgId = user.organizationId || null
+
         const { id } = await params
         const project = await templateProjectDb.getById(id)
         if (!project) {
             return NextResponse.json({ error: 'Project not found' }, { status: 404 })
         }
 
-        const credentials = await getWhatsAppCredentials()
+        const credentials = await getWhatsAppCredentials(orgId)
         if (!credentials) {
             return NextResponse.json({ error: 'WhatsApp credentials not found' }, { status: 500 })
         }

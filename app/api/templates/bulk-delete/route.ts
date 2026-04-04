@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { requireManager } from '@/lib/role-guard'
 import { z } from 'zod'
 
 const BulkDeleteSchema = z.object({
@@ -12,7 +13,11 @@ const BulkDeleteSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const credentials = await getWhatsAppCredentials()
+    const { error: authError, user } = await requireManager()
+    if (authError) return authError
+    const orgId = user.organizationId || null
+
+    const credentials = await getWhatsAppCredentials(orgId)
     
     if (!credentials?.businessAccountId || !credentials?.accessToken) {
       return NextResponse.json(

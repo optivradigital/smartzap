@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
 import { getCurrentUser } from '@/lib/multi-user-auth'
+import { requireAnyUser } from '@/lib/role-guard'
 import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
 import { supabase } from '@/lib/supabase'
 
@@ -116,6 +117,10 @@ export async function GET() {
 
 // POST /api/templates — fetch with body credentials (Meta only, legacy)
 export async function POST(request: NextRequest) {
+  const { error: authError, user } = await requireAnyUser()
+  if (authError) return authError
+  const orgId = user.organizationId || null
+
   let businessAccountId: string | undefined
   let accessToken: string | undefined
 
@@ -128,7 +133,7 @@ export async function POST(request: NextRequest) {
   } catch { /* empty body */ }
 
   if (!businessAccountId || !accessToken) {
-    const credentials = await getWhatsAppCredentials()
+    const credentials = await getWhatsAppCredentials(orgId)
     if (credentials) {
       businessAccountId = credentials.businessAccountId
       accessToken = credentials.accessToken

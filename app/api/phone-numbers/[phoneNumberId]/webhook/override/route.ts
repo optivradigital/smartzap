@@ -1,27 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials';
-import { redis, isRedisAvailable } from '@/lib/redis';
+import { settingsDb } from '@/lib/supabase-db';
+import { getCurrentUser } from '@/lib/multi-user-auth';
+import { requireManager } from '@/lib/role-guard';
 
-const META_API_VERSION = 'v21.0';
+const META_API_VERSION = 'v24.0';
 const META_API_BASE = `https://graph.facebook.com/${META_API_VERSION}`;
 
 interface RouteContext {
   params: Promise<{ phoneNumberId: string }>;
 }
-
-// Get verify token from Redis (same logic as webhook endpoint)
-async function getVerifyToken(): Promise<string> {
-  if (isRedisAvailable() && redis) {
-    const storedToken = await redis.get('webhook:verify_token');
-    if (storedToken) {
-      return storedToken as string;
-    }
-    // Generate new UUID token and store in Redis
-    const newToken = crypto.randomUUID();
-    await redis.set('webhook:verify_token', newToken);
-    return newToken;
+// Use the same token source as /api/webhook and /api/webhook/info
+async function getVerifyToken(preferredToken?: string): Promise<string> {
+  if (preferredToken && preferredToken.trim()) {
+    return preferredToken.trim();
   }
-  return process.env.WEBHOOK_VERIFY_TOKEN || 'smartzap_verify_token';
+  try {
+    const storedToken = await settingsDb.get('webhook_verify_token');
+    if (storedToken) return storedToken;
+    const newToken = crypto.randomUUID();
+    await settingsDb.set('webhook_verify_token', newToken);
+    return newToken;
+  } catch {
+    if (process.env.WEBHOOK_VERIFY_TOKEN) return process.env.WEBHOOK_VERIFY_TOKEN.trim();
+    return 'not-configured';
+  }
 }
 
 /**
@@ -30,12 +33,17 @@ async function getVerifyToken(): Promise<string> {
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
+    const { error: authError } = await requireManager();
+    if (authError) return authError;
     const { phoneNumberId } = await context.params;
-    
+    const currentUser = await getCurrentUser();
+    const orgId = currentUser?.organizationId || null;
+
     // Try to get credentials from request body first, then fallback to Redis
     let accessToken: string | undefined;
     let callbackUrl: string | undefined;
-    
+    let verifyTokenFromBody: string | undefined;
+
     try {
       const body = await request.json();
       // Only use accessToken from body if it's a valid non-empty string
@@ -43,13 +51,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
         accessToken = body.accessToken.trim();
       }
       callbackUrl = body.callbackUrl;
+      if (body.verifyToken && typeof body.verifyToken === 'string') {
+        verifyTokenFromBody = body.verifyToken;
+      }
     } catch {
       // Empty body, will use Redis credentials
     }
-    
+
     // Always try Redis credentials if we don't have a valid token yet
     if (!accessToken) {
-      const credentials = await getWhatsAppCredentials();
+      const credentials = await getWhatsAppCredentials(orgId);
       if (credentials?.accessToken) {
         accessToken = credentials.accessToken;
       }
@@ -69,8 +80,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Get verify token from Redis (ensures consistency with webhook endpoint)
-    const verifyTokenFromRedis = await getVerifyToken();
+    // Get verify token from shared source (ensures consistency with webhook endpoint)
+    const verifyToken = await getVerifyToken(verifyTokenFromBody);
 
     // Call Meta API to set webhook override on phone number
     // Reference: https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/override
@@ -85,7 +96,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         body: JSON.stringify({
           webhook_configuration: {
             override_callback_uri: callbackUrl,
-            verify_token: verifyTokenFromRedis,
+            verify_token: verifyToken,
           },
         }),
       }
@@ -125,6 +136,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
+    const { error: authError } = await requireManager();
+    if (authError) return authError;
     const { phoneNumberId } = await context.params;
     
     // Try to get credentials from request body first, then fallback to Redis
@@ -141,8 +154,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     }
     
     // Always try Redis credentials if we don't have a valid token yet
+    const currentUser = await getCurrentUser();
+    const orgId = currentUser?.organizationId || null;
     if (!accessToken) {
-      const credentials = await getWhatsAppCredentials();
+      const credentials = await getWhatsAppCredentials(orgId);
       if (credentials?.accessToken) {
         accessToken = credentials.accessToken;
       }

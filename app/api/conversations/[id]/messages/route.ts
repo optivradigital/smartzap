@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server'
 import { botConversationDb, botMessageDb, botDb } from '@/lib/supabase-db'
 import { buildTextMessage } from '@/lib/whatsapp/text'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { requireAnyUser } from '@/lib/role-guard'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -23,6 +24,10 @@ interface RouteParams {
  */
 export async function POST(request: Request, { params }: RouteParams) {
   try {
+    const { error: authError, user } = await requireAnyUser()
+    if (authError) return authError
+    const orgId = user.organizationId || null
+
     const { id } = await params
     const body = await request.json()
     const { text } = body as { text: string }
@@ -61,7 +66,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     // Buscar credenciais do WhatsApp
-    const credentials = await getWhatsAppCredentials()
+    const credentials = await getWhatsAppCredentials(orgId)
     if (!credentials) {
       return NextResponse.json(
         { error: 'Credenciais do WhatsApp não configuradas' },

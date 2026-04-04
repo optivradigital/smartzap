@@ -3,8 +3,9 @@ import { requireManager } from '@/lib/role-guard'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
 
 export async function POST(request: NextRequest) {
-  const { error: authError } = await requireManager()
+  const { error: authError, user } = await requireManager()
   if (authError) return authError
+  const orgId = user?.organizationId || null
 
   let businessAccountId: string | undefined
   let accessToken: string | undefined
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
 
   // Fallback to Redis credentials if not provided
   if (!businessAccountId || !accessToken) {
-    const credentials = await getWhatsAppCredentials()
+    const credentials = await getWhatsAppCredentials(orgId)
     if (credentials) {
       businessAccountId = credentials.businessAccountId
       accessToken = credentials.accessToken
@@ -58,10 +59,11 @@ export async function POST(request: NextRequest) {
 
 // Also support GET for simpler access
 export async function GET() {
-  const { error: authError } = await requireManager()
+  const { error: authError, user } = await requireManager()
   if (authError) return authError
+  const orgId = user?.organizationId || null
 
-  const credentials = await getWhatsAppCredentials()
+  const credentials = await getWhatsAppCredentials(orgId)
   
   if (!credentials) {
     return NextResponse.json(

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { redis, isRedisAvailable } from '@/lib/redis'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { requireManager } from '@/lib/role-guard'
 
 interface UsageData {
   vercel: {
@@ -48,6 +49,10 @@ function getStatus(percentage: number): 'ok' | 'warning' | 'critical' {
 }
 
 export async function GET() {
+  const { error: authError, user } = await requireManager()
+  if (authError) return authError
+  const orgId = user.organizationId || null
+
   const usage: UsageData = {
     vercel: {
       functionInvocations: 0,
@@ -192,7 +197,7 @@ export async function GET() {
     usage.whatsapp.messagesSent = totalSent
 
     // Get tier from WhatsApp API - use correct endpoint
-    const credentials = await getWhatsAppCredentials()
+    const credentials = await getWhatsAppCredentials(orgId)
     if (credentials) {
       try {
         // Parallel fetch for tier and quality

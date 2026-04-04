@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { requireAnyUser, requireManager } from '@/lib/role-guard'
 
 // GET /api/templates/[name] - Buscar template específico
 export async function GET(
@@ -7,8 +8,12 @@ export async function GET(
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
+    const { error: authError, user } = await requireAnyUser()
+    if (authError) return authError
+    const orgId = user.organizationId || null
+
     const { name } = await params
-    const credentials = await getWhatsAppCredentials()
+    const credentials = await getWhatsAppCredentials(orgId)
     
     if (!credentials?.businessAccountId || !credentials?.accessToken) {
       return NextResponse.json(
@@ -79,8 +84,12 @@ export async function DELETE(
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
+    const { error: authError, user } = await requireManager()
+    if (authError) return authError
+    const orgId = user.organizationId || null
+
     const { name } = await params
-    const credentials = await getWhatsAppCredentials()
+    const credentials = await getWhatsAppCredentials(orgId)
     
     if (!credentials?.businessAccountId || !credentials?.accessToken) {
       return NextResponse.json(
