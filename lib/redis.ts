@@ -38,11 +38,17 @@ export const redis = {
     const val = await ioredisClient.get(key)
     return deserialize<T>(val)
   },
-  set: async (key: string, value: unknown, options?: { ex?: number }): Promise<string | null> => {
+  set: async (key: string, value: unknown, options?: { ex?: number; nx?: boolean }): Promise<string | null> => {
     if (!ioredisClient) return null
     const serialized = serialize(value)
+    if (options?.ex && options?.nx) {
+      return ioredisClient.set(key, serialized, 'EX', options.ex, 'NX')
+    }
     if (options?.ex) {
       return ioredisClient.set(key, serialized, 'EX', options.ex)
+    }
+    if (options?.nx) {
+      return ioredisClient.set(key, serialized, 'NX')
     }
     return ioredisClient.set(key, serialized)
   },
