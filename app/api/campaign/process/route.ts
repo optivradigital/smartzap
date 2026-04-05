@@ -82,7 +82,8 @@ async function registerInGptMaker(
   phone: string,
   templateName: string,
   contactName: string,
-  orgId?: string | null
+  orgId?: string | null,
+  templateVariables: string[] = []
 ) {
   // Load per-org credentials first, fall back to global env
   let agentId = process.env.GPTMAKER_AGENT_ID;
@@ -103,23 +104,38 @@ async function registerInGptMaker(
     return;
   }
 
-  // Fetch actual template body text from DB for richer context
-  let templateText = `[Campanha enviada] Template: "${templateName}" para ${contactName || phone}`;
-  try {
-    const { data: tpl } = await supabase
-      .from("templates")
-      .select("components")
-      .eq("name", templateName)
-      .single();
-    if (tpl?.components) {
-      const comps = Array.isArray(tpl.components) ? tpl.components : [];
-      const bodyComp = comps.find((x: { type: string; text?: string }) => x.type === 'BODY');
-      if (bodyComp?.text) {
-        templateText = bodyComp.text.replace(/{{\d+}}/g, contactName || phone);
+  // Usa renderTemplateText (busca no banco local — funciona para Evolution)
+  let templateText = await renderTemplateText(templateName, contactName, templateVariables);
+
+  // Se retornou fallback genérico (template não está no banco local, ex: orgs Meta),
+  // busca o corpo real na Meta API
+  if (templateText.startsWith('[Campanha]')) {
+    try {
+      const credentials = await getWhatsAppCredentials(orgId);
+      if (credentials?.businessAccountId && credentials?.accessToken) {
+        const metaRes = await fetch(
+          `https://graph.facebook.com/v24.0/${credentials.businessAccountId}/message_templates?name=${templateName}&fields=components`,
+          { headers: { Authorization: `Bearer ${credentials.accessToken}` } }
+        );
+        if (metaRes.ok) {
+          const metaData = await metaRes.json();
+          const tpl = metaData.data?.[0];
+          if (tpl?.components) {
+            const bodyComp = tpl.components.find((c: { type: string; text?: string }) => c.type === 'BODY');
+            if (bodyComp?.text) {
+              const vars = [contactName || 'Cliente', ...templateVariables];
+              let body: string = bodyComp.text;
+              vars.forEach((v, i) => {
+                body = body.replace(new RegExp(`\\{\\{${i + 1}\\}\\}`, 'g'), v);
+              });
+              templateText = body;
+            }
+          }
+        }
       }
+    } catch {
+      // mantém o fallback genérico
     }
-  } catch {
-    // use fallback text
   }
 
   try {
@@ -133,6 +149,7 @@ async function registerInGptMaker(
         },
         body: JSON.stringify({
           contextId: phone,
+          phone,
           prompt: templateText,
           role: "assistant",
         }),
@@ -140,6 +157,8 @@ async function registerInGptMaker(
     );
     if (!res.ok) {
       console.warn("[GPTMaker] API returned", res.status, await res.text().catch(() => ''));
+    } else {
+      console.log(`[GPTMaker] Registered context for ${phone}: "${templateText.substring(0, 80)}"`);
     }
   } catch (e) {
     console.error("[GPTMaker] Failed to register campaign message:", e);
@@ -432,7 +451,7 @@ export async function POST(request: NextRequest) {
               },
               status: "sent",
             });
-            await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId);
+            await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, templateVariables);
           } catch (e) {
             console.error("[Campaign] Failed to log template dispatch:", e);
           }
