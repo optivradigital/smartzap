@@ -51,7 +51,10 @@ export async function getWhatsAppCredentials(
     }
   }
 
-  // 2. Fallback to env vars (only if no orgId or global request)
+  // 2. Se orgId foi fornecido mas não há credenciais no Redis → sem config para esta org
+  if (orgId) return null;
+
+  // 3. Fallback env vars apenas para requests sem org (setup single-tenant)
   const phoneNumberId = process.env.WHATSAPP_PHONE_ID;
   const businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
   const accessToken = process.env.WHATSAPP_TOKEN;
