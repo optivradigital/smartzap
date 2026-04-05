@@ -37,6 +37,22 @@ async function findOrgByEvolutionInstance(instanceName: string): Promise<string 
   return null
 }
 
+// ── Find orgId by Meta phoneNumberId (scan Redis) ────────────────────────────
+async function findOrgByPhoneNumberId(phoneNumberId: string): Promise<string | null> {
+  try {
+    const keys = await redis.keys('settings:whatsapp:credentials:*')
+    for (const key of keys) {
+      const raw = await redis.get(key)
+      if (!raw) continue
+      const config = JSON.parse(typeof raw === 'string' ? raw : JSON.stringify(raw))
+      if (config.phoneNumberId === phoneNumberId) {
+        return key.replace('settings:whatsapp:credentials:', '')
+      }
+    }
+  } catch { /* non-fatal */ }
+  return null
+}
+
 // ── Helper: get WhatsApp access token (Meta) ──────────────────────────────────
 async function getWhatsAppAccessToken(orgId?: string | null): Promise<string | null> {
   if (orgId) {
@@ -109,16 +125,15 @@ async function handleIncomingMessage(
     return
   }
 
-  // ── Deduplication ──────────────────────────────────────────────────────────
+  // ── Deduplication (atomic SET NX to avoid race conditions) ───────────────
   if (waMessageId) {
     try {
       const dupKey = 'agent:processed:' + waMessageId
-      const already = await redis.get(dupKey)
-      if (already) {
+      const isNew = await redis.set(dupKey, '1', { ex: 600, nx: true })
+      if (!isNew) {
         console.log('[Agent] Duplicate message', waMessageId, '— skipping')
         return
       }
-      await redis.set(dupKey, '1', { ex: 600 })
     } catch { /* proceed anyway */ }
   }
 
@@ -435,7 +450,8 @@ export async function POST(request: NextRequest) {
           if (message.type !== 'text' || !message.text?.body) continue
 
           const phoneNumberId: string = change.value?.metadata?.phone_number_id || ''
-          const accessToken = await getWhatsAppAccessToken()
+          const orgId = await findOrgByPhoneNumberId(phoneNumberId)
+          const accessToken = await getWhatsAppAccessToken(orgId)
           if (!phoneNumberId || !accessToken) continue
 
           console.log(`📩 [Meta] Incoming from ${message.from}: "${message.text.body.substring(0, 60)}"`)
@@ -445,7 +461,7 @@ export async function POST(request: NextRequest) {
             message.text.body,
             message.id,
             { type: 'meta', phoneNumberId, accessToken },
-            null
+            orgId
           ).catch(e => console.error('[Agent/Meta]', e))
         }
       }
