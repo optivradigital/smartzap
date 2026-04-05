@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
 import { requireAnyUser } from '@/lib/role-guard'
+import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
 
 // Tier limits mapping
 const TIER_LIMITS: Record<string, number> = {
@@ -74,6 +75,20 @@ export async function GET() {
   if (authError) return authError
   const orgId = user.organizationId || null
 
+  // Evolution orgs não têm tier/quality da Meta API
+  const providerConfig = await loadProviderConfig(orgId)
+  if (providerConfig?.type === 'evolution') {
+    return NextResponse.json({
+      messagingTier: 'EVOLUTION',
+      maxUniqueUsersPerDay: -1,
+      throughputLevel: 'STANDARD',
+      maxMessagesPerSecond: 1,
+      qualityScore: 'UNKNOWN',
+      usedToday: 0,
+      lastFetched: new Date().toISOString(),
+    })
+  }
+
   const credentials = await getWhatsAppCredentials(orgId)
   
   if (!credentials?.phoneNumberId || !credentials?.accessToken) {
@@ -101,6 +116,20 @@ export async function POST(request: NextRequest) {
   const { error: authError, user } = await requireAnyUser()
   if (authError) return authError
   const orgId = user.organizationId || null
+
+  // Evolution orgs não têm tier/quality da Meta API
+  const providerConfig = await loadProviderConfig(orgId)
+  if (providerConfig?.type === 'evolution') {
+    return NextResponse.json({
+      messagingTier: 'EVOLUTION',
+      maxUniqueUsersPerDay: -1,
+      throughputLevel: 'STANDARD',
+      maxMessagesPerSecond: 1,
+      qualityScore: 'UNKNOWN',
+      usedToday: 0,
+      lastFetched: new Date().toISOString(),
+    })
+  }
 
   let phoneNumberId: string | undefined
   let accessToken: string | undefined

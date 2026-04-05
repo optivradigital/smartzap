@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireManager } from '@/lib/role-guard'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
+import { loadProviderConfig, createWhatsAppProvider } from '@/lib/whatsapp-provider/factory'
 
 export async function POST(request: NextRequest) {
   const { error: authError, user } = await requireManager()
   if (authError) return authError
   const orgId = user?.organizationId || null
+
+  // Evolution orgs: retorna número conectado via instância
+  const providerConfig = await loadProviderConfig(orgId)
+  if (providerConfig?.type === 'evolution') {
+    try {
+      const provider = await createWhatsAppProvider(orgId)
+      const status = await provider.getConnectionStatus()
+      if (!status.connected) return NextResponse.json([])
+      return NextResponse.json([{
+        id: providerConfig.evolutionInstance || 'SmartZap',
+        display_phone_number: status.phone || '',
+        verified_name: status.name || providerConfig.evolutionInstance || 'SmartZap',
+        quality_rating: 'GREEN',
+        provider: 'evolution',
+      }])
+    } catch (error) {
+      console.error('Evolution getConnectionStatus error:', error)
+      return NextResponse.json([])
+    }
+  }
 
   let businessAccountId: string | undefined
   let accessToken: string | undefined
@@ -62,6 +83,26 @@ export async function GET() {
   const { error: authError, user } = await requireManager()
   if (authError) return authError
   const orgId = user?.organizationId || null
+
+  // Evolution orgs: retorna número conectado via instância
+  const providerConfig = await loadProviderConfig(orgId)
+  if (providerConfig?.type === 'evolution') {
+    try {
+      const provider = await createWhatsAppProvider(orgId)
+      const status = await provider.getConnectionStatus()
+      if (!status.connected) return NextResponse.json([])
+      return NextResponse.json([{
+        id: providerConfig.evolutionInstance || 'SmartZap',
+        display_phone_number: status.phone || '',
+        verified_name: status.name || providerConfig.evolutionInstance || 'SmartZap',
+        quality_rating: 'GREEN',
+        provider: 'evolution',
+      }])
+    } catch (error) {
+      console.error('Evolution getConnectionStatus error:', error)
+      return NextResponse.json([])
+    }
+  }
 
   const credentials = await getWhatsAppCredentials(orgId)
   

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
 import { requireAnyUser, requireManager } from '@/lib/role-guard'
+import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
+import { supabase } from '@/lib/supabase'
 
 // GET /api/templates/[name] - Buscar template específico
 export async function GET(
@@ -13,6 +15,33 @@ export async function GET(
     const orgId = user.organizationId || null
 
     const { name } = await params
+
+    // Evolution orgs: busca template do Supabase
+    const providerConfig = await loadProviderConfig(orgId)
+    if (providerConfig?.type === 'evolution') {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('name', name)
+        .single()
+
+      if (error || !data) {
+        return NextResponse.json({ error: 'Template não encontrado' }, { status: 404 })
+      }
+
+      const bodyComp = data.components?.find((c: { type: string }) => c.type === 'BODY')
+      return NextResponse.json({
+        id: data.name,
+        name: data.name,
+        category: data.category || 'UTILITY',
+        language: data.language || 'pt_BR',
+        status: data.status || 'APPROVED',
+        content: bodyComp?.text || '',
+        components: data.components,
+        source: 'local',
+      })
+    }
+
     const credentials = await getWhatsAppCredentials(orgId)
     
     if (!credentials?.businessAccountId || !credentials?.accessToken) {
@@ -89,6 +118,22 @@ export async function DELETE(
     const orgId = user.organizationId || null
 
     const { name } = await params
+
+    // Evolution orgs: apaga template do Supabase
+    const providerConfig = await loadProviderConfig(orgId)
+    if (providerConfig?.type === 'evolution') {
+      const { error } = await supabase
+        .from('templates')
+        .delete()
+        .eq('name', name)
+
+      if (error) {
+        return NextResponse.json({ error: 'Erro ao deletar template' }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, message: `Template "${name}" deletado com sucesso!` })
+    }
+
     const credentials = await getWhatsAppCredentials(orgId)
     
     if (!credentials?.businessAccountId || !credentials?.accessToken) {
