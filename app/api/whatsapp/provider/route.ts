@@ -24,6 +24,7 @@ export async function GET() {
   const hasEvolutionKey = !!(config.evolutionApiKey)
 
   const hasGptToken = !!(config.gptmakerJwtToken)
+  const hasChatwootToken = !!(config.chatwootApiToken)
 
   return NextResponse.json({
     type: config.type || 'meta',
@@ -41,6 +42,12 @@ export async function GET() {
     gptmakerJwtTokenSaved: hasGptToken,
     gptmakerJwtTokenPreview: hasGptToken ? config.gptmakerJwtToken!.slice(0, 8) + '••••••' : '',
     gptmakerDirectChannel: config.gptmakerDirectChannel ?? false,
+    chatwootUrl: config.chatwootUrl || '',
+    chatwootAccountId: config.chatwootAccountId || '',
+    chatwootApiToken: '',
+    chatwootApiTokenSaved: hasChatwootToken,
+    chatwootApiTokenPreview: hasChatwootToken ? config.chatwootApiToken!.slice(0, 8) + '••••••' : '',
+    chatwootInboxId: config.chatwootInboxId || '',
   })
 }
 
@@ -82,6 +89,12 @@ export async function POST(req: NextRequest) {
     body.gptmakerJwtToken = existing?.gptmakerJwtToken || ''
   }
 
+  // Chatwoot: keep existing token if not sent
+  if (!body.chatwootApiToken) {
+    const existing = await loadProviderConfig(orgId)
+    body.chatwootApiToken = existing?.chatwootApiToken || ''
+  }
+
   const configToSave: ProviderConfig = {
     type: body.type,
     phoneNumberId: body.phoneNumberId,
@@ -93,6 +106,10 @@ export async function POST(req: NextRequest) {
     gptmakerAgentId: body.gptmakerAgentId || '',
     gptmakerJwtToken: body.gptmakerJwtToken || '',
     gptmakerDirectChannel: body.gptmakerDirectChannel ?? false,
+    chatwootUrl: body.chatwootUrl || '',
+    chatwootAccountId: body.chatwootAccountId || '',
+    chatwootApiToken: body.chatwootApiToken || '',
+    chatwootInboxId: body.chatwootInboxId || '',
   }
 
   await saveProviderConfig(configToSave, orgId)

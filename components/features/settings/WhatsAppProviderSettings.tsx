@@ -6,8 +6,9 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { Smartphone, Wifi, WifiOff, RefreshCw, CheckCircle2, AlertCircle, Loader2, Save, QrCode, Zap, Shield, KeyRound } from 'lucide-react'
+import { Smartphone, Wifi, WifiOff, RefreshCw, CheckCircle2, AlertCircle, Loader2, Save, QrCode, Zap, Shield, KeyRound, MessageSquare, Copy } from 'lucide-react'
 import { toast } from 'sonner'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 type ProviderType = 'meta' | 'evolution'
 
@@ -27,6 +28,12 @@ interface ProviderConfig {
   gptmakerJwtTokenSaved?: boolean
   gptmakerJwtTokenPreview?: string
   gptmakerDirectChannel?: boolean
+  chatwootUrl?: string
+  chatwootAccountId?: string
+  chatwootApiToken?: string
+  chatwootApiTokenSaved?: boolean
+  chatwootApiTokenPreview?: string
+  chatwootInboxId?: string
 }
 
 interface ConnectionStatus {
@@ -45,6 +52,7 @@ export function WhatsAppProviderSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [refreshingQR, setRefreshingQR] = useState(false)
+  const { user } = useCurrentUser()
 
   const fetchConfig = useCallback(async () => {
     const res = await fetch('/api/whatsapp/provider')
@@ -398,6 +406,94 @@ export function WhatsAppProviderSettings() {
             GPT Maker tem canal WhatsApp direto — SmartZap só registra contexto de campanhas, não responde às mensagens
           </span>
         </label>
+      </div>
+
+      {/* Chatwoot Integration */}
+      <div className="space-y-3 p-4 rounded-xl bg-white/5 border border-white/10">
+        <div className="flex items-center gap-2 mb-1">
+          <MessageSquare size={15} className="text-indigo-400" />
+          <h4 className="text-sm font-semibold text-white">Integração Chatwoot</h4>
+          <span className="text-xs text-gray-500 bg-zinc-800 px-2 py-0.5 rounded-full">opcional</span>
+        </div>
+        <p className="text-xs text-gray-500">
+          Conecta o SmartZap como Agent Bot do Chatwoot. O GPT Maker responde às mensagens recebidas no Chatwoot.
+        </p>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">URL do Chatwoot</label>
+          <input
+            type="text"
+            value={config.chatwootUrl || ''}
+            onChange={e => setConfig(c => ({ ...c, chatwootUrl: e.target.value }))}
+            placeholder="https://chatwoot.seudominio.com"
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Account ID</label>
+          <input
+            type="text"
+            value={config.chatwootAccountId || ''}
+            onChange={e => setConfig(c => ({ ...c, chatwootAccountId: e.target.value }))}
+            placeholder="Ex: 1"
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+          />
+          <p className="text-xs text-gray-500 mt-1">Encontre em: Chatwoot → Settings → General Settings → Account ID</p>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+            API Token (User Access Token)
+            {config.chatwootApiTokenSaved && (
+              <span className="flex items-center gap-1 text-green-400 text-xs font-normal">
+                <KeyRound size={11} /> Token salvo — deixe vazio para manter
+              </span>
+            )}
+          </label>
+          <input
+            type="password"
+            value={config.chatwootApiToken || ''}
+            onChange={e => setConfig(c => ({ ...c, chatwootApiToken: e.target.value }))}
+            placeholder={config.chatwootApiTokenSaved ? `Token atual: ${config.chatwootApiTokenPreview} (cole novo para substituir)` : 'Token de acesso do usuário administrador'}
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+          />
+          <p className="text-xs text-gray-500 mt-1">Encontre em: Chatwoot → Profile Settings → Access Token</p>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Inbox ID (opcional — filtra por caixa)</label>
+          <input
+            type="text"
+            value={config.chatwootInboxId || ''}
+            onChange={e => setConfig(c => ({ ...c, chatwootInboxId: e.target.value }))}
+            placeholder="Ex: 2 (deixe vazio para responder em todas as caixas)"
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+          />
+        </div>
+
+        {/* Webhook URL to configure in Chatwoot */}
+        {user?.organizationId && (
+          <div className="pt-2 border-t border-white/10">
+            <label className="block text-xs text-gray-400 mb-1">URL do Agent Bot (configure no Chatwoot)</label>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-indigo-300 break-all">
+                {typeof window !== 'undefined' ? window.location.origin : ''}/api/chatwoot-bot?orgId={user.organizationId}
+              </code>
+              <button
+                type="button"
+                onClick={() => {
+                  const url = `${window.location.origin}/api/chatwoot-bot?orgId=${user.organizationId}`
+                  navigator.clipboard.writeText(url)
+                  toast.success('URL copiada!')
+                }}
+                className="shrink-0 p-2 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/20 transition-colors"
+                title="Copiar URL"
+              >
+                <Copy size={14} />
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Chatwoot → Settings → Integrations → Agent Bots → Add new Agent Bot → Cole esta URL como Bot URL
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Save button */}
