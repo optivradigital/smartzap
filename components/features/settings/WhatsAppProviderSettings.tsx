@@ -26,6 +26,7 @@ interface ProviderConfig {
   gptmakerJwtToken?: string
   gptmakerJwtTokenSaved?: boolean
   gptmakerJwtTokenPreview?: string
+  gptmakerDirectChannel?: boolean
 }
 
 interface ConnectionStatus {
@@ -386,6 +387,17 @@ export function WhatsAppProviderSettings() {
             className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
           />
         </div>
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={!!config.gptmakerDirectChannel}
+            onChange={e => setConfig(c => ({ ...c, gptmakerDirectChannel: e.target.checked }))}
+            className="w-4 h-4 rounded accent-amber-400"
+          />
+          <span className="text-xs text-gray-300">
+            GPT Maker tem canal WhatsApp direto — SmartZap só registra contexto de campanhas, não responde às mensagens
+          </span>
+        </label>
       </div>
 
       {/* Save button */}

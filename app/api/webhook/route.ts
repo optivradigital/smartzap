@@ -451,6 +451,15 @@ export async function POST(request: NextRequest) {
 
           const phoneNumberId: string = change.value?.metadata?.phone_number_id || ''
           const orgId = await findOrgByPhoneNumberId(phoneNumberId)
+          const orgConfig = await loadProviderConfig(orgId).catch(() => null)
+
+          // Se GPT Maker tem canal WhatsApp direto ativo, ele responde por conta própria.
+          // SmartZap só rastreia status de entrega (tratado acima) — não processa respostas.
+          if (orgConfig?.gptmakerDirectChannel) {
+            console.log(`[Agent] gptmakerDirectChannel ativo — GPT Maker responde diretamente (${message.from})`)
+            continue
+          }
+
           const accessToken = await getWhatsAppAccessToken(orgId)
           if (!phoneNumberId || !accessToken) continue
 

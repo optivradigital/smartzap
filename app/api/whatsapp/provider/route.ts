@@ -40,6 +40,7 @@ export async function GET() {
     gptmakerJwtToken: '',
     gptmakerJwtTokenSaved: hasGptToken,
     gptmakerJwtTokenPreview: hasGptToken ? config.gptmakerJwtToken!.slice(0, 8) + '••••••' : '',
+    gptmakerDirectChannel: config.gptmakerDirectChannel ?? false,
   })
 }
 
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
     evolutionInstance: body.evolutionInstance,
     gptmakerAgentId: body.gptmakerAgentId || '',
     gptmakerJwtToken: body.gptmakerJwtToken || '',
+    gptmakerDirectChannel: body.gptmakerDirectChannel ?? false,
   }
 
   await saveProviderConfig(configToSave, orgId)
