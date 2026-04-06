@@ -46,6 +46,8 @@ export interface ProviderConfig {
   chatwootApiTokenPreview?: string
   chatwootInboxId?: string
   chatwootTeamId?: string
+  // Agent routing map: { default: rockyId, constansa: constansaId, demi: demiId, ... }
+  agentRouting?: Record<string, string>
 }
 
 export interface SendMessageOptions {

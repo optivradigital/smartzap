@@ -15,9 +15,36 @@ import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
 import { redis } from '@/lib/redis'
 
 const HANDOFF_TTL_SECONDS = 8 * 60 * 60 // 8 hours
+const ACTIVE_AGENT_TTL_SECONDS = 24 * 60 * 60 // 24 hours
 
 function handoffKey(conversationId: number) {
   return `chatwoot:handoff:${conversationId}`
+}
+
+function activeAgentKey(conversationId: number) {
+  return `chatwoot:active_agent:${conversationId}`
+}
+
+async function getActiveAgentId(conversationId: number, defaultAgentId: string): Promise<string> {
+  const stored = await redis.get<string>(activeAgentKey(conversationId))
+  return stored || defaultAgentId
+}
+
+async function setActiveAgentId(conversationId: number, agentId: string): Promise<void> {
+  await redis.set(activeAgentKey(conversationId), agentId, { ex: ACTIVE_AGENT_TTL_SECONDS })
+}
+
+/**
+ * Detects if Rocky's response contains a transfer to another agent.
+ * Returns the target agentId if found, null otherwise.
+ */
+function detectAgentTransfer(message: string, routing: Record<string, string>): string | null {
+  const lower = message.toLowerCase()
+  for (const [name, id] of Object.entries(routing)) {
+    if (name === 'default') continue
+    if (lower.includes(name.toLowerCase())) return id
+  }
+  return null
 }
 
 async function isHandedOff(conversationId: number): Promise<boolean> {
@@ -154,6 +181,7 @@ export async function POST(request: NextRequest) {
   let chatwootApiToken: string | undefined
   let chatwootInboxId: string | undefined
   let chatwootTeamId: string | undefined
+  let agentRouting: Record<string, string> | undefined
 
   if (orgId) {
     try {
@@ -165,6 +193,7 @@ export async function POST(request: NextRequest) {
       if (orgConfig?.chatwootApiToken) chatwootApiToken = orgConfig.chatwootApiToken
       if (orgConfig?.chatwootInboxId) chatwootInboxId = orgConfig.chatwootInboxId
       if (orgConfig?.chatwootTeamId) chatwootTeamId = orgConfig.chatwootTeamId
+      if (orgConfig?.agentRouting) agentRouting = orgConfig.agentRouting
     } catch {
       // fall through to env
     }
@@ -197,12 +226,18 @@ export async function POST(request: NextRequest) {
 
   console.log(`[ChatwootBot] Incoming from ${normalizedPhone} (conv ${conversationId}): "${content.slice(0, 80)}"`)
 
+  // Determine which agent to call (may differ from default if already transferred)
+  const defaultAgentId = agentRouting?.default || agentId
+  const resolvedAgentId = defaultAgentId
+    ? await getActiveAgentId(conversationId, defaultAgentId)
+    : (agentId || '')
+
   // Process async — don't block the response
   ;(async () => {
     try {
-      // Call GPT Maker
+      // Call GPT Maker using the currently active agent for this conversation
       const gptRes = await fetch(
-        `https://api.gptmaker.ai/v2/agent/${agentId}/conversation`,
+        `https://api.gptmaker.ai/v2/agent/${resolvedAgentId}/conversation`,
         {
           method: 'POST',
           headers: {
@@ -235,6 +270,15 @@ export async function POST(request: NextRequest) {
       if (!reply) {
         console.log('[ChatwootBot] No reply from GPT Maker for conv', conversationId)
         return
+      }
+
+      // Detect agent-to-agent transfer before posting (e.g. Rocky → Constansa/Demi)
+      if (agentRouting && !isHumanTransfer) {
+        const targetAgentId = detectAgentTransfer(reply, agentRouting)
+        if (targetAgentId && targetAgentId !== resolvedAgentId) {
+          await setActiveAgentId(conversationId, targetAgentId)
+          console.log(`[ChatwootBot] Agent transfer detected → switching conv ${conversationId} to agent ${targetAgentId}`)
+        }
       }
 
       // Post reply back to Chatwoot
