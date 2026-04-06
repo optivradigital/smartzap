@@ -282,6 +282,7 @@ export async function POST(request: NextRequest) {
             phone: normalizedPhone,
             prompt: content,
             role: 'user',
+            channel: 'whatsapp',
           }),
         }
       )

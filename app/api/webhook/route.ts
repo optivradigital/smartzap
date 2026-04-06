@@ -199,6 +199,7 @@ async function handleIncomingMessage(
           phone: phone,
           prompt: message,
           role: 'user',
+          channel: 'whatsapp',
         }),
       }
     )
