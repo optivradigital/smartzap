@@ -46,6 +46,7 @@ export interface ProviderConfig {
   chatwootApiTokenPreview?: string
   chatwootInboxId?: string
   chatwootTeamId?: string
+  chatwootAssigneeId?: string  // Chatwoot agent ID to assign when humanizing (e.g. Mariane)
   // Agent routing map: { default: rockyId, constansa: constansaId, demi: demiId, ... }
   agentRouting?: Record<string, string>
 }

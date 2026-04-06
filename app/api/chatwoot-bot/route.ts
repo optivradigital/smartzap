@@ -57,27 +57,47 @@ async function markHandedOff(conversationId: number): Promise<void> {
 }
 
 /**
- * Assigns the conversation to a team (or unassigns if no teamId) so a human can take over.
+ * Assigns the conversation to a team/agent and reopens it so a human can take over.
  */
 async function assignToHuman(
   chatwootUrl: string,
   accountId: string,
   conversationId: number,
   apiToken: string,
-  teamId?: string
+  teamId?: string,
+  assigneeId?: string
 ): Promise<void> {
-  const url = `${chatwootUrl.replace(/\/$/, '')}/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`
-  const body = teamId ? { team_id: Number(teamId) } : {}
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api_access_token': apiToken },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const err = await res.text().catch(() => '')
-    console.error(`[ChatwootBot] Failed to assign conversation ${conversationId} to human:`, res.status, err.slice(0, 200))
+  const base = chatwootUrl.replace(/\/$/, '')
+  const headers = { 'Content-Type': 'application/json', 'api_access_token': apiToken }
+
+  // 1. Assign to team and/or specific agent
+  const assignBody: Record<string, unknown> = {}
+  if (teamId) assignBody.team_id = Number(teamId)
+  if (assigneeId) assignBody.assignee_id = Number(assigneeId)
+
+  if (Object.keys(assignBody).length > 0) {
+    const assignRes = await fetch(
+      `${base}/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`,
+      { method: 'POST', headers, body: JSON.stringify(assignBody) }
+    )
+    if (!assignRes.ok) {
+      const err = await assignRes.text().catch(() => '')
+      console.error(`[ChatwootBot] Failed to assign conversation ${conversationId}:`, assignRes.status, err.slice(0, 200))
+    } else {
+      console.log(`[ChatwootBot] Conversation ${conversationId} assigned${teamId ? ` team=${teamId}` : ''}${assigneeId ? ` agent=${assigneeId}` : ''}`)
+    }
+  }
+
+  // 2. Update status to "open" so agents can see it
+  const statusRes = await fetch(
+    `${base}/api/v1/accounts/${accountId}/conversations/${conversationId}`,
+    { method: 'PATCH', headers, body: JSON.stringify({ status: 'open' }) }
+  )
+  if (!statusRes.ok) {
+    const err = await statusRes.text().catch(() => '')
+    console.error(`[ChatwootBot] Failed to open conversation ${conversationId}:`, statusRes.status, err.slice(0, 200))
   } else {
-    console.log(`[ChatwootBot] Conversation ${conversationId} handed off to human${teamId ? ` (team ${teamId})` : ''}`)
+    console.log(`[ChatwootBot] Conversation ${conversationId} set to open — handed off to human`)
   }
 }
 
@@ -97,6 +117,7 @@ interface ChatwootConversation {
 
 interface ChatwootWebhookPayload {
   event?: string
+  id?: number            // message ID — used for deduplication
   message_type?: string  // "incoming" | "outgoing" | "activity" | "template"
   content?: string
   conversation?: ChatwootConversation
@@ -162,6 +183,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, skipped: true })
   }
 
+  // Deduplication: skip if this exact message was already processed (prevents Chatwoot retries)
+  if (payload.id) {
+    const dedupKey = `chatwoot:msg:${payload.id}`
+    const isNew = await redis.set(dedupKey, '1', { ex: 300, nx: true })
+    if (!isNew) {
+      console.log(`[ChatwootBot] Duplicate message ${payload.id} — skipping`)
+      return NextResponse.json({ ok: true, skipped: true })
+    }
+  }
+
   // If this conversation was already handed off to a human, skip the bot
   if (await isHandedOff(conversationId)) {
     console.log(`[ChatwootBot] Conversation ${conversationId} is handed off — skipping bot`)
@@ -181,6 +212,7 @@ export async function POST(request: NextRequest) {
   let chatwootApiToken: string | undefined
   let chatwootInboxId: string | undefined
   let chatwootTeamId: string | undefined
+  let chatwootAssigneeId: string | undefined
   let agentRouting: Record<string, string> | undefined
 
   if (orgId) {
@@ -193,6 +225,7 @@ export async function POST(request: NextRequest) {
       if (orgConfig?.chatwootApiToken) chatwootApiToken = orgConfig.chatwootApiToken
       if (orgConfig?.chatwootInboxId) chatwootInboxId = orgConfig.chatwootInboxId
       if (orgConfig?.chatwootTeamId) chatwootTeamId = orgConfig.chatwootTeamId
+      if (orgConfig?.chatwootAssigneeId) chatwootAssigneeId = orgConfig.chatwootAssigneeId
       if (orgConfig?.agentRouting) agentRouting = orgConfig.agentRouting
     } catch {
       // fall through to env
@@ -293,7 +326,7 @@ export async function POST(request: NextRequest) {
       // Hand off to human if GPT Maker requested it
       if (isHumanTransfer) {
         await markHandedOff(conversationId)
-        await assignToHuman(chatwootUrl!, chatwootAccountId!, conversationId, chatwootApiToken!, chatwootTeamId)
+        await assignToHuman(chatwootUrl!, chatwootAccountId!, conversationId, chatwootApiToken!, chatwootTeamId, chatwootAssigneeId)
       }
     } catch (e) {
       console.error('[ChatwootBot] Error processing message:', e)
