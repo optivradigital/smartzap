@@ -45,6 +45,7 @@ export interface ProviderConfig {
   chatwootApiTokenSaved?: boolean
   chatwootApiTokenPreview?: string
   chatwootInboxId?: string
+  chatwootTeamId?: string
 }
 
 export interface SendMessageOptions {

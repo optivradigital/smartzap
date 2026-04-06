@@ -12,6 +12,47 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
+import { redis } from '@/lib/redis'
+
+const HANDOFF_TTL_SECONDS = 8 * 60 * 60 // 8 hours
+
+function handoffKey(conversationId: number) {
+  return `chatwoot:handoff:${conversationId}`
+}
+
+async function isHandedOff(conversationId: number): Promise<boolean> {
+  const val = await redis.exists(handoffKey(conversationId))
+  return val === 1
+}
+
+async function markHandedOff(conversationId: number): Promise<void> {
+  await redis.set(handoffKey(conversationId), '1', { ex: HANDOFF_TTL_SECONDS })
+}
+
+/**
+ * Assigns the conversation to a team (or unassigns if no teamId) so a human can take over.
+ */
+async function assignToHuman(
+  chatwootUrl: string,
+  accountId: string,
+  conversationId: number,
+  apiToken: string,
+  teamId?: string
+): Promise<void> {
+  const url = `${chatwootUrl.replace(/\/$/, '')}/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`
+  const body = teamId ? { team_id: Number(teamId) } : {}
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api_access_token': apiToken },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const err = await res.text().catch(() => '')
+    console.error(`[ChatwootBot] Failed to assign conversation ${conversationId} to human:`, res.status, err.slice(0, 200))
+  } else {
+    console.log(`[ChatwootBot] Conversation ${conversationId} handed off to human${teamId ? ` (team ${teamId})` : ''}`)
+  }
+}
 
 interface ChatwootSender {
   id?: number
@@ -94,6 +135,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, skipped: true })
   }
 
+  // If this conversation was already handed off to a human, skip the bot
+  if (await isHandedOff(conversationId)) {
+    console.log(`[ChatwootBot] Conversation ${conversationId} is handed off — skipping bot`)
+    return NextResponse.json({ ok: true, skipped: true })
+  }
+
   // Extract phone from sender info
   const phone = payload.conversation?.meta?.sender?.phone_number
     || payload.sender?.phone_number
@@ -106,6 +153,7 @@ export async function POST(request: NextRequest) {
   let chatwootAccountId: string | undefined
   let chatwootApiToken: string | undefined
   let chatwootInboxId: string | undefined
+  let chatwootTeamId: string | undefined
 
   if (orgId) {
     try {
@@ -116,6 +164,7 @@ export async function POST(request: NextRequest) {
       if (orgConfig?.chatwootAccountId) chatwootAccountId = orgConfig.chatwootAccountId
       if (orgConfig?.chatwootApiToken) chatwootApiToken = orgConfig.chatwootApiToken
       if (orgConfig?.chatwootInboxId) chatwootInboxId = orgConfig.chatwootInboxId
+      if (orgConfig?.chatwootTeamId) chatwootTeamId = orgConfig.chatwootTeamId
     } catch {
       // fall through to env
     }
@@ -170,10 +219,12 @@ export async function POST(request: NextRequest) {
       )
 
       let reply: string | null = null
+      let isHumanTransfer = false
 
       if (gptRes.ok) {
         const gptData = await gptRes.json().catch(() => null)
         const proj = gptData?.data || gptData?.projetion || gptData
+        isHumanTransfer = proj?.humanize === true
         reply = proj?.message || proj?.response || proj?.content || proj?.originalMessage || null
         if (gptData) console.log('[ChatwootBot] GPT Maker response:', JSON.stringify(gptData).slice(0, 300))
       } else {
@@ -194,6 +245,12 @@ export async function POST(request: NextRequest) {
         chatwootApiToken!,
         reply
       )
+
+      // Hand off to human if GPT Maker requested it
+      if (isHumanTransfer) {
+        await markHandedOff(conversationId)
+        await assignToHuman(chatwootUrl!, chatwootAccountId!, conversationId, chatwootApiToken!, chatwootTeamId)
+      }
     } catch (e) {
       console.error('[ChatwootBot] Error processing message:', e)
     }
