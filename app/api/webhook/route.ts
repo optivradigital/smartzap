@@ -150,6 +150,12 @@ async function handleIncomingMessage(
     }
     const conversationId = conversation.id
 
+    // Se conversa está pausada (atendimento humano), não responder
+    if (conversation.status === 'paused') {
+      console.log('[Agent] Conversation paused (human operator) — skipping:', phone)
+      return
+    }
+
     // 2. Store incoming message
     await botMessageDb.create({
       conversationId,
@@ -221,17 +227,7 @@ async function handleIncomingMessage(
       return
     }
 
-    // 5. Store outbound message
-    await botMessageDb.create({
-      conversationId,
-      direction: 'outbound',
-      origin: 'ai',
-      type: 'text',
-      content: { text: reply },
-      status: 'pending',
-    })
-
-    // 6. Send response via the correct provider
+    // 5. Send response and store with waMessageId
     if (provider.type === 'evolution') {
       const instanceEncoded = encodeURIComponent(provider.instanceName)
       const sendRes = await fetch(
@@ -244,8 +240,12 @@ async function handleIncomingMessage(
       )
       if (!sendRes.ok) {
         console.error('[Agent] Evolution send error:', await sendRes.text())
+        await botMessageDb.create({ conversationId, direction: 'outbound', origin: 'ai', type: 'text', content: { text: reply }, status: 'failed' })
       } else {
+        const d = await sendRes.json().catch(() => null)
+        const sentMsgId = d?.key?.id as string | undefined
         console.log('[Agent] →', phone + ':', reply.substring(0, 80))
+        await botMessageDb.create({ conversationId, waMessageId: sentMsgId, direction: 'outbound', origin: 'ai', type: 'text', content: { text: reply }, status: sentMsgId ? 'sent' : 'pending' })
       }
     } else {
       // Meta Cloud API
@@ -267,11 +267,12 @@ async function handleIncomingMessage(
       )
       if (!sendRes.ok) {
         console.error('[Agent] Meta send error:', await sendRes.text())
+        await botMessageDb.create({ conversationId, direction: 'outbound', origin: 'ai', type: 'text', content: { text: reply }, status: 'failed' })
       } else {
         const d = await sendRes.json()
+        const sentMsgId = d.messages?.[0]?.id as string | undefined
         console.log('[Agent] →', phone + ':', reply.substring(0, 80))
-        const sentMsgId = d.messages?.[0]?.id
-        if (sentMsgId) await botMessageDb.updateStatus(sentMsgId, 'sent')
+        await botMessageDb.create({ conversationId, waMessageId: sentMsgId, direction: 'outbound', origin: 'ai', type: 'text', content: { text: reply }, status: sentMsgId ? 'sent' : 'pending' })
       }
     }
   } catch (e) {
@@ -282,6 +283,25 @@ async function handleIncomingMessage(
 // ── Main POST handler ─────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   const body = await request.json()
+
+  // ── Evolution: delivery/read status updates ──────────────────────────────
+  if (body.event === 'messages.update') {
+    const updates: Array<{ key: { id: string; fromMe: boolean }; update: { status: string } }> = body.data || []
+    for (const u of updates) {
+      if (!u.key?.fromMe || !u.key?.id) continue
+      const ack = u.update?.status
+      // Evolution ACK: PENDING, SERVER_ACK, DELIVERY_ACK, READ
+      let msgStatus: string | null = null
+      if (ack === 'SERVER_ACK') msgStatus = 'sent'
+      else if (ack === 'DELIVERY_ACK') msgStatus = 'delivered'
+      else if (ack === 'READ') msgStatus = 'read'
+      if (msgStatus) {
+        botMessageDb.updateStatus(u.key.id, msgStatus as 'sent' | 'delivered' | 'read')
+          .catch(() => { /* non-fatal */ })
+      }
+    }
+    return NextResponse.json({ status: 'ok' })
+  }
 
   // ── Evolution API webhook ─────────────────────────────────────────────────
   if (body.event === 'messages.upsert') {
@@ -338,6 +358,12 @@ export async function POST(request: NextRequest) {
 
         for (const statusUpdate of statuses) {
           const { id: messageId, status: msgStatus, errors } = statusUpdate
+
+          // Update bot_messages delivery status (non-campaign AI replies)
+          if (msgStatus === 'delivered' || msgStatus === 'read' || msgStatus === 'sent') {
+            botMessageDb.updateStatus(messageId, msgStatus as 'sent' | 'delivered' | 'read')
+              .catch(() => { /* non-fatal, message may not exist in bot_messages */ })
+          }
 
           const { data: existingUpdate } = await supabase
             .from('campaign_contacts')
