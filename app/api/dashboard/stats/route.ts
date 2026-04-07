@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getRequestOrgId, applyOrgFilter } from '@/lib/org-context'
 
 export async function GET() {
   try {
-    // Fetch stats from Supabase
-    const { data, error } = await supabase
+    const orgId = await getRequestOrgId()
+    if (!orgId) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    }
+
+    // Fetch stats from Supabase scoped to the current organization
+    const query = supabase
       .from('campaigns')
       .select('sent, delivered, read, failed, status')
+
+    const { data, error } = await applyOrgFilter(query, orgId)
 
     if (error) throw error
 
@@ -43,8 +51,7 @@ export async function GET() {
       },
       {
         headers: {
-          // Cache no CDN por 15s, serve stale enquanto revalida em background
-          'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         },
       }
     )
