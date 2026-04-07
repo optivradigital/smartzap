@@ -296,9 +296,54 @@ export async function POST(request: NextRequest) {
       if (ack === 'SERVER_ACK') msgStatus = 'sent'
       else if (ack === 'DELIVERY_ACK') msgStatus = 'delivered'
       else if (ack === 'READ') msgStatus = 'read'
-      if (msgStatus) {
-        botMessageDb.updateStatus(u.key.id, msgStatus as 'sent' | 'delivered' | 'read')
-          .catch(() => { /* non-fatal */ })
+      if (!msgStatus) continue
+
+      // Update bot_messages (AI agent conversations)
+      botMessageDb.updateStatus(u.key.id, msgStatus as 'sent' | 'delivered' | 'read')
+        .catch(() => { /* non-fatal */ })
+
+      // Update campaign_contacts for Evolution campaigns
+      if (msgStatus === 'delivered' || msgStatus === 'read') {
+        try {
+          const { data: contact } = await supabase
+            .from('campaign_contacts')
+            .select('id, campaign_id, status')
+            .eq('message_id', u.key.id)
+            .single()
+
+          if (contact) {
+            const statusOrder: Record<string, number> = { pending: 0, sent: 1, delivered: 2, read: 3, failed: 4 }
+            const currentOrder = statusOrder[contact.status] ?? 0
+            const newOrder = statusOrder[msgStatus] ?? 0
+
+            if (newOrder > currentOrder) {
+              const now = new Date().toISOString()
+              const updateData = msgStatus === 'delivered'
+                ? { status: 'delivered', delivered_at: now }
+                : { status: 'read', read_at: now }
+
+              const { data: updated } = await supabase
+                .from('campaign_contacts')
+                .update(updateData)
+                .eq('id', contact.id)
+                .select('id')
+
+              if (updated?.length) {
+                const col = msgStatus === 'delivered' ? 'delivered' : 'read'
+                const { data: campaign } = await supabase
+                  .from('campaigns')
+                  .select(col)
+                  .eq('id', contact.campaign_id)
+                  .single()
+                if (campaign) {
+                  await supabase.from('campaigns')
+                    .update({ [col]: ((campaign as Record<string, number>)[col] || 0) + 1 })
+                    .eq('id', contact.campaign_id)
+                }
+              }
+            }
+          }
+        } catch { /* non-fatal */ }
       }
     }
     return NextResponse.json({ status: 'ok' })

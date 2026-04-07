@@ -27,6 +27,7 @@ export default function CampaignDetailsPage() {
       shouldShowRefreshButton={controller.shouldShowRefreshButton}
       isRefreshing={controller.isRefreshing}
       refetch={controller.refetch}
+      onExportCsv={controller.onExportCsv}
     />
   )
 }

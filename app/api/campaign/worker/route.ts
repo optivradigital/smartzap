@@ -152,12 +152,7 @@ export async function POST(request: NextRequest) {
           if (provider.type === 'evolution' && messageVariants.length > 0) {
             // Evolution + Spinning: envia texto livre com variação aleatória
             const text = spinMessage(messageVariants, contact.name)
-            result = await provider.sendText({
-              phone: contact.phone,
-              text,
-              simulateTyping,
-              typingDurationMs: randomBetween(800, 2500),
-            })
+            result = await sendEvolutionBlocks(provider, contact.phone, text, simulateTyping, sleep, randomBetween)
           } else if (provider.type === 'meta' && templateName) {
             // Meta Cloud API: usa template aprovado pelo Meta
             result = await sendMetaTemplate({
@@ -171,11 +166,7 @@ export async function POST(request: NextRequest) {
           } else if (provider.type === 'evolution') {
             // Evolution sem variantes: usa templateName como texto base
             const text = (templateName || '').replace(/\{name\}/gi, contact.name)
-            result = await provider.sendText({
-              phone: contact.phone,
-              text,
-              simulateTyping,
-            })
+            result = await sendEvolutionBlocks(provider, contact.phone, text, simulateTyping, sleep, randomBetween)
           } else {
             result = { success: false, error: 'Configuração de provider inválida' }
           }
@@ -235,6 +226,45 @@ export async function POST(request: NextRequest) {
   })
 
   return responsePromise
+}
+
+// ── Evolution Block Sender ─────────────────────────────────────────────────────
+
+/**
+ * Divide a mensagem em blocos por parágrafo duplo (\n\n) e envia cada um
+ * como uma bolha separada, simulando digitação em todas elas.
+ * Se não houver \n\n, envia como mensagem única (retrocompatível).
+ */
+async function sendEvolutionBlocks(
+  provider: { sendText: (opts: { phone: string; text: string; simulateTyping?: boolean; typingDurationMs?: number }) => Promise<{ success: boolean; messageId?: string; error?: string }> },
+  phone: string,
+  text: string,
+  simulateTyping: boolean,
+  sleepFn: (ms: number) => Promise<void>,
+  randomBetweenFn: (min: number, max: number) => number,
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const blocks = text.split('\n\n').map(b => b.trim()).filter(Boolean)
+  if (blocks.length === 0) return { success: false, error: 'Mensagem vazia' }
+
+  let lastResult: { success: boolean; messageId?: string; error?: string } = { success: false }
+
+  for (let i = 0; i < blocks.length; i++) {
+    lastResult = await provider.sendText({
+      phone,
+      text: blocks[i],
+      simulateTyping,
+      typingDurationMs: randomBetweenFn(800, 2500),
+    })
+
+    if (!lastResult.success) return lastResult
+
+    // Pausa entre blocos (exceto após o último)
+    if (i < blocks.length - 1) {
+      await sleepFn(randomBetweenFn(500, 1500))
+    }
+  }
+
+  return lastResult
 }
 
 // ── Meta Template Sender (mantém compatibilidade) ─────────────────────────────

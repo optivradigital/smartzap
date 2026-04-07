@@ -172,6 +172,38 @@ export const useCampaignDetailsController = () => {
   const canResume = activeCampaign?.status === CampaignStatus.PAUSED;
   const canStart = activeCampaign?.status === CampaignStatus.SCHEDULED || activeCampaign?.status === CampaignStatus.DRAFT;
 
+  // Export campaign messages as CSV download
+  const onExportCsv = () => {
+    const allMessages = messagesQuery.data?.messages || [];
+    if (!allMessages.length) return;
+
+    const statusLabels: Record<string, string> = {
+      sent: 'Enviado', delivered: 'Entregue', read: 'Lido', failed: 'Falhou', pending: 'Pendente',
+    };
+
+    const rows = [
+      ['Destinatário', 'Telefone', 'Status', 'Enviado em', 'Entregue em', 'Lido em', 'Erro'],
+      ...allMessages.map(m => [
+        m.contactName || '',
+        m.contactPhone || '',
+        statusLabels[m.status] || m.status,
+        m.sentAt ? new Date(m.sentAt).toLocaleString('pt-BR') : '',
+        m.deliveredAt ? new Date(m.deliveredAt).toLocaleString('pt-BR') : '',
+        m.readAt ? new Date(m.readAt).toLocaleString('pt-BR') : '',
+        m.error || '',
+      ]),
+    ];
+
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `campanha-${activeCampaign?.name || id}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return {
     campaign: activeCampaign,
     messages: filteredMessages,
@@ -195,5 +227,6 @@ export const useCampaignDetailsController = () => {
     canPause,
     canResume,
     canStart,
+    onExportCsv,
   };
 };

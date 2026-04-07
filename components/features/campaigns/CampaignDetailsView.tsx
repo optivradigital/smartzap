@@ -106,6 +106,7 @@ interface CampaignDetailsViewProps {
   shouldShowRefreshButton?: boolean;
   isRefreshing?: boolean;
   refetch?: () => void;
+  onExportCsv?: () => void;
 }
 
 export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
@@ -128,6 +129,7 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
   shouldShowRefreshButton,
   isRefreshing,
   refetch,
+  onExportCsv,
 }) => {
   if (isLoading || !campaign) return <div className="p-10 text-center text-gray-500">Carregando...</div>;
 
@@ -227,7 +229,10 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
             </button>
           )}
 
-          <button className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2 text-sm font-medium">
+          <button
+            onClick={onExportCsv}
+            className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2 text-sm font-medium"
+          >
             <Download size={16} /> Relatório CSV
           </button>
         </div>
