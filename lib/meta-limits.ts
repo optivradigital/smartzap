@@ -145,8 +145,8 @@ export function validateCampaign(
     estimatedDuration,
   };
 
-  // UNLIMITED tier - always allow
-  if (limits.messagingTier === 'TIER_UNLIMITED') {
+  // UNLIMITED tier or Evolution provider (sem limites Meta) - always allow
+  if (limits.messagingTier === 'TIER_UNLIMITED' || limits.maxUniqueUsersPerDay === -1) {
     // Still check quality
     if (limits.qualityScore === 'RED') {
       warnings.push('⚠️ Sua conta está com qualidade BAIXA. A Meta pode limitar seus envios.');
