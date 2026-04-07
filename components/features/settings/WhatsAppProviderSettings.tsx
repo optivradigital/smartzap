@@ -52,6 +52,7 @@ export function WhatsAppProviderSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [refreshingQR, setRefreshingQR] = useState(false)
+  const [disconnecting, setDisconnecting] = useState(false)
   const { user } = useCurrentUser()
 
   const fetchConfig = useCallback(async () => {
@@ -107,6 +108,22 @@ export function WhatsAppProviderSettings() {
     setRefreshingQR(true)
     await fetchStatus()
     setRefreshingQR(false)
+  }
+
+  const handleDisconnect = async () => {
+    setDisconnecting(true)
+    try {
+      const res = await fetch('/api/whatsapp/disconnect', { method: 'POST' })
+      if (res.ok) {
+        toast.success('Desconectado! Escaneie o QR code para reconectar.')
+        await fetchStatus()
+      } else {
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error || 'Erro ao desconectar')
+      }
+    } finally {
+      setDisconnecting(false)
+    }
   }
 
   return (
@@ -310,18 +327,30 @@ export function WhatsAppProviderSettings() {
                 Verificando conexão...
               </div>
             ) : status?.connected ? (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <CheckCircle2 size={20} className="text-green-400" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <CheckCircle2 size={20} className="text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-green-400">Conectado</p>
+                    {status.phone && (
+                      <p className="text-xs text-gray-400">
+                        {status.name ? `${status.name} · ` : ''}{status.phone}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-green-400">Conectado</p>
-                  {status.phone && (
-                    <p className="text-xs text-gray-400">
-                      {status.name ? `${status.name} · ` : ''}{status.phone}
-                    </p>
-                  )}
-                </div>
+                {config.type === 'evolution' && (
+                  <button
+                    type="button"
+                    onClick={handleDisconnect}
+                    disabled={disconnecting}
+                    className="text-xs text-red-400/70 hover:text-red-400 transition-colors disabled:opacity-50"
+                  >
+                    {disconnecting ? 'Desconectando...' : 'Desconectar'}
+                  </button>
+                )}
               </div>
             ) : status?.qrCode ? (
               <div className="space-y-3">
