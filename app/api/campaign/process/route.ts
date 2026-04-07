@@ -451,7 +451,9 @@ export async function POST(request: NextRequest) {
               },
               status: "sent",
             });
-            await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, templateVariables);
+            if (!orgConfig?.gptmakerDirectChannel) {
+              await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, templateVariables);
+            }
           } catch (e) {
             console.error("[Campaign] Failed to log template dispatch:", e);
           }
