@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { getRequestOrgId, applyOrgFilter } from '@/lib/org-context'
+import { getRequestOrgId, SUPER_ADMIN_ORG } from '@/lib/org-context'
 
 export async function GET() {
   try {
@@ -10,11 +10,15 @@ export async function GET() {
     }
 
     // Fetch stats from Supabase scoped to the current organization
-    const query = supabase
+    let query = supabase
       .from('campaigns')
       .select('sent, delivered, read, failed, status')
 
-    const { data, error } = await applyOrgFilter(query, orgId)
+    if (orgId !== SUPER_ADMIN_ORG) {
+      query = query.eq('organization_id', orgId)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
 
