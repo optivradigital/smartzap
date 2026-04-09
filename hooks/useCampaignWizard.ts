@@ -341,8 +341,8 @@ export const useCampaignWizardController = () => {
       scheduledAt: scheduleTime || scheduledAt || undefined, // Use provided time or state
       templateVariables: templateVariables.length > 0 ? templateVariables : undefined,
       providerType: providerType,
-      delayMinMs: antiBanConfig.delayMinMs,
-      delayMaxMs: antiBanConfig.delayMaxMs,
+      delayMinSec: antiBanConfig.delayMinSec,
+      delayMaxSec: antiBanConfig.delayMaxSec,
       simulateTyping: antiBanConfig.simulateTyping,
       dailyLimit: antiBanConfig.dailyLimit,
       messageVariants: antiBanConfig.messageVariants.length > 0 ? antiBanConfig.messageVariants : undefined,

@@ -40,8 +40,8 @@ interface CreateCampaignBody {
   contacts?: { name: string; phone: string }[]
   templateVariables?: string[]
   providerType?: 'meta' | 'evolution'
-  delayMinMs?: number
-  delayMaxMs?: number
+  delayMinSec?: number
+  delayMaxSec?: number
   simulateTyping?: boolean
   dailyLimit?: number | null
   messageVariants?: string[]
@@ -76,8 +76,8 @@ export async function POST(request: Request) {
       templateVariables: data.templateVariables,
       organizationId: orgId === '*' ? undefined : orgId,
       providerType: (data as any).providerType,
-      delayMinMs: (data as any).delayMinMs,
-      delayMaxMs: (data as any).delayMaxMs,
+      delayMinMs: (data as any).delayMinSec != null ? (data as any).delayMinSec * 1000 : undefined,
+      delayMaxMs: (data as any).delayMaxSec != null ? (data as any).delayMaxSec * 1000 : undefined,
       simulateTyping: (data as any).simulateTyping,
       dailyLimit: (data as any).dailyLimit,
       messageVariants: (data as any).messageVariants,

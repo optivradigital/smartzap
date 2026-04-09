@@ -11,8 +11,8 @@ interface CreateCampaignInput {
   templateVariables?: string[];
   // Anti-ban (Evolution API)
   providerType?: 'meta' | 'evolution';
-  delayMinMs?: number;
-  delayMaxMs?: number;
+  delayMinSec?: number;
+  delayMaxSec?: number;
   simulateTyping?: boolean;
   dailyLimit?: number | null;
   messageVariants?: string[];
@@ -144,7 +144,7 @@ export const campaignService = {
   },
 
   create: async (input: CreateCampaignInput): Promise<Campaign> => {
-    const { name, templateName, templateNames, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, providerType, delayMinMs, delayMaxMs, simulateTyping, dailyLimit, messageVariants } = input;
+    const { name, templateName, templateNames, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, providerType, delayMinSec, delayMaxSec, simulateTyping, dailyLimit, messageVariants } = input;
 
     // 1. Create campaign in Database (source of truth) with contacts
     const response = await fetch('/api/campaigns', {
@@ -160,8 +160,8 @@ export const campaignService = {
         templateVariables,
         templateNames,
         providerType,
-        delayMinMs,
-        delayMaxMs,
+        delayMinSec,
+        delayMaxSec,
         simulateTyping,
         dailyLimit,
         messageVariants,

@@ -9,8 +9,8 @@ import React, { useState } from 'react'
 import { Plus, Trash2, Shuffle, Clock, Shield, MessageSquare } from 'lucide-react'
 
 export interface AntiBanConfig {
-  delayMinMs: number
-  delayMaxMs: number
+  delayMinSec: number
+  delayMaxSec: number
   simulateTyping: boolean
   messageVariants: string[]
   dailyLimit: number | undefined
@@ -23,15 +23,12 @@ interface Props {
 }
 
 export const DEFAULT_ANTI_BAN: AntiBanConfig = {
-  delayMinMs: 3000,
-  delayMaxMs: 12000,
+  delayMinSec: 3,
+  delayMaxSec: 12,
   simulateTyping: true,
   messageVariants: [],
   dailyLimit: undefined,
 }
-
-function msToSec(ms: number) { return ms / 1000 }
-function secToMs(s: number) { return s * 1000 }
 
 export function AntiBanSettings({ value, onChange, providerType }: Props) {
   const [newVariant, setNewVariant] = useState('')
@@ -83,8 +80,8 @@ export function AntiBanSettings({ value, onChange, providerType }: Props) {
               type="number"
               min={1}
               max={3600}
-              value={msToSec(value.delayMinMs)}
-              onChange={e => onChange({ ...value, delayMinMs: secToMs(Math.max(1, Math.min(3600, +e.target.value || 1))) })}
+              value={value.delayMinSec}
+              onChange={e => onChange({ ...value, delayMinSec: Math.max(1, Math.min(3600, +e.target.value || 1)) })}
               className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500"
             />
           </div>
@@ -94,14 +91,14 @@ export function AntiBanSettings({ value, onChange, providerType }: Props) {
               type="number"
               min={1}
               max={3600}
-              value={msToSec(value.delayMaxMs)}
-              onChange={e => onChange({ ...value, delayMaxMs: secToMs(Math.max(1, Math.min(3600, +e.target.value || 1))) })}
+              value={value.delayMaxSec}
+              onChange={e => onChange({ ...value, delayMaxSec: Math.max(1, Math.min(3600, +e.target.value || 1)) })}
               className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500"
             />
           </div>
         </div>
         <p className="text-xs text-gray-500 mt-1">
-          O sistema aguarda entre {msToSec(value.delayMinMs)}s e {msToSec(value.delayMaxMs)}s de forma aleatória entre cada envio.
+          O sistema aguarda entre {value.delayMinSec}s e {value.delayMaxSec}s de forma aleatória entre cada envio.
         </p>
       </div>
 
