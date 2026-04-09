@@ -213,36 +213,43 @@ export class EvolutionProvider implements IWhatsAppProvider {
    */
   async checkNumbers(phones: string[]): Promise<Set<string>> {
     if (!phones.length) return new Set()
-    try {
-      const res = await fetch(
-        `${this.baseUrl}/chat/whatsappNumbers/${this.instance}`,
-        {
+    const cleanPhones = phones.map(p => p.replace(/\D/g, ''))
+    // Try primary endpoint, then fallback (endpoint varies between Evolution API versions)
+    const endpoints = [
+      `${this.baseUrl}/chat/whatsappNumbers/${this.instance}`,
+      `${this.baseUrl}/chat/checkIsWhatsapp/${this.instance}`,
+    ]
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, {
           method: 'POST',
           headers: this.headers,
-          body: JSON.stringify({ numbers: phones.map(p => p.replace(/\D/g, '')) }),
+          body: JSON.stringify({ numbers: cleanPhones }),
+        })
+        if (!res.ok) {
+          const body = await res.text().catch(() => '')
+          console.warn(`[Evolution] checkNumbers ${url} → ${res.status}: ${body.slice(0, 200)}`)
+          continue // try next endpoint
         }
-      )
-      if (!res.ok) {
-        console.warn(`[Evolution] checkNumbers returned ${res.status} — treating all as valid`)
-        return new Set(phones)
-      }
-      const data = await res.json()
-      const valid = new Set<string>()
-      for (const item of Array.isArray(data) ? data : []) {
-        if (item.exists) {
-          const num = (item.jid as string | undefined)?.split('@')[0] || (item.number as string | undefined) || ''
-          if (num) {
-            valid.add(num)
-            valid.add(`+${num}`)
+        const data = await res.json()
+        const valid = new Set<string>()
+        for (const item of Array.isArray(data) ? data : []) {
+          if (item.exists) {
+            const num = (item.jid as string | undefined)?.split('@')[0] || (item.number as string | undefined) || ''
+            if (num) {
+              valid.add(num)
+              valid.add(`+${num}`)
+            }
           }
         }
+        console.log(`[Evolution] checkNumbers via ${url}: ${valid.size / 2}/${phones.length} valid`)
+        return valid
+      } catch (e) {
+        console.warn(`[Evolution] checkNumbers ${url} threw:`, e)
       }
-      console.log(`[Evolution] checkNumbers: ${valid.size / 2}/${phones.length} numbers have WhatsApp`)
-      return valid
-    } catch (e) {
-      console.warn('[Evolution] checkNumbers failed — treating all as valid:', e)
-      return new Set(phones)
     }
+    console.warn('[Evolution] checkNumbers: all endpoints failed — treating all as valid')
+    return new Set(phones)
   }
 }
 
