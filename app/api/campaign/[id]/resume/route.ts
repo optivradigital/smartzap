@@ -1,23 +1,34 @@
 /**
  * Resume Campaign API
- * 
+ *
  * POST /api/campaign/[id]/resume
- * 
+ *
  * Resumes a paused campaign. State is stored in Supabase.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { campaignDb } from '@/lib/supabase-db'
 import { CampaignStatus } from '@/types'
+import { getRequestOrgId, SUPER_ADMIN_ORG } from '@/lib/org-context'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const orgId = await getRequestOrgId()
+  if (!orgId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
   const { id: campaignId } = await params
 
   try {
-    // Update campaign status in Supabase
+    const existing = await campaignDb.getById(campaignId)
+    if (!existing) {
+      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
+    }
+    if (orgId !== SUPER_ADMIN_ORG && existing.organizationId && existing.organizationId !== orgId) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
+
     const campaign = await campaignDb.updateStatus(campaignId, {
       status: CampaignStatus.SENDING,
       startedAt: new Date().toISOString(),

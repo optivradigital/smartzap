@@ -71,6 +71,7 @@ export interface Campaign {
   read: number;
   failed: number;
   createdAt: string;
+  organizationId?: string;
   templateName: string;
   templateVariables?: string[];  // Dynamic template variables for {{2}}, {{3}}, etc.
   // Scheduling
@@ -92,6 +93,7 @@ export interface Contact {
   lastActive: string;
   createdAt?: string;
   updatedAt?: string;
+  organizationId?: string;
 }
 
 export interface Message {

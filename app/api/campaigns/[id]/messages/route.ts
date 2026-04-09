@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { MessageStatus } from '@/types'
+import { campaignDb } from '@/lib/supabase-db'
+import { getRequestOrgId, SUPER_ADMIN_ORG } from '@/lib/org-context'
 
 // Force dynamic rendering (no caching)
 export const dynamic = 'force-dynamic'
@@ -20,7 +22,20 @@ interface Params {
  */
 export async function GET(request: Request, { params }: Params) {
   try {
+    const orgId = await getRequestOrgId()
+    if (!orgId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
     const { id } = await params
+
+    // Verify campaign ownership
+    const campaign = await campaignDb.getById(id)
+    if (!campaign) {
+      return NextResponse.json({ error: 'Campanha não encontrada' }, { status: 404 })
+    }
+    if (orgId !== SUPER_ADMIN_ORG && campaign.organizationId && campaign.organizationId !== orgId) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
 
     // Pagination params

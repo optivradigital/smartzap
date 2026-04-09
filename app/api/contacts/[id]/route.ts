@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { contactDb } from '@/lib/supabase-db'
+import { getRequestOrgId, SUPER_ADMIN_ORG } from '@/lib/org-context'
 
 interface Params {
   params: Promise<{ id: string }>
@@ -11,6 +12,9 @@ interface Params {
  */
 export async function GET(request: Request, { params }: Params) {
   try {
+    const orgId = await getRequestOrgId()
+    if (!orgId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
     const { id } = await params
     const contact = await contactDb.getById(id)
 
@@ -19,6 +23,10 @@ export async function GET(request: Request, { params }: Params) {
         { error: 'Contato não encontrado' },
         { status: 404 }
       )
+    }
+
+    if (orgId !== SUPER_ADMIN_ORG && contact.organizationId && contact.organizationId !== orgId) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
     }
 
     return NextResponse.json(contact)
@@ -37,7 +45,20 @@ export async function GET(request: Request, { params }: Params) {
  */
 export async function PATCH(request: Request, { params }: Params) {
   try {
+    const orgId = await getRequestOrgId()
+    if (!orgId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
     const { id } = await params
+
+    // Verify ownership before updating
+    const existing = await contactDb.getById(id)
+    if (!existing) {
+      return NextResponse.json({ error: 'Contato não encontrado' }, { status: 404 })
+    }
+    if (orgId !== SUPER_ADMIN_ORG && existing.organizationId && existing.organizationId !== orgId) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
+
     const body = await request.json()
     const contact = await contactDb.update(id, body)
 
@@ -64,7 +85,20 @@ export async function PATCH(request: Request, { params }: Params) {
  */
 export async function DELETE(request: Request, { params }: Params) {
   try {
+    const orgId = await getRequestOrgId()
+    if (!orgId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
     const { id } = await params
+
+    // Verify ownership before deleting
+    const existing = await contactDb.getById(id)
+    if (!existing) {
+      return NextResponse.json({ error: 'Contato não encontrado' }, { status: 404 })
+    }
+    if (orgId !== SUPER_ADMIN_ORG && existing.organizationId && existing.organizationId !== orgId) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
+
     await contactDb.delete(id)
     return NextResponse.json({ success: true })
   } catch (error) {

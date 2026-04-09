@@ -100,6 +100,7 @@ export const campaignDb = {
             scheduledAt: data.scheduled_date,
             startedAt: data.started_at,
             completedAt: data.completed_at,
+            organizationId: data.organization_id ?? undefined,
         }
     },
 
@@ -315,6 +316,7 @@ export const contactDb = {
                 : (data.created_at ? new Date(data.created_at).toLocaleDateString() : '-'),
             createdAt: data.created_at,
             updatedAt: data.updated_at,
+            organizationId: data.organization_id ?? undefined,
         }
     },
 
