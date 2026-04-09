@@ -12,12 +12,13 @@ export const SUPER_ADMIN_ORG = '*'  // Sentinel for super admin (sees all)
 /**
  * Get organization ID for the current request.
  * Returns null if not authenticated.
- * Returns SUPER_ADMIN_ORG ('*') for super admins who bypass org filtering.
+ * Returns the selected org when a super admin has one active via cookie.
+ * Returns SUPER_ADMIN_ORG ('*') only when super admin has no org selected (sees all).
  */
 export async function getRequestOrgId(): Promise<string | null> {
   const user = await getCurrentUser()
   if (!user) return null
-  if (user.isSuperAdmin) return SUPER_ADMIN_ORG
+  if (user.isSuperAdmin) return user.organizationId || SUPER_ADMIN_ORG
   return user.organizationId || null
 }
 

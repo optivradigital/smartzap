@@ -84,9 +84,16 @@ export async function POST(request: Request) {
     })
 
     if (data.contacts && data.contacts.length > 0) {
+      // Deduplicate by phone to avoid UNIQUE(campaign_id, phone) constraint failure
+      const seen = new Set<string>()
+      const uniqueContacts = data.contacts.filter(c => {
+        if (seen.has(c.phone)) return false
+        seen.add(c.phone)
+        return true
+      })
       await campaignContactDb.addContacts(
         campaign.id,
-        data.contacts.map((c, index) => ({
+        uniqueContacts.map((c, index) => ({
           contactId: `temp_${index}`,
           phone: c.phone,
           name: c.name || '',
@@ -95,8 +102,8 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(campaign, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create campaign:', error)
-    return NextResponse.json({ error: 'Falha ao criar campanha' }, { status: 500 })
+    return NextResponse.json({ error: 'Falha ao criar campanha', details: error?.message }, { status: 500 })
   }
 }
