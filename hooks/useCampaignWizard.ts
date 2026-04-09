@@ -148,7 +148,7 @@ export const useCampaignWizardController = () => {
         queryClient.removeQueries({ queryKey: ['campaign', context.tempId] });
         queryClient.removeQueries({ queryKey: ['campaignMessages', context.tempId] });
       }
-      toast.error('Erro ao criar campanha.');
+      toast.error(`Erro ao criar campanha: ${_error instanceof Error ? _error.message : 'erro desconhecido'}`);
       navigate('/campaigns');
     }
   });

@@ -45,6 +45,45 @@ export async function POST(request: NextRequest) {
 
   const orgId = user!.organizationId || null;
 
+  const contentType = request.headers.get("content-type") || "";
+
+  // JSON path: wizard sends { contacts: [{phone, name}] } directly (background sync)
+  if (contentType.includes("application/json")) {
+    try {
+      const { contacts: rawContacts } = await request.json() as { contacts: { phone: string; name: string }[] };
+      if (!Array.isArray(rawContacts) || rawContacts.length === 0) {
+        return NextResponse.json({ imported: 0, total: 0, invalid: 0, duplicates: 0, contacts: [] });
+      }
+      const now = new Date().toISOString();
+      const seen = new Set<string>();
+      const rows = rawContacts
+        .filter(c => {
+          const phone = String(c.phone || "").trim();
+          if (!phone || seen.has(phone)) return false;
+          seen.add(phone);
+          return true;
+        })
+        .map(c => ({
+          id: generateId(),
+          phone: String(c.phone).trim(),
+          name: String(c.name || "").slice(0, 99) || null,
+          organization_id: orgId,
+          created_at: now,
+        }));
+      if (rows.length > 0) {
+        const { error: upsertError } = await supabase
+          .from("contacts")
+          .upsert(rows, { onConflict: "phone,organization_id" });
+        if (upsertError) console.error("[contacts/import] json upsert error:", upsertError);
+      }
+      return NextResponse.json({ imported: rows.length, total: rawContacts.length, invalid: 0, duplicates: rawContacts.length - rows.length, contacts: rows.map(r => ({ phone: r.phone, name: r.name })) });
+    } catch (e) {
+      console.error("[contacts/import] json parse error:", e);
+      return NextResponse.json({ error: "Falha ao processar contatos" }, { status: 400 });
+    }
+  }
+
+  // FormData path: file upload
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
   const campaignId = formData.get("campaignId") as string | null;

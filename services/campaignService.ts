@@ -170,7 +170,11 @@ export const campaignService = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create campaign');
+      const errBody = await response.json().catch(() => ({})) as { error?: string; details?: Record<string, string[]> }
+      const detail = errBody.details
+        ? Object.entries(errBody.details).map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`).join(' | ')
+        : errBody.error || 'Falha ao criar campanha'
+      throw new Error(detail)
     }
 
     const newCampaign = await response.json();

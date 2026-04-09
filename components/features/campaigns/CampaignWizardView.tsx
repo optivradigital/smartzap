@@ -107,7 +107,7 @@ const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelCo
       const name = nameKey ? String(row[nameKey] || '').trim() : '';
       const phone = normalizePhone(rawPhone);
       if (phone.length >= 10) {
-        results.push({ name: name || phone, phone });
+        results.push({ name: (name || phone).slice(0, 99), phone });
       }
     }
 
