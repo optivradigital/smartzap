@@ -563,6 +563,7 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
   antiBanConfig: antiBanConfigProp,
   setAntiBanConfig: setAntiBanConfigProp,
   providerType: providerTypeProp,
+  setProviderType: setProviderTypeProp,
   additionalTemplateIds = [],
   setAdditionalTemplateIds,
   additionalTemplates = [],
@@ -571,7 +572,9 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
   const [antiBanConfigInternal, setAntiBanConfigInternal] = React.useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
   const antiBanConfig = antiBanConfigProp ?? antiBanConfigInternal;
   const setAntiBanConfig = setAntiBanConfigProp ?? setAntiBanConfigInternal;
-  const providerType = providerTypeProp ?? 'meta';
+  const [providerTypeInternal, setProviderTypeInternal] = React.useState<'meta' | 'evolution'>('meta');
+  const providerType = providerTypeProp ?? providerTypeInternal;
+  const setProviderType = setProviderTypeProp ?? setProviderTypeInternal;
 
   // State for upgrade modal
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -1037,14 +1040,14 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => { if (setProviderType) setProviderType('meta') }}
+                    onClick={() => setProviderType('meta')}
                     className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${providerType === 'meta' ? 'bg-blue-600/20 border-blue-500/50 text-blue-300' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'}`}
                   >
                     Meta Cloud API
                   </button>
                   <button
                     type="button"
-                    onClick={() => { if (setProviderType) setProviderType('evolution') }}
+                    onClick={() => setProviderType('evolution')}
                     className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${providerType === 'evolution' ? 'bg-green-600/20 border-green-500/50 text-green-300' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'}`}
                   >
                     WhatsApp Business App (QR Code)
