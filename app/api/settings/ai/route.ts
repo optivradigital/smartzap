@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSuperAdmin } from '@/lib/role-guard'
+import { requireSuperAdmin, requireAnyUser } from '@/lib/role-guard'
 import { supabase } from '@/lib/supabase'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
@@ -73,6 +73,9 @@ async function validateApiKey(provider: string, apiKey: string): Promise<{ valid
 }
 
 export async function GET() {
+    const { error: authError } = await requireAnyUser()
+    if (authError) return authError
+
     try {
         // Get all AI settings from Supabase
         const { data, error } = await supabase.admin
