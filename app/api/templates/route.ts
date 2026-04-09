@@ -65,10 +65,14 @@ export async function GET() {
 
     // Evolution orgs: return templates from Supabase (no Meta approval needed)
     if (isEvolution) {
-      const { data: rows, error } = await supabase
+      const query = supabase
         .from('templates')
         .select('*')
         .order('created_at', { ascending: false })
+
+      if (orgId) query.eq('organization_id', orgId)
+
+      const { data: rows, error } = await query
 
       if (error) throw error
 

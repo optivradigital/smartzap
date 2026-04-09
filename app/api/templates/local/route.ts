@@ -8,8 +8,9 @@ import { requireManager } from '@/lib/role-guard'
 import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
-  const { error: authError } = await requireManager()
+  const { error: authError, user } = await requireManager()
   if (authError) return authError
+  const orgId = user?.organizationId || null
 
   let body: { name?: string; content?: string; category?: string; language?: string }
   try {
@@ -41,9 +42,10 @@ export async function POST(request: NextRequest) {
         language,
         status: 'APPROVED',
         components,
+        organization_id: orgId,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: 'name' }
+      { onConflict: 'name,organization_id' }
     )
     .select()
     .single()
@@ -67,14 +69,18 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const { error: authError } = await requireManager()
+  const { error: authError, user } = await requireManager()
   if (authError) return authError
+  const orgId = user?.organizationId || null
 
   const { searchParams } = new URL(request.url)
   const name = searchParams.get('name')
   if (!name) return NextResponse.json({ error: 'name é obrigatório' }, { status: 400 })
 
-  const { error } = await supabase.from('templates').delete().eq('name', name)
+  const query = supabase.from('templates').delete().eq('name', name)
+  if (orgId) query.eq('organization_id', orgId)
+
+  const { error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ deleted: true })
