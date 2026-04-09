@@ -1030,9 +1030,26 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
               </div>
             )}
 
-                        {/* Anti-Ban Settings (shown in Step 1) */}
+                        {/* Provider type toggle + Anti-Ban Settings (shown in Step 1) */}
             {step === 1 && (
-              <div className="px-6 pb-6">
+              <div className="px-6 pb-6 space-y-3">
+                {/* Provider selector */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { if (setProviderType) setProviderType('meta') }}
+                    className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${providerType === 'meta' ? 'bg-blue-600/20 border-blue-500/50 text-blue-300' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'}`}
+                  >
+                    Meta Cloud API
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { if (setProviderType) setProviderType('evolution') }}
+                    className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${providerType === 'evolution' ? 'bg-green-600/20 border-green-500/50 text-green-300' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'}`}
+                  >
+                    WhatsApp Business App (QR Code)
+                  </button>
+                </div>
                 <AntiBanSettings
                   value={antiBanConfig}
                   onChange={setAntiBanConfig}

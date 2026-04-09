@@ -1,6 +1,6 @@
 import React from 'react';
 import { PrefetchLink } from '@/components/ui/PrefetchLink';
-import { ChevronLeft, Clock, CheckCircle2, Eye, AlertCircle, Download, Search, Filter, RefreshCw, Pause, Play, Calendar, Loader2 } from 'lucide-react';
+import { ChevronLeft, Clock, CheckCircle2, Eye, AlertCircle, Download, Search, Filter, RefreshCw, Pause, Play, Calendar, Loader2, PhoneOff } from 'lucide-react';
 import { Campaign, CampaignStatus, Message, MessageStatus } from '../../../types';
 
 interface DetailCardProps {
@@ -33,6 +33,7 @@ const MessageStatusBadge = ({ status }: { status: MessageStatus }) => {
     [MessageStatus.DELIVERED]: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
     [MessageStatus.SENT]: 'text-gray-400 bg-gray-500/10 border-gray-500/20',
     [MessageStatus.FAILED]: 'text-red-400 bg-red-500/10 border-red-500/20',
+    [MessageStatus.NOT_EXISTS]: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
     // Fallback para valores antigos em inglês
     'Pending': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
     'Read': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
@@ -47,6 +48,7 @@ const MessageStatusBadge = ({ status }: { status: MessageStatus }) => {
     [MessageStatus.DELIVERED]: <CheckCircle2 size={12} className="mr-1" />,
     [MessageStatus.SENT]: <Clock size={12} className="mr-1" />,
     [MessageStatus.FAILED]: <AlertCircle size={12} className="mr-1" />,
+    [MessageStatus.NOT_EXISTS]: <PhoneOff size={12} className="mr-1" />,
     // Fallback para valores antigos em inglês
     'Pending': <Loader2 size={12} className="mr-1 animate-spin" />,
     'Read': <Eye size={12} className="mr-1" />,
@@ -62,6 +64,7 @@ const MessageStatusBadge = ({ status }: { status: MessageStatus }) => {
     [MessageStatus.DELIVERED]: 'Entregue',
     [MessageStatus.SENT]: 'Enviado',
     [MessageStatus.FAILED]: 'Falhou',
+    [MessageStatus.NOT_EXISTS]: 'Não existe',
     // Fallback para valores antigos em inglês
     'Pending': 'Pendente',
     'Read': 'Lido',
@@ -249,14 +252,14 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
         />
         <DetailCard
           title="Entregues"
-          value={(campaign.delivered ?? 0) > 0 ? (campaign.delivered ?? 0).toLocaleString() : '—'}
+          value={(campaign.delivered ?? 0).toLocaleString()}
           subvalue={(campaign.delivered ?? 0) > 0 ? `${(((campaign.delivered ?? 0) / (campaign.recipients ?? 1)) * 100).toFixed(1)}% taxa de entrega` : 'Aguardando webhook'}
           icon={CheckCircle2}
           color="#10b981"
         />
         <DetailCard
           title="Lidas"
-          value={(campaign.read ?? 0) > 0 ? (campaign.read ?? 0).toLocaleString() : '—'}
+          value={(campaign.read ?? 0).toLocaleString()}
           subvalue={(campaign.read ?? 0) > 0 ? `${(((campaign.read ?? 0) / (campaign.recipients ?? 1)) * 100).toFixed(1)}% taxa de abertura` : 'Aguardando webhook'}
           icon={Eye}
           color="#3b82f6"

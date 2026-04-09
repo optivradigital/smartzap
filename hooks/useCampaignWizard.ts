@@ -334,6 +334,7 @@ export const useCampaignWizardController = () => {
     createCampaignMutation.mutate({
       name: recipientSource === 'test' ? `[TESTE] ${name}` : name,
       templateName: selectedTemplate?.name || 'unknown_template',
+      templateNames: allSelectedTemplateNames.length > 1 ? allSelectedTemplateNames : undefined,
       recipients: recipientCount,
       selectedContacts: contactsForSending,
       selectedContactIds: recipientSource === 'test' ? [] : selectedContactIds, // Save for resume functionality

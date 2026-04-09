@@ -35,14 +35,16 @@ export async function GET(request: Request, { params }: Params) {
       { count: sent },
       { count: delivered },
       { count: read },
-      { count: failed }
+      { count: failed },
+      { count: invalid }
     ] = await Promise.all([
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'pending'),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'sent'),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'delivered'),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'read'),
-      supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'failed')
+      supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'failed'),
+      supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'invalid'),
     ])
 
     const aggregatedStats = {
@@ -52,6 +54,7 @@ export async function GET(request: Request, { params }: Params) {
       delivered: delivered || 0,
       read: read || 0,
       failed: failed || 0,
+      invalid: invalid || 0,
     }
 
     // 2. Get paginated messages
@@ -79,6 +82,7 @@ export async function GET(request: Request, { params }: Params) {
       else if (dbStatus === 'delivered') status = MessageStatus.DELIVERED
       else if (dbStatus === 'read') status = MessageStatus.READ
       else if (dbStatus === 'failed') status = MessageStatus.FAILED
+      else if (dbStatus === 'invalid') status = MessageStatus.NOT_EXISTS
 
       return {
         id: row.id as string || `msg_${id}_${offset + index}`,
@@ -87,9 +91,9 @@ export async function GET(request: Request, { params }: Params) {
         contactPhone: row.phone as string,
         status,
         messageId: row.message_id as string | undefined,
-        sentAt: row.sent_at ? new Date(row.sent_at as string).toLocaleString('pt-BR') : '-',
-        deliveredAt: row.delivered_at ? new Date(row.delivered_at as string).toLocaleString('pt-BR') : undefined,
-        readAt: row.read_at ? new Date(row.read_at as string).toLocaleString('pt-BR') : undefined,
+        sentAt: row.sent_at ? new Date(row.sent_at as string).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '-',
+        deliveredAt: row.delivered_at ? new Date(row.delivered_at as string).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : undefined,
+        readAt: row.read_at ? new Date(row.read_at as string).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : undefined,
         error: row.error as string | undefined,
       }
     })

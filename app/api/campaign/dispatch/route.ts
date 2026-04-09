@@ -118,6 +118,13 @@ export async function POST(request: NextRequest) {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
 
+  // Fetch delay settings from campaign
+  const { data: campRow } = await supabase
+    .from('campaigns')
+    .select('delay_min_ms, delay_max_ms')
+    .eq('id', campaignId)
+    .single()
+
   const workflowPayload = {
     campaignId,
     templateName,
@@ -127,6 +134,8 @@ export async function POST(request: NextRequest) {
     phoneNumberId,
     accessToken,
     orgId,
+    minIntervalSeconds: campRow?.delay_min_ms ? Math.round(campRow.delay_min_ms / 1000) : 7,
+    maxIntervalSeconds: campRow?.delay_max_ms ? Math.round(campRow.delay_max_ms / 1000) : 63,
   };
 
   console.log(`[Dispatch] Firing workflow: ${baseUrl}/api/campaign/process`);

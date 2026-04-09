@@ -304,11 +304,19 @@ export async function POST(request: NextRequest) {
     `🚀 [Process] Campaign ${campaignId} — ${contacts.length} contacts, templates: [${allTemplates.join(", ")}], delay: ${minIntervalSeconds}-${maxIntervalSeconds}s`
   );
 
-  // Validate WhatsApp numbers before sending (Meta Cloud API only)
+  // Validate WhatsApp numbers before sending
   const allPhones = contacts.map(c => c.phone)
-  const validPhones = isEvolution
-    ? new Set(allPhones)  // Evolution: skip pre-validation (send directly, errors handled per contact)
-    : await validateWhatsAppNumbers(allPhones, resolvedPhoneId, resolvedToken)
+  let validPhones: Set<string>
+  if (isEvolution) {
+    const evoProvider = new EvolutionProvider(
+      orgConfig!.evolutionUrl || process.env.EVOLUTION_API_URL || 'http://evolution_api:8080',
+      orgConfig!.evolutionApiKey || process.env.EVOLUTION_API_KEY || '',
+      orgConfig!.evolutionInstance || process.env.EVOLUTION_INSTANCE || 'SmartZap'
+    )
+    validPhones = await evoProvider.checkNumbers(allPhones)
+  } else {
+    validPhones = await validateWhatsAppNumbers(allPhones, resolvedPhoneId, resolvedToken)
+  }
 
   // Mark invalid contacts immediately
   const invalidContacts = contacts.filter(c => {

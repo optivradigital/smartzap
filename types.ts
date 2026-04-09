@@ -24,7 +24,8 @@ export enum MessageStatus {
   SENT = 'Enviado',
   DELIVERED = 'Entregue',
   READ = 'Lido',
-  FAILED = 'Falhou'
+  FAILED = 'Falhou',
+  NOT_EXISTS = 'Não existe',
 }
 
 export type TemplateCategory = 'MARKETING' | 'UTILIDADE' | 'AUTENTICACAO';

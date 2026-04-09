@@ -1,20 +1,9 @@
-import { supabase } from '@/lib/supabase'
 import { Campaign } from '@/types'
+import { getRequestOrgId } from '@/lib/org-context'
+import { campaignDb } from '@/lib/supabase-db'
 
 export async function getCampaignsServer(): Promise<Campaign[]> {
-    const { data, error } = await supabase.from('campaigns')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-    if (error) {
-        console.error('Error fetching campaigns:', error)
-        return []
-    }
-
-    // Map to Campaign type (simulating API response transformation if needed)
-    return (data || []).map(row => ({
-        ...row,
-        createdAt: row.created_at, // simple camelCase mapping if needed
-        // Add other fields mapping if strict type required
-    })) as Campaign[]
+    const orgId = await getRequestOrgId()
+    if (!orgId) return []
+    return campaignDb.getAll(orgId)
 }
