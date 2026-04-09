@@ -413,13 +413,13 @@ export const contactDb = {
         if (error) throw error
     },
 
-    deleteMany: async (ids: string[]): Promise<number> => {
+    deleteMany: async (ids: string[], orgId?: string): Promise<number> => {
         if (ids.length === 0) return 0
 
-        const { error } = await supabase
-            .from('contacts')
-            .delete()
-            .in('id', ids)
+        let query = supabase.from('contacts').delete().in('id', ids)
+        if (orgId && orgId !== '*') query = query.eq('organization_id', orgId)
+
+        const { error } = await query
 
         if (error) throw error
 

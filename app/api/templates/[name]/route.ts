@@ -19,11 +19,9 @@ export async function GET(
     // Evolution orgs: busca template do Supabase
     const providerConfig = await loadProviderConfig(orgId)
     if (providerConfig?.type === 'evolution') {
-      const { data, error } = await supabase
-        .from('templates')
-        .select('*')
-        .eq('name', name)
-        .single()
+      const query = supabase.from('templates').select('*').eq('name', name)
+      if (orgId) query.eq('organization_id', orgId)
+      const { data, error } = await query.single()
 
       if (error || !data) {
         return NextResponse.json({ error: 'Template não encontrado' }, { status: 404 })
@@ -122,10 +120,9 @@ export async function DELETE(
     // Evolution orgs: apaga template do Supabase
     const providerConfig = await loadProviderConfig(orgId)
     if (providerConfig?.type === 'evolution') {
-      const { error } = await supabase
-        .from('templates')
-        .delete()
-        .eq('name', name)
+      const query = supabase.from('templates').delete().eq('name', name)
+      if (orgId) query.eq('organization_id', orgId)
+      const { error } = await query
 
       if (error) {
         return NextResponse.json({ error: 'Erro ao deletar template' }, { status: 500 })

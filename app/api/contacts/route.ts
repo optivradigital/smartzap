@@ -77,7 +77,7 @@ export async function DELETE(request: Request) {
       )
     }
 
-    const deleted = await contactDb.deleteMany(validation.data.ids)
+    const deleted = await contactDb.deleteMany(validation.data.ids, orgId)
     return NextResponse.json({ deleted })
   } catch (error) {
     console.error('Failed to delete contacts:', error)
