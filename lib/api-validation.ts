@@ -58,8 +58,8 @@ export const CreateCampaignSchema = z.object({
   templateVariables: z.array(z.string()).optional(),  // Static values for {{2}}, {{3}}, etc.
   // Anti-ban fields (Evolution API)
   providerType: z.enum(['meta', 'evolution']).optional(),
-  delayMinMs: z.number().int().min(500).max(60000).optional(),
-  delayMaxMs: z.number().int().min(500).max(120000).optional(),
+  delayMinMs: z.number().int().min(500).max(3600000).optional(),
+  delayMaxMs: z.number().int().min(500).max(3600000).optional(),
   simulateTyping: z.boolean().optional(),
   dailyLimit: z.number().int().min(0).max(10000).optional().nullable(),
   messageVariants: z.array(z.string()).optional(),

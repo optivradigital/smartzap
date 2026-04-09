@@ -82,9 +82,9 @@ export function AntiBanSettings({ value, onChange, providerType }: Props) {
             <input
               type="number"
               min={1}
-              max={60}
+              max={3600}
               value={msToSec(value.delayMinMs)}
-              onChange={e => onChange({ ...value, delayMinMs: secToMs(+e.target.value) })}
+              onChange={e => onChange({ ...value, delayMinMs: secToMs(Math.max(1, Math.min(3600, +e.target.value || 1))) })}
               className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500"
             />
           </div>
@@ -93,9 +93,9 @@ export function AntiBanSettings({ value, onChange, providerType }: Props) {
             <input
               type="number"
               min={1}
-              max={120}
+              max={3600}
               value={msToSec(value.delayMaxMs)}
-              onChange={e => onChange({ ...value, delayMaxMs: secToMs(+e.target.value) })}
+              onChange={e => onChange({ ...value, delayMaxMs: secToMs(Math.max(1, Math.min(3600, +e.target.value || 1))) })}
               className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500"
             />
           </div>
