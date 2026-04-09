@@ -1,0 +1,98 @@
+name: Run DB Migration
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    name: Apply migration 0004
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run migration via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/ubuntu/apps/smartzap
+
+            # Lê as variáveis do .env
+            export $(grep -v '^#' .env | xargs)
+
+            # Extrai o project ref da URL (https://xxxx.supabase.co → xxxx)
+            PROJECT_REF=$(echo "$NEXT_PUBLIC_SUPABASE_URL" | sed 's|https://||' | sed 's|\.supabase\.co.*||')
+
+            echo "Project ref: $PROJECT_REF"
+
+            # Executa o SQL via Supabase Management API
+            RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+              -X POST \
+              "https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "query": "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS provider_type TEXT NOT NULL DEFAULT '\''meta'\'', ADD COLUMN IF NOT EXISTS delay_min_ms INTEGER NOT NULL DEFAULT 3000, ADD COLUMN IF NOT EXISTS delay_max_ms INTEGER NOT NULL DEFAULT 12000, ADD COLUMN IF NOT EXISTS simulate_typing BOOLEAN NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS daily_limit INTEGER, ADD COLUMN IF NOT EXISTS message_variants JSONB NOT NULL DEFAULT '\''[]'\''::jsonb"
+              }')
+
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+            BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
+
+            echo "Response: $BODY"
+            echo "Status: $HTTP_STATUS"
+
+            if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "201" ]; then
+              echo "✅ Migration aplicada com sucesso"
+            else
+              echo "⚠️  Management API falhou (status $HTTP_STATUS) — tentando via Node.js..."
+
+              # Fallback: cria script Node temporário e roda no container
+              cat > /tmp/migrate.mjs << 'EOF'
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.SUPABASE_SERVICE_ROLE_KEY,
+              { auth: { autoRefreshToken: false, persistSession: false } }
+            )
+
+            // Verifica se as colunas já existem
+            const { data, error } = await supabase
+              .from('campaigns')
+              .select('delay_min_ms')
+              .limit(1)
+
+            if (error?.message?.includes('column') && error?.message?.includes('does not exist')) {
+              console.log('Colunas não existem — usando psql...')
+              process.exit(2)
+            } else {
+              console.log('✅ Colunas já existem')
+              process.exit(0)
+            }
+            EOF
+
+              docker exec -e NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+                          -e SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+                          smartzap node /tmp/migrate.mjs 2>&1 || true
+
+              # Última tentativa: psql direto se DATABASE_URL estiver disponível
+              if [ -n "$DATABASE_URL" ]; then
+                echo "Tentando via psql..."
+                docker exec smartzap sh -c "
+                  psql \$DATABASE_URL -c \"
+                    ALTER TABLE campaigns
+                      ADD COLUMN IF NOT EXISTS provider_type TEXT NOT NULL DEFAULT 'meta',
+                      ADD COLUMN IF NOT EXISTS delay_min_ms INTEGER NOT NULL DEFAULT 3000,
+                      ADD COLUMN IF NOT EXISTS delay_max_ms INTEGER NOT NULL DEFAULT 12000,
+                      ADD COLUMN IF NOT EXISTS simulate_typing BOOLEAN NOT NULL DEFAULT false,
+                      ADD COLUMN IF NOT EXISTS daily_limit INTEGER,
+                      ADD COLUMN IF NOT EXISTS message_variants JSONB NOT NULL DEFAULT '[]'::jsonb;
+                  \"
+                " && echo "✅ Migration via psql OK"
+              else
+                echo "❌ DATABASE_URL não disponível. Rode o SQL manualmente no Supabase Dashboard."
+                exit 1
+              fi
+            fi
