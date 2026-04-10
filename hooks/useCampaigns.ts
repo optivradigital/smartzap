@@ -8,6 +8,10 @@ import { useCurrentUser } from './useCurrentUser';
 // --- Data Hook (React Query + Realtime) ---
 export const useCampaignsQuery = (initialData?: Campaign[]) => {
   const { activeOrgId } = useCurrentUser()
+  const orgFilter = activeOrgId && activeOrgId !== '*'
+    ? `organization_id=eq.${activeOrgId}`
+    : undefined
+
   return useRealtimeQuery({
     queryKey: ['campaigns', activeOrgId ?? 'default'],
     queryFn: campaignService.getAll,
@@ -17,6 +21,7 @@ export const useCampaignsQuery = (initialData?: Campaign[]) => {
     table: 'campaigns',
     events: ['INSERT', 'UPDATE', 'DELETE'],
     debounceMs: 200,
+    filter: orgFilter,
   });
 };
 

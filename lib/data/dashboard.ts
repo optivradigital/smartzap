@@ -1,11 +1,19 @@
 import { supabase } from '@/lib/supabase'
 import { DashboardStats, ChartDataPoint } from '@/services/dashboardService'
 import { getCampaignsServer } from './campaigns'
+import { getRequestOrgId, SUPER_ADMIN_ORG } from '@/lib/org-context'
 
 export async function getDashboardStatsServer(): Promise<{ stats: DashboardStats, recentCampaigns: any[] }> {
+    const orgId = await getRequestOrgId()
+
+    let statsQuery = supabase.from('campaigns').select('sent, delivered, read, failed, status')
+    if (orgId && orgId !== SUPER_ADMIN_ORG) {
+        statsQuery = statsQuery.eq('organization_id', orgId)
+    }
+
     // Parallel fetch stats source data and campaigns
     const [statsData, campaigns] = await Promise.all([
-        supabase.from('campaigns').select('sent, delivered, read, failed, status'),
+        statsQuery,
         getCampaignsServer()
     ])
 

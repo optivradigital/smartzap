@@ -77,8 +77,8 @@ export async function DELETE(request: NextRequest) {
   const name = searchParams.get('name')
   if (!name) return NextResponse.json({ error: 'name é obrigatório' }, { status: 400 })
 
-  const query = supabase.from('templates').delete().eq('name', name)
-  if (orgId) query.eq('organization_id', orgId)
+  let query = supabase.from('templates').delete().eq('name', name)
+  if (orgId) query = query.eq('organization_id', orgId)
 
   const { error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
