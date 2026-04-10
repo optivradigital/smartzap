@@ -66,8 +66,9 @@ export function useCurrentUser() {
       credentials: 'include',
       body: JSON.stringify({ orgId }),
     })
-    // Invalidate all queries so everything refetches with new org context
-    await queryClient.invalidateQueries()
+    // Remove all cached data so everything fetches fresh with new org context
+    // (invalidateQueries shows stale data during refetch — removeQueries forces loading state)
+    queryClient.removeQueries()
   }
 
   return { user, isLoading, isSuperAdmin, isManager, isUser, organizations, activeOrgId, switchOrg }
