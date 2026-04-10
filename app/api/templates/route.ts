@@ -107,9 +107,7 @@ export async function GET() {
     }
 
     const templates = await fetchTemplatesFromMeta(credentials.businessAccountId, credentials.accessToken)
-    return NextResponse.json(templates, {
-      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
-    })
+    return NextResponse.json(templates)
   } catch (error) {
     console.error('Templates API Error:', error)
     return NextResponse.json(
