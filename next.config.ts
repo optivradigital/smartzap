@@ -55,10 +55,23 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Headers for security and CORS
+  // Headers de segurança e CORS
   async headers() {
-    const allowedOrigin = process.env.FRONTEND_URL || 'https://smartzap.vercel.app'
+    const allowedOrigin = process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'
     return [
+      // Headers de segurança em todas as rotas
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+      // CORS para rotas de API
       {
         source: '/api/:path*',
         headers: [
