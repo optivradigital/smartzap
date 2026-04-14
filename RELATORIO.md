@@ -22,10 +22,10 @@
 ### 🟡 Infraestrutura / CI/CD
 | # | Item | Status | Obs |
 |---|---|---|---|
-| I-01 | Ambiente de dev/staging acessível online | 🟡 Em andamento | EC2 configurado, aguarda DNS `dev.smartzap` → `52.1.228.224` |
+| I-01 | Ambiente de dev/staging acessível online | ✅ Concluído | https://dev.smartzap.optivra.digital — SSL ativo |
 | I-02 | GitHub Actions → deploy automático em develop | ✅ Configurado | `.github/workflows/staging.yml` → porta 3004 |
 | I-03 | Aprovação de PR obrigatória para deploy em produção | ⏳ Pendente | GitHub → Settings → Branches → main → require PR |
-| I-04 | SSL `dev.smartzap.optivra.digital` | ⏳ Pendente | Após DNS: `sudo certbot --nginx -d dev.smartzap.optivra.digital` |
+| I-04 | SSL `dev.smartzap.optivra.digital` | ✅ Concluído | Certbot emitido, válido até 2026-07-13 |
 | I-05 | Remover rastros da Vercel | ✅ Concluído | vercel.json deletado, headers movidos para next.config.ts |
 
 ---
