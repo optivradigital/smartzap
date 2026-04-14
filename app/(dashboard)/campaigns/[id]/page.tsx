@@ -14,6 +14,7 @@ export default function CampaignDetailsPage() {
       searchTerm={controller.searchTerm}
       setSearchTerm={controller.setSearchTerm}
       navigate={controller.navigate}
+      messageStats={controller.messageStats}
       onPause={controller.onPause}
       onResume={controller.onResume}
       onStart={controller.onStart}

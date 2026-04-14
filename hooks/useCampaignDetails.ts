@@ -179,6 +179,7 @@ export const useCampaignDetailsController = () => {
 
     const statusLabels: Record<string, string> = {
       sent: 'Enviado', delivered: 'Entregue', read: 'Lido', failed: 'Falhou', pending: 'Pendente',
+      invalid: 'Sem WhatsApp', 'Não existe': 'Sem WhatsApp',
     };
 
     const rows = [
@@ -212,6 +213,7 @@ export const useCampaignDetailsController = () => {
     setSearchTerm,
     navigate,
     realStats,
+    messageStats: messagesQuery.data?.stats,
     // Realtime status
     isRealtimeConnected,
     shouldShowRefreshButton,

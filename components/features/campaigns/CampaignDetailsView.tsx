@@ -87,6 +87,16 @@ const MessageStatusBadge = ({ status }: { status: MessageStatus }) => {
 // Navigate function type compatible with Next.js
 type NavigateFn = (path: string, options?: { replace?: boolean }) => void;
 
+interface MessageStats {
+  total: number;
+  pending: number;
+  sent: number;
+  delivered: number;
+  read: number;
+  failed: number;
+  invalid: number;
+}
+
 interface CampaignDetailsViewProps {
   campaign?: Campaign;
   messages: Message[];
@@ -94,6 +104,7 @@ interface CampaignDetailsViewProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   navigate: NavigateFn;
+  messageStats?: MessageStats;
   // Actions
   onPause?: () => void;
   onResume?: () => void;
@@ -119,6 +130,7 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
   searchTerm,
   setSearchTerm,
   navigate,
+  messageStats,
   onPause,
   onResume,
   onStart,
@@ -135,6 +147,17 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
   onExportCsv,
 }) => {
   if (isLoading || !campaign) return <div className="p-10 text-center text-gray-500">Carregando...</div>;
+
+  // Falhas: soma failed + invalid (números sem WhatsApp) das stats reais
+  const failedCount = messageStats ? (messageStats.failed + messageStats.invalid) : (campaign.failed ?? 0);
+  const failedSubvalue = (() => {
+    if (!messageStats) return 'Números inválidos ou bloqueio';
+    const { failed, invalid } = messageStats;
+    if (failed > 0 && invalid > 0) return `${invalid} sem WhatsApp · ${failed} bloqueio/erro`;
+    if (invalid > 0) return `${invalid} número${invalid > 1 ? 's' : ''} sem WhatsApp ativo`;
+    if (failed > 0) return `${failed} bloqueio${failed > 1 ? 's' : ''} ou erro de envio`;
+    return 'Nenhuma falha';
+  })();
 
   // Format scheduled time for display
   const scheduledTimeDisplay = campaign.scheduledAt
@@ -266,8 +289,8 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
         />
         <DetailCard
           title="Falhas"
-          value={(campaign.failed ?? 0).toLocaleString()}
-          subvalue="Números inválidos ou bloqueio"
+          value={failedCount.toLocaleString()}
+          subvalue={failedSubvalue}
           icon={AlertCircle}
           color="#ef4444"
         />
