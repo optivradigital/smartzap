@@ -7,6 +7,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react'
 
 function LoginForm() {
@@ -105,6 +106,15 @@ function LoginForm() {
           </div>
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
+
+          <div className="text-right">
+            <Link
+              href="/forgot-password"
+              className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+            >
+              Esqueceu a senha?
+            </Link>
+          </div>
 
           <button
             type="submit"
