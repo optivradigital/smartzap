@@ -3,6 +3,11 @@ name: Tests
 on:
   push:
     branches: [develop, main]
+    paths-ignore:
+      - 'PROGRESS.md'
+      - 'RELATORIO.md'
+      - '**.md'
+      - 'docs/**'
   pull_request:
     branches: [main]
 

@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'PROGRESS.md'
+      - 'RELATORIO.md'
+      - '**.md'
+      - 'docs/**'
   workflow_dispatch:
 
 jobs:
