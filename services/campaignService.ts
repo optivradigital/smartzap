@@ -113,7 +113,7 @@ export const campaignService = {
   // ASYNC: Get real message status from campaign_contacts table (paginated)
   getMessages: async (id: string, options?: { limit?: number; offset?: number; status?: string }): Promise<{
     messages: Message[];
-    stats: { total: number; pending: number; sent: number; delivered: number; read: number; failed: number };
+    stats: { total: number; pending: number; sent: number; delivered: number; read: number; failed: number; invalid: number };
     pagination: { limit: number; offset: number; total: number; hasMore: boolean };
   }> => {
     const params = new URLSearchParams();
@@ -125,7 +125,7 @@ export const campaignService = {
     const response = await fetch(url);
     if (!response.ok) {
       console.error('Failed to fetch messages:', response.statusText);
-      return { messages: [], stats: { total: 0, pending: 0, sent: 0, delivered: 0, read: 0, failed: 0 }, pagination: { limit: 50, offset: 0, total: 0, hasMore: false } };
+      return { messages: [], stats: { total: 0, pending: 0, sent: 0, delivered: 0, read: 0, failed: 0, invalid: 0 }, pagination: { limit: 50, offset: 0, total: 0, hasMore: false } };
     }
     return response.json();
   },

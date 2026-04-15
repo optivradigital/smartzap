@@ -34,6 +34,7 @@ const MessageStatusBadge = ({ status }: { status: MessageStatus }) => {
     [MessageStatus.SENT]: 'text-gray-400 bg-gray-500/10 border-gray-500/20',
     [MessageStatus.FAILED]: 'text-red-400 bg-red-500/10 border-red-500/20',
     [MessageStatus.NOT_EXISTS]: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+    [MessageStatus.INVALID]: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
     // Fallback para valores antigos em inglês
     'Pending': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
     'Read': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
@@ -49,6 +50,7 @@ const MessageStatusBadge = ({ status }: { status: MessageStatus }) => {
     [MessageStatus.SENT]: <Clock size={12} className="mr-1" />,
     [MessageStatus.FAILED]: <AlertCircle size={12} className="mr-1" />,
     [MessageStatus.NOT_EXISTS]: <PhoneOff size={12} className="mr-1" />,
+    [MessageStatus.INVALID]: <PhoneOff size={12} className="mr-1" />,
     // Fallback para valores antigos em inglês
     'Pending': <Loader2 size={12} className="mr-1 animate-spin" />,
     'Read': <Eye size={12} className="mr-1" />,
@@ -346,6 +348,8 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
                   <td className="px-6 py-3">
                     {msg.error ? (
                       <span className="text-red-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> {msg.error}</span>
+                    ) : (msg.status === MessageStatus.INVALID || msg.status === MessageStatus.NOT_EXISTS) ? (
+                      <span className="text-orange-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> Sem WhatsApp ativo</span>
                     ) : (
                       <span className="text-gray-600 text-xs">-</span>
                     )}

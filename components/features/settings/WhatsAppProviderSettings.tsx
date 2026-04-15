@@ -77,10 +77,9 @@ export function WhatsAppProviderSettings() {
   // Polling para QR code atualizado enquanto aguarda scan (Evolution)
   useEffect(() => {
     if (config.type !== 'evolution' || status?.connected) return
-    if (!status?.qrCode) return
     const interval = setInterval(() => fetchStatus(true), 5000)
     return () => clearInterval(interval)
-  }, [config.type, status?.connected, status?.qrCode, fetchStatus])
+  }, [config.type, status?.connected, fetchStatus])
 
   const handleSave = async () => {
     setSaving(true)

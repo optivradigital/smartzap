@@ -26,6 +26,7 @@ export enum MessageStatus {
   READ = 'Lido',
   FAILED = 'Falhou',
   NOT_EXISTS = 'Não existe',
+  INVALID = 'invalid',
 }
 
 export type TemplateCategory = 'MARKETING' | 'UTILIDADE' | 'AUTENTICACAO';
