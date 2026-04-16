@@ -18,36 +18,44 @@ export async function GET() {
   const orgId = user?.organizationId
   const config = await loadProviderConfig(orgId)
 
-  if (!config) return NextResponse.json({ type: 'meta' })
+  // If no Redis config, fall back to env vars for Evolution (server-configured deployments)
+  const effectiveConfig: Partial<ProviderConfig> = config ?? {}
+  const evolutionUrlFromEnv = process.env.EVOLUTION_API_URL || ''
+  const evolutionKeyFromEnv = process.env.EVOLUTION_API_KEY || ''
+  const evolutionInstanceFromEnv = process.env.EVOLUTION_INSTANCE || ''
 
-  const hasToken = !!(config.accessToken)
-  const hasEvolutionKey = !!(config.evolutionApiKey)
+  const hasEnvEvolution = !!(evolutionUrlFromEnv && evolutionKeyFromEnv)
+  const resolvedType = effectiveConfig.type || (hasEnvEvolution ? 'evolution' : 'meta')
+  const resolvedEvolutionUrl = effectiveConfig.evolutionUrl || evolutionUrlFromEnv
+  const resolvedEvolutionInstance = effectiveConfig.evolutionInstance || evolutionInstanceFromEnv || 'SmartZap'
+  const resolvedEvolutionKeyExists = !!(effectiveConfig.evolutionApiKey || evolutionKeyFromEnv)
 
-  const hasGptToken = !!(config.gptmakerJwtToken)
-  const hasChatwootToken = !!(config.chatwootApiToken)
+  const hasToken = !!(effectiveConfig.accessToken)
+  const hasGptToken = !!(effectiveConfig.gptmakerJwtToken)
+  const hasChatwootToken = !!(effectiveConfig.chatwootApiToken)
 
   return NextResponse.json({
-    type: config.type || 'meta',
-    phoneNumberId: config.phoneNumberId || '',
-    businessAccountId: config.businessAccountId || '',
+    type: resolvedType,
+    phoneNumberId: effectiveConfig.phoneNumberId || '',
+    businessAccountId: effectiveConfig.businessAccountId || '',
     accessToken: '',
     tokenSaved: hasToken,
-    tokenPreview: hasToken ? config.accessToken!.slice(0, 8) + '••••••' : '',
-    evolutionUrl: config.evolutionUrl || '',
-    evolutionInstance: config.evolutionInstance || '',
+    tokenPreview: hasToken ? effectiveConfig.accessToken!.slice(0, 8) + '••••••' : '',
+    evolutionUrl: resolvedEvolutionUrl,
+    evolutionInstance: resolvedEvolutionInstance,
     evolutionApiKey: '',
-    evolutionKeySaved: hasEvolutionKey,
-    gptmakerAgentId: config.gptmakerAgentId || '',
+    evolutionKeySaved: resolvedEvolutionKeyExists,
+    gptmakerAgentId: effectiveConfig.gptmakerAgentId || '',
     gptmakerJwtToken: '',
     gptmakerJwtTokenSaved: hasGptToken,
-    gptmakerJwtTokenPreview: hasGptToken ? config.gptmakerJwtToken!.slice(0, 8) + '••••••' : '',
-    gptmakerDirectChannel: config.gptmakerDirectChannel ?? false,
-    chatwootUrl: config.chatwootUrl || '',
-    chatwootAccountId: config.chatwootAccountId || '',
+    gptmakerJwtTokenPreview: hasGptToken ? effectiveConfig.gptmakerJwtToken!.slice(0, 8) + '••••••' : '',
+    gptmakerDirectChannel: effectiveConfig.gptmakerDirectChannel ?? false,
+    chatwootUrl: effectiveConfig.chatwootUrl || '',
+    chatwootAccountId: effectiveConfig.chatwootAccountId || '',
     chatwootApiToken: '',
     chatwootApiTokenSaved: hasChatwootToken,
-    chatwootApiTokenPreview: hasChatwootToken ? config.chatwootApiToken!.slice(0, 8) + '••••••' : '',
-    chatwootInboxId: config.chatwootInboxId || '',
+    chatwootApiTokenPreview: hasChatwootToken ? effectiveConfig.chatwootApiToken!.slice(0, 8) + '••••••' : '',
+    chatwootInboxId: effectiveConfig.chatwootInboxId || '',
   })
 }
 
