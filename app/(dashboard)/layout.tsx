@@ -1,8 +1,7 @@
-import { getUserAuthStatus } from '@/lib/user-auth'
+import { currentUser } from '@clerk/nextjs/server'
 import { getHealthStatus } from '@/lib/health-check'
 import { DashboardShell } from './DashboardShell'
 
-// This is a Server Component
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardLayout({
@@ -10,12 +9,21 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Fetch everything in parallel on the server
-  // NO loading spinners, instant initial HTML
-  const [authStatus, healthStatus] = await Promise.all([
-    getUserAuthStatus(),
-    getHealthStatus({ checkExternal: false, checkPing: false }), // Fast check for critical path
+  const [clerkUser, healthStatus] = await Promise.all([
+    currentUser(),
+    getHealthStatus({ checkExternal: false, checkPing: false }),
   ])
+
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress ?? ''
+  const name = clerkUser?.firstName
+    ? `${clerkUser.firstName} ${clerkUser.lastName ?? ''}`.trim()
+    : email
+
+  const authStatus = {
+    isSetup: true,
+    isAuthenticated: !!clerkUser,
+    company: clerkUser ? { name, email } : null,
+  }
 
   return (
     <DashboardShell

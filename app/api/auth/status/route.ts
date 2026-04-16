@@ -1,55 +1,91 @@
 /**
- * Auth Status API — Multi-User
- * GET: Check if the session is valid (any authenticated user)
- *      For super_admin: also returns list of all orgs + activeOrgId
+ * Auth Status API
+ * GET: Returns authenticated user info via Clerk + org data from Supabase
  */
 
 import { NextResponse } from 'next/server'
-import { validateMultiUserSession, getCurrentUser, getActiveOrgId } from '@/lib/multi-user-auth'
-import { isSetupComplete } from '@/lib/user-auth'
+import { auth, currentUser } from '@clerk/nextjs/server'
+import { getActiveOrgId } from '@/lib/multi-user-auth'
 import { supabase } from '@/lib/supabase'
 
-// Node.js runtime (not edge) — required for crypto/pbkdf2
-export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const isConfigured = !!process.env.MASTER_PASSWORD
-    const isSetup = await isSetupComplete()
-    const isAuthenticated = await validateMultiUserSession()
-    const user = isAuthenticated ? await getCurrentUser() : null
+    const { userId } = await auth()
+
+    if (!userId) {
+      return NextResponse.json({
+        isAuthenticated: false,
+        isConfigured: true,
+        isSetup: true,
+        user: null,
+        organizations: [],
+        activeOrgId: null,
+        company: null,
+      })
+    }
+
+    const clerkUser = await currentUser()
+    const email = clerkUser?.emailAddresses?.[0]?.emailAddress ?? ''
+
+    // Look up user in smartzap_users by email
+    const { data: dbUser } = await supabase
+      .from('smartzap_users')
+      .select('id, email, name, role, organization_id')
+      .eq('email', email.toLowerCase())
+      .single()
+
+    const user = dbUser
+      ? {
+          id: dbUser.id,
+          email: dbUser.email,
+          name: dbUser.name || email,
+          role: dbUser.role as 'super_admin' | 'manager' | 'user',
+          isSuperAdmin: dbUser.role === 'super_admin',
+          organizationId: dbUser.organization_id,
+        }
+      : {
+          id: userId,
+          email,
+          name: clerkUser?.firstName
+            ? `${clerkUser.firstName} ${clerkUser.lastName ?? ''}`.trim()
+            : email,
+          role: 'user' as const,
+          isSuperAdmin: false,
+          organizationId: null,
+        }
 
     let organizations: { id: string; name: string; slug: string }[] = []
     let activeOrgId: string | null = null
 
-    if (user?.isSuperAdmin) {
-      // Fetch all orgs for the org switcher dropdown
+    if (user.isSuperAdmin) {
       const { data: orgs } = await supabase
         .from('organizations')
         .select('id, name, slug')
         .order('name', { ascending: true })
       organizations = orgs || []
 
-      // Get the active org from cookie
       activeOrgId = await getActiveOrgId()
-      // If no active org selected yet, default to first org or user's own org
       if (!activeOrgId && organizations.length > 0) {
         activeOrgId = user.organizationId || organizations[0].id
       }
     }
 
     return NextResponse.json({
-      isConfigured,
-      isSetup,
-      isAuthenticated,
+      isConfigured: true,
+      isSetup: true,
+      isAuthenticated: true,
       user,
       organizations,
       activeOrgId,
-      // legacy compat
-      company: user ? { name: user.name || user.email, email: user.email } : null,
+      company: { name: user.name, email: user.email },
     })
   } catch (error) {
     console.error('Auth status error:', error)
-    return NextResponse.json({ isConfigured: false, isSetup: false, isAuthenticated: false, company: null }, { status: 500 })
+    return NextResponse.json(
+      { isConfigured: false, isSetup: false, isAuthenticated: false, company: null },
+      { status: 500 }
+    )
   }
 }
