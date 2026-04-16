@@ -1,4 +1,4 @@
-import { currentUser } from '@clerk/nextjs/server'
+import { getCurrentUser } from '@/lib/multi-user-auth'
 import { getHealthStatus } from '@/lib/health-check'
 import { DashboardShell } from './DashboardShell'
 
@@ -9,20 +9,15 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [clerkUser, healthStatus] = await Promise.all([
-    currentUser(),
+  const [user, healthStatus] = await Promise.all([
+    getCurrentUser(),
     getHealthStatus({ checkExternal: false, checkPing: false }),
   ])
 
-  const email = clerkUser?.emailAddresses?.[0]?.emailAddress ?? ''
-  const name = clerkUser?.firstName
-    ? `${clerkUser.firstName} ${clerkUser.lastName ?? ''}`.trim()
-    : email
-
   const authStatus = {
     isSetup: true,
-    isAuthenticated: !!clerkUser,
-    company: clerkUser ? { name, email } : null,
+    isAuthenticated: !!user,
+    company: user ? { name: user.name || user.email, email: user.email } : null,
   }
 
   return (

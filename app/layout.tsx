@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { Toaster } from 'sonner'
-import { ClerkProvider } from '@clerk/nextjs'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -21,15 +20,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
-      <html lang="pt-BR" className={`dark ${inter.variable}`} suppressHydrationWarning>
-        <body className="font-sans antialiased">
-          <Providers>
-            <Toaster richColors position="top-right" theme="dark" />
-            {children}
-          </Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="pt-BR" className={`dark ${inter.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased">
+        <Providers>
+          <Toaster richColors position="top-right" theme="dark" />
+          {children}
+        </Providers>
+      </body>
+    </html>
   )
 }
