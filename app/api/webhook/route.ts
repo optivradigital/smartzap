@@ -287,7 +287,9 @@ export async function POST(request: NextRequest) {
 
   // ── Evolution: delivery/read status updates ──────────────────────────────
   if (body.event === 'messages.update') {
-    const updates: Array<{ key: { id: string; fromMe: boolean }; update: { status: string } }> = body.data || []
+    const rawData = body.data
+    const updates: Array<{ key: { id: string; fromMe: boolean }; update: { status: string } }> =
+      Array.isArray(rawData) ? rawData : (rawData ? [rawData] : [])
     for (const u of updates) {
       if (!u.key?.fromMe || !u.key?.id) continue
       const ack = u.update?.status
