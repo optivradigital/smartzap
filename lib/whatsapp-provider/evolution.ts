@@ -26,8 +26,8 @@ export class EvolutionProvider implements IWhatsAppProvider {
     return phone.replace(/\D/g, '')
   }
 
-  /** Ensure the instance exists, creating it if needed */
-  private async ensureInstance(): Promise<void> {
+  /** Ensure the instance exists, creating it if needed. Returns QR from create response if available. */
+  private async ensureInstance(): Promise<string | undefined> {
     try {
       const check = await fetch(
         `${this.baseUrl}/instance/connectionState/${this.instance}`,
@@ -35,7 +35,7 @@ export class EvolutionProvider implements IWhatsAppProvider {
       )
       if (check.status === 404) {
         // Instance doesn't exist — create it
-        await fetch(`${this.baseUrl}/instance/create`, {
+        const createRes = await fetch(`${this.baseUrl}/instance/create`, {
           method: 'POST',
           headers: this.headers,
           body: JSON.stringify({
@@ -44,10 +44,20 @@ export class EvolutionProvider implements IWhatsAppProvider {
             integration: 'WHATSAPP-BAILEYS',
           }),
         })
+        if (createRes.ok) {
+          const createData = await createRes.json()
+          // Some versions return QR code directly in the create response
+          const qr = createData.qrcode?.base64 || createData.base64 || createData.qrCode
+          if (qr) return qr
+        } else {
+          const body = await createRes.text().catch(() => '')
+          console.warn(`[Evolution] create instance failed ${createRes.status}: ${body.slice(0, 300)}`)
+        }
       }
-    } catch {
-      // Non-fatal — proceed anyway
+    } catch (e) {
+      console.warn('[Evolution] ensureInstance error:', e)
     }
+    return undefined
   }
 
   /** Fetch QR code from the Evolution API */
@@ -58,25 +68,39 @@ export class EvolutionProvider implements IWhatsAppProvider {
         `${this.baseUrl}/instance/connect/${this.instance}`,
         { headers: this.headers }
       )
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => '')
+        console.warn(`[Evolution] fetchQrCode /connect ${res.status}: ${body.slice(0, 300)}`)
+        return undefined
+      }
+
       const data = await res.json()
 
       // v2: { code: "...", base64: "data:image/png;base64,..." }
       // v1: { qrcode: { base64: "..." } }
-      const qr = data.base64 || data.code || data.qrcode?.base64 || data.qrCode
+      const qr = data.base64 || data.qrcode?.base64 || data.qrCode
 
       if (qr) return qr
 
-      // Alternative: fetchQrCode endpoint (some versions)
+      // Fallback: fetchInstances (some versions embed QR there)
       const res2 = await fetch(
         `${this.baseUrl}/instance/fetchInstances`,
         { headers: this.headers }
       )
-      const instances = await res2.json()
-      const inst = Array.isArray(instances)
-        ? instances.find((i: any) => i.instance?.instanceName === this.instance || i.instanceName === this.instance)
-        : null
-      return inst?.instance?.qrcode?.base64 || inst?.qrcode?.base64 || undefined
-    } catch {
+      if (res2.ok) {
+        const instances = await res2.json()
+        const inst = Array.isArray(instances)
+          ? instances.find((i: any) => i.instance?.instanceName === this.instance || i.instanceName === this.instance)
+          : null
+        const qr2 = inst?.instance?.qrcode?.base64 || inst?.qrcode?.base64
+        if (qr2) return qr2
+      }
+
+      console.warn('[Evolution] fetchQrCode: no QR found in response:', JSON.stringify(data).slice(0, 300))
+      return undefined
+    } catch (e) {
+      console.warn('[Evolution] fetchQrCode error:', e)
       return undefined
     }
   }
@@ -141,8 +165,8 @@ export class EvolutionProvider implements IWhatsAppProvider {
 
   async getConnectionStatus(): Promise<ConnectionStatus> {
     try {
-      // Ensure instance exists before checking state
-      await this.ensureInstance()
+      // Ensure instance exists before checking state (may return QR from create response)
+      const qrFromCreate = await this.ensureInstance()
 
       const res = await fetch(
         `${this.baseUrl}/instance/connectionState/${this.instance}`,
@@ -150,7 +174,7 @@ export class EvolutionProvider implements IWhatsAppProvider {
       )
 
       if (!res.ok) {
-        const qrCode = await this.fetchQrCode()
+        const qrCode = qrFromCreate || await this.fetchQrCode()
         return { connected: false, state: 'connecting', qrCode }
       }
 
@@ -187,8 +211,8 @@ export class EvolutionProvider implements IWhatsAppProvider {
         }
       }
 
-      // Not connected — get QR code
-      const qrCode = await this.fetchQrCode()
+      // Not connected — get QR code (prefer QR from create if fresh)
+      const qrCode = qrFromCreate || await this.fetchQrCode()
       return { connected: false, state, qrCode }
 
     } catch (err) {
