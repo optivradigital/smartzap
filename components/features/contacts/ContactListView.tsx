@@ -431,7 +431,19 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
             </thead>
             <tbody className="divide-y divide-white/5">
               {contacts.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">Nenhum contato encontrado.</td></tr>
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-zinc-300 font-medium text-sm">Nenhum contato encontrado</p>
+                      <p className="text-zinc-600 text-xs max-w-xs">Importe um arquivo CSV com seus contatos ou ajuste os filtros aplicados.</p>
+                    </div>
+                  </td>
+                </tr>
               ) : (
                 contacts.map((contact) => (
                   <tr key={contact.id} className="hover:bg-white/5 transition-colors group">

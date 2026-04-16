@@ -29,7 +29,7 @@ export default function SignupPage() {
             footerActionLink: 'text-emerald-400 hover:text-emerald-300',
           },
         }}
-        fallbackRedirectUrl="/"
+        fallbackRedirectUrl="/onboarding"
         signInUrl="/login"
       />
 
