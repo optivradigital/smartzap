@@ -45,6 +45,18 @@ export async function loadProviderConfig(
   try {
     const key = providerConfigKey(orgId);
     const raw = await redis.get(key);
+
+    // If org-specific key not found, fall back to global key (handles migration
+    // from single-org setup and super_admin without active org cookie)
+    if (!raw && orgId && orgId !== "*") {
+      const globalRaw = await redis.get("whatsapp:provider:config");
+      if (globalRaw) {
+        return JSON.parse(
+          typeof globalRaw === "string" ? globalRaw : JSON.stringify(globalRaw)
+        ) as ProviderConfig;
+      }
+    }
+
     if (!raw) return null;
     return JSON.parse(
       typeof raw === "string" ? raw : JSON.stringify(raw)
