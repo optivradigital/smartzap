@@ -9,6 +9,7 @@ import { WhatsAppProviderSettings } from './WhatsAppProviderSettings';
 import { UserManagement } from './UserManagement'
 import { OrganizationManagement } from './OrganizationManagement'
 import { BrandingSettings } from './BrandingSettings';
+import { BillingSettings } from './BillingSettings';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface WebhookStats {
@@ -343,6 +344,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {[
           {href: "#whatsapp", label: "📱 WhatsApp", show: isManager},
           {href: "#usuarios", label: "👥 Usuários", show: isManager},
+          {href: "#billing", label: "💳 Plano & Faturamento", show: isManager},
           {href: "#branding", label: "🎨 Branding", show: isSuperAdmin},
           {href: "#organizacoes", label: "🏢 Organizações", show: isSuperAdmin},
         ].filter(l => l.show).map(link => (
@@ -1167,6 +1169,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             Adicione e gerencie os usuarios da sua organizacao. Managers podem criar e remover usuarios.
           </p>
           <UserManagement />
+        </div>
+        )}
+
+        {/* Billing Section — manager+ */}
+        {isManager && (
+        <div id="billing" className="glass-panel rounded-2xl p-8">
+          <BillingSettings />
         </div>
         )}
 
