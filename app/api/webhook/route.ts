@@ -406,14 +406,14 @@ export async function POST(request: NextRequest) {
   console.log('📨 Meta webhook received')
 
   try {
-    const entries = body.entry || []
+    const entries = Array.isArray(body.entry) ? body.entry : []
 
     for (const entry of entries) {
-      const changes = entry.changes || []
+      const changes = Array.isArray(entry.changes) ? entry.changes : []
 
       for (const change of changes) {
         // ── Campaign status updates ─────────────────────────────────────────
-        const statuses = change.value?.statuses || []
+        const statuses = Array.isArray(change.value?.statuses) ? change.value.statuses : []
 
         for (const statusUpdate of statuses) {
           const { id: messageId, status: msgStatus, errors } = statusUpdate
@@ -530,7 +530,7 @@ export async function POST(request: NextRequest) {
         }
 
         // ── Incoming messages → AI Agent (Meta Cloud API) ───────────────────
-        const messages = change.value?.messages || []
+        const messages = Array.isArray(change.value?.messages) ? change.value.messages : []
         for (const message of messages) {
           if (message.type !== 'text' || !message.text?.body) continue
 
