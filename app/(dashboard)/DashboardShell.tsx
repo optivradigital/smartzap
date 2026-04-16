@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useClerk } from '@clerk/nextjs'
 import {
     LayoutDashboard,
     MessageSquare,
@@ -475,6 +476,7 @@ export function DashboardShell({
     // Hydrate auth status in React Query if needed, or just use it directly
     // For now we use the prop directly for immediate rendering
 
+    const { signOut } = useClerk()
     const companyName = initialAuthStatus?.company?.name
     const { user: currentAuthUser, isSuperAdmin: isAuthSuperAdmin, organizations: authOrgs, activeOrgId: authActiveOrgId, switchOrg: authSwitchOrg } = useCurrentUser()
     const [orgDropdownOpen, setOrgDropdownOpen] = React.useState(false)
@@ -487,14 +489,10 @@ export function DashboardShell({
     const handleLogout = async () => {
         setIsLoggingOut(true)
         try {
-            await fetch('/api/auth/logout', { method: 'POST' })
-            // Invalidate role cache so next login gets fresh user data
             queryClient.removeQueries({ queryKey: ['currentUser'] })
-            router.push('/login')
-            router.refresh()
+            await signOut({ redirectUrl: '/login' })
         } catch (error) {
             console.error('Logout error:', error)
-        } finally {
             setIsLoggingOut(false)
         }
     }
