@@ -161,7 +161,26 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
     }
   }, [editingContact]);
 
-  if (isLoading) return <div className="text-white">Carregando contatos...</div>;
+  if (isLoading) return (
+    <div className="space-y-6">
+      <div className="h-8 w-36 bg-zinc-800/80 rounded-lg animate-pulse" />
+      <div className="grid grid-cols-3 gap-4">
+        {[...Array(3)].map((_, i) => <div key={i} className="glass-panel p-5 rounded-2xl h-20 animate-pulse" />)}
+      </div>
+      <div className="glass-panel rounded-2xl overflow-hidden">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="flex gap-4 px-5 py-4 border-b border-white/5">
+            <div className="w-4 h-4 rounded bg-zinc-800 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-40 bg-zinc-800/80 rounded animate-pulse" />
+              <div className="h-3 w-28 bg-zinc-800/50 rounded animate-pulse" />
+            </div>
+            <div className="h-6 w-16 bg-zinc-800/80 rounded-full animate-pulse" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   // --- Import Handlers ---
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,99 +282,100 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
   ];
 
   return (
-    <div className="space-y-8 relative">
+    <div className="space-y-6 relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Contatos</h1>
-          <p className="text-gray-400">Gerencie sua audiência e listas</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight leading-none mb-1">Contatos</h1>
+          <p className="text-sm text-zinc-500">Gerencie sua audiência e listas</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-2">
           {isSomeSelected && (
             <button
               onClick={onBulkDeleteClick}
-              className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 font-medium hover:bg-red-500/20 transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-medium hover:bg-red-500/20 transition-colors"
             >
-              <Trash2 size={18} />
+              <Trash2 size={15} />
               Excluir ({selectedIds.size})
             </button>
           )}
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-gray-300 font-medium hover:bg-white/5 transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-zinc-300 font-medium hover:bg-zinc-800 hover:border-zinc-600 transition-all"
           >
-            <UploadCloud size={18} />
+            <UploadCloud size={15} />
             Importar CSV
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-xl font-bold hover:bg-gray-200 transition-colors shadow-lg shadow-white/10"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-primary-900/30"
           >
-            <Plus size={18} />
+            <Plus size={15} />
             Novo Contato
           </button>
         </div>
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="glass-panel p-6 rounded-2xl">
-          <p className="text-sm text-gray-500 font-medium mb-1">Total de Contatos</p>
-          <p className="text-3xl font-bold text-white">{(stats?.total ?? 0).toLocaleString()}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="glass-panel p-5 rounded-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-px bg-zinc-600 opacity-40" />
+          <p className="text-[11px] text-zinc-500 font-semibold uppercase tracking-widest mb-1.5">Total</p>
+          <p className="text-2xl font-bold text-white tabular-nums">{(stats?.total ?? 0).toLocaleString()}</p>
         </div>
-        <div className="glass-panel p-6 rounded-2xl border-l-4 border-l-emerald-500">
-          <p className="text-sm text-emerald-500/80 font-medium mb-1">Opt-in Ativos</p>
-          <p className="text-3xl font-bold text-emerald-400">{(stats?.optIn ?? 0).toLocaleString()}</p>
+        <div className="glass-panel p-5 rounded-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-px bg-emerald-500 opacity-50" />
+          <p className="text-[11px] text-emerald-500/70 font-semibold uppercase tracking-widest mb-1.5">Opt-in Ativos</p>
+          <p className="text-2xl font-bold text-emerald-400 tabular-nums">{(stats?.optIn ?? 0).toLocaleString()}</p>
         </div>
-        <div className="glass-panel p-6 rounded-2xl border-l-4 border-l-zinc-700">
-          <p className="text-sm text-gray-500 font-medium mb-1">Inativos / Opt-out</p>
-          <p className="text-3xl font-bold text-gray-400">{(stats?.optOut ?? 0).toLocaleString()}</p>
+        <div className="glass-panel p-5 rounded-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-px bg-zinc-600 opacity-30" />
+          <p className="text-[11px] text-zinc-500 font-semibold uppercase tracking-widest mb-1.5">Opt-out / Inativos</p>
+          <p className="text-2xl font-bold text-zinc-400 tabular-nums">{(stats?.optOut ?? 0).toLocaleString()}</p>
         </div>
       </div>
 
       {/* Filters Bar */}
       <div className="glass-panel rounded-2xl">
-        <div className="p-5 border-b border-white/5 flex flex-col lg:flex-row gap-4">
+        <div className="p-4 border-b border-white/5 flex flex-col lg:flex-row gap-3">
           {/* Search */}
-          <div className="flex items-center gap-3 flex-1 bg-zinc-900/50 border border-white/10 rounded-xl px-4 py-2.5 max-w-md focus-within:border-primary-500/50 focus-within:ring-1 focus-within:ring-primary-500/50 transition-all">
-            <Search size={18} className="text-gray-500" />
+          <div className="flex items-center gap-2.5 flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 max-w-sm focus-within:border-primary-500/40 focus-within:ring-1 focus-within:ring-primary-500/20 transition-all">
+            <Search size={15} className="text-zinc-500 flex-shrink-0" />
             <input
               type="text"
               placeholder="Buscar por nome ou telefone..."
-              className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-gray-600"
+              className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-zinc-600"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
 
           {/* Filter Toggles */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-2.5 rounded-xl border transition-colors ${showFilters || statusFilter !== 'ALL' || tagFilter !== 'ALL'
+              className={`p-2.5 rounded-xl border transition-all ${showFilters || statusFilter !== 'ALL' || tagFilter !== 'ALL'
                 ? 'text-primary-400 bg-primary-500/10 border-primary-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-white/5 border-white/10'
+                : 'text-zinc-500 hover:text-zinc-200 bg-zinc-900 border-zinc-800 hover:border-zinc-600'
                 }`}
             >
-              <Filter size={20} />
+              <Filter size={15} />
             </button>
 
-            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => onStatusFilterChange(e.target.value as ContactStatus | 'ALL')}
-              className="px-4 py-2.5 text-sm font-medium bg-zinc-900 text-gray-300 hover:text-white rounded-xl border border-white/10 transition-colors outline-none cursor-pointer"
+              className="px-3 py-2.5 text-xs font-medium bg-zinc-900 text-zinc-300 rounded-xl border border-zinc-800 outline-none cursor-pointer transition-colors hover:border-zinc-600"
             >
               {statusOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
 
-            {/* Tag Filter */}
             <select
               value={tagFilter}
               onChange={(e) => onTagFilterChange(e.target.value)}
-              className="px-4 py-2.5 text-sm font-medium bg-zinc-900 text-gray-300 hover:text-white rounded-xl border border-white/10 transition-colors outline-none cursor-pointer"
+              className="px-3 py-2.5 text-xs font-medium bg-zinc-900 text-zinc-300 rounded-xl border border-zinc-800 outline-none cursor-pointer transition-colors hover:border-zinc-600"
             >
               <option value="ALL">Todas Tags</option>
               {tags.map(tag => (
