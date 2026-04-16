@@ -431,7 +431,7 @@ import { AccountAlertBanner } from '@/components/ui/AccountAlertBanner'
 
 interface SidebarItemProps {
     href: string
-    icon: React.ComponentType<{ size?: number }>
+    icon: React.ComponentType<{ size?: number; className?: string }>
     label: string
     isActive: boolean
     onClick?: () => void
@@ -443,13 +443,13 @@ const SidebarItem = ({ href, icon: Icon, label, isActive, onClick, onMouseEnter 
         href={href}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 mb-1 ${isActive
-            ? 'bg-primary-500/10 text-primary-400 font-medium border border-primary-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+        className={`nav-active-bar flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 ${isActive
+            ? 'bg-gradient-to-r from-primary-500/15 to-primary-500/5 text-primary-400 font-medium border border-primary-500/20'
+            : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100 border border-transparent'
             }`}
     >
-        <Icon size={20} />
-        <span>{label}</span>
+        <Icon size={18} className={isActive ? 'text-primary-400' : 'text-zinc-500'} />
+        <span className="text-sm">{label}</span>
     </PrefetchLink>
 )
 
@@ -592,47 +592,47 @@ export function DashboardShell({
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-zinc-950 lg:bg-transparent border-r border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-zinc-950 border-r border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     }`}
             >
-                <div className="h-full flex flex-col p-4">
+                <div className="h-full flex flex-col p-3">
                     {/* Logo */}
-                    <div className="h-16 flex items-center px-2 mb-6">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-primary-900/20 border border-white/10">
-                            <Zap className="text-white" size={20} fill="currentColor" />
+                    <div className="h-14 flex items-center px-2 mb-4">
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center mr-2.5 shadow-lg shadow-primary-900/30">
+                            <Zap className="text-white" size={16} fill="currentColor" />
                         </div>
                         <div>
                             {branding.brand_logo_url ? (
-                              <img src={branding.brand_logo_url} alt={branding.brand_name} className="h-9 object-contain" />
+                              <img src={branding.brand_logo_url} alt={branding.brand_name} className="h-8 object-contain" />
                             ) : (
-                              <span className="text-xl font-bold text-white tracking-tight block">{branding.brand_name}</span>
+                              <span className="text-base font-bold text-white tracking-tight block leading-none">{branding.brand_name}</span>
                             )}
-                            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">by Optivra</span>
+                            <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-medium">by Optivra</span>
                         </div>
                         <button
                             className="ml-auto lg:hidden"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
-                            <X size={20} className="text-gray-400" />
+                            <X size={18} className="text-zinc-500" />
                         </button>
                     </div>
 
                     {/* Nav */}
-                    <nav className="flex-1 space-y-6 overflow-y-auto no-scrollbar">
+                    <nav className="flex-1 space-y-4 overflow-y-auto no-scrollbar">
                         <div>
                             <PrefetchLink
                                 href="/campaigns/new"
-                                className="w-full group relative flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all shadow-lg shadow-primary-900/20 overflow-hidden"
+                                className="w-full group relative flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all overflow-hidden text-sm emerald-glow"
                             >
-                                <div className="absolute inset-0 bg-primary-600 group-hover:bg-primary-500 transition-colors"></div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-500 group-hover:from-primary-500 group-hover:to-primary-400 transition-all"></div>
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                <Plus size={18} className="relative z-10 text-white" />
+                                <Plus size={16} className="relative z-10 text-white" />
                                 <span className="relative z-10 text-white">Nova Campanha</span>
                             </PrefetchLink>
                         </div>
 
-                        <div className="space-y-1">
-                            <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Menu</p>
+                        <div className="space-y-0.5">
+                            <p className="px-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-2">Menu</p>
                             {navItems.map((item) => (
                                 <SidebarItem
                                     key={item.path}
@@ -648,33 +648,30 @@ export function DashboardShell({
                     </nav>
 
                     {/* User Profile */}
-                    <div className="pt-4 mt-4 border-t border-white/5">
+                    <div className="pt-3 mt-3 border-t border-white/5">
                         <button
                             onClick={handleLogout}
                             disabled={isLoggingOut}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors border border-transparent hover:border-white/5"
+                            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-zinc-800/60 cursor-pointer transition-all duration-200 group border border-transparent hover:border-zinc-700/50"
                         >
-                            <div className="w-9 h-9 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center overflow-hidden">
-                                <span className="text-lg font-bold text-primary-400">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-600/30 to-primary-800/30 border border-primary-500/20 flex items-center justify-center flex-shrink-0">
+                                <span className="text-sm font-bold text-primary-400">
                                     {companyName?.charAt(0)?.toUpperCase() || 'S'}
                                 </span>
                             </div>
                             <div className="flex-1 min-w-0 text-left">
-                                <p className="text-sm font-medium text-white truncate">{companyName || 'SmartZap'}</p>
-                                <p className="text-xs text-gray-500 truncate">
+                                <p className="text-xs font-semibold text-zinc-200 truncate leading-none mb-0.5">{companyName || 'SmartZap'}</p>
+                                <p className="text-[10px] text-zinc-600 truncate">
                                   {currentAuthUser?.role === 'super_admin' ? 'Super Admin' : currentAuthUser?.role === 'manager' ? 'Manager' : 'Usuário'}
                                 </p>
                             </div>
                             {isLoggingOut ? (
-                                <div className="w-4 h-4 border-2 border-gray-500 border-t-white rounded-full animate-spin" />
+                                <div className="w-3.5 h-3.5 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
                             ) : (
-                                <LogOut size={16} className="text-gray-500 hover:text-white transition-colors" />
+                                <LogOut size={14} className="text-zinc-600 group-hover:text-zinc-300 transition-colors flex-shrink-0" />
                             )}
                         </button>
-                    </div>
-                    {/* Version */}
-                    <div className="pt-2 pb-1 text-center">
-                      <span className="text-[10px] text-zinc-600 font-mono">v2.0.0</span>
+                        <p className="text-center text-[10px] text-zinc-700 font-mono mt-2">v2.0.0</p>
                     </div>
                 </div>
             </aside>
@@ -682,23 +679,23 @@ export function DashboardShell({
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                 {/* Header */}
-                <header className="h-20 flex items-center justify-between px-6 lg:px-10 flex-shrink-0">
+                <header className="h-14 flex items-center justify-between px-5 lg:px-8 flex-shrink-0 border-b border-white/5">
                     <div className="flex items-center">
                         <button
-                            className="lg:hidden p-2 text-gray-400 mr-4"
+                            className="lg:hidden p-1.5 text-zinc-500 mr-3 hover:text-white transition-colors"
                             onClick={() => setIsMobileMenuOpen(true)}
                         >
-                            <Menu size={24} />
+                            <Menu size={20} />
                         </button>
 
-                        <div className="hidden md:flex items-center text-sm text-gray-500">
-                            <span className="hover:text-white cursor-pointer transition-colors">App</span>
-                            <span className="mx-2 text-gray-700">/</span>
-                            <span className="text-gray-300">{getPageTitle(pathname || '/')}</span>
+                        <div className="hidden md:flex items-center text-xs text-zinc-500">
+                            <span className="hover:text-zinc-300 cursor-pointer transition-colors">App</span>
+                            <ChevronRight size={12} className="mx-1.5 text-zinc-700" />
+                            <span className="text-zinc-300 font-medium">{getPageTitle(pathname || '/')}</span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         {/* Org switcher for super_admin / org badge for others */}
                         {isAuthSuperAdmin && authOrgs.length > 0 ? (
                           <div className="relative hidden sm:block">
@@ -742,10 +739,10 @@ export function DashboardShell({
                             </span>
                           </div>
                         ) : null}
-                        <div className="relative group">
-                            <Bell size={20} className="text-gray-500 group-hover:text-white transition-colors cursor-pointer" />
-                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary-500 rounded-full border-2 border-zinc-950"></span>
-                        </div>
+                        <button className="relative p-1.5 rounded-lg hover:bg-zinc-800 transition-colors group">
+                            <Bell size={17} className="text-zinc-500 group-hover:text-zinc-200 transition-colors" />
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full border border-zinc-950"></span>
+                        </button>
                     </div>
                 </header>
 

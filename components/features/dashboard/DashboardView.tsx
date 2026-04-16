@@ -21,34 +21,36 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardProps) => {
-  // Map color prop to actual Tailwind classes
-  const colorStyles: Record<string, { bg: string; text: string }> = {
-    'bg-blue-500': { bg: 'bg-blue-500/20', text: 'text-blue-400' },
-    'bg-emerald-500': { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
-    'bg-purple-500': { bg: 'bg-purple-500/20', text: 'text-purple-400' },
-    'bg-red-500': { bg: 'bg-red-500/20', text: 'text-red-400' },
+  const colorStyles: Record<string, { bg: string; text: string; glow: string; bar: string }> = {
+    'bg-blue-500':    { bg: 'bg-blue-500/10',    text: 'text-blue-400',    glow: 'shadow-blue-500/10',    bar: 'bg-blue-500' },
+    'bg-emerald-500': { bg: 'bg-emerald-500/10',  text: 'text-emerald-400', glow: 'shadow-emerald-500/10', bar: 'bg-emerald-500' },
+    'bg-purple-500':  { bg: 'bg-purple-500/10',   text: 'text-purple-400',  glow: 'shadow-purple-500/10',  bar: 'bg-purple-500' },
+    'bg-red-500':     { bg: 'bg-red-500/10',      text: 'text-red-400',     glow: 'shadow-red-500/10',     bar: 'bg-red-500' },
   };
-  
-  const styles = colorStyles[color] || { bg: 'bg-zinc-500/20', text: 'text-zinc-400' };
-  
+
+  const styles = colorStyles[color] || { bg: 'bg-zinc-500/10', text: 'text-zinc-400', glow: '', bar: 'bg-zinc-500' };
+
   return (
-    <div className="glass-panel p-6 rounded-2xl hover:bg-white/5 transition-colors group">
-      <div className="flex items-start justify-between mb-6">
-        <div className={`p-3 rounded-xl ${styles.bg} border border-white/5 group-hover:scale-105 transition-transform duration-300`}>
-          <Icon size={20} className={styles.text} />
+    <div className={`relative glass-panel p-5 rounded-2xl hover:bg-white/5 transition-all duration-300 group overflow-hidden shadow-lg ${styles.glow}`}>
+      {/* Top accent bar */}
+      <div className={`absolute top-0 left-0 right-0 h-px ${styles.bar} opacity-30`} />
+
+      <div className="flex items-start justify-between mb-5">
+        <div className={`p-2.5 rounded-xl ${styles.bg} border border-white/5 group-hover:scale-110 transition-transform duration-300`}>
+          <Icon size={18} className={styles.text} />
         </div>
         {trend ? (
-          <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${trendUp ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
-            {trendUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+          <div className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full border ${trendUp ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+            {trendUp ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
             {trend}
           </div>
         ) : (
-          <div className="text-xs text-gray-600 px-2 py-1">—</div>
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-700 mt-1.5" />
         )}
       </div>
       <div>
-        <h3 className="text-3xl font-bold text-white mb-1 tracking-tight">{value}</h3>
-        <p className="text-sm text-gray-500 font-medium">{title}</p>
+        <h3 className="text-2xl font-bold text-white tracking-tight leading-none mb-1.5">{value}</h3>
+        <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">{title}</p>
       </div>
     </div>
   );
@@ -108,15 +110,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Dashboard</h1>
-          <p className="text-gray-400">Visão geral da performance de mensagens</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight leading-none mb-1">Dashboard</h1>
+          <p className="text-sm text-zinc-500">Visão geral da performance de mensagens</p>
         </div>
-        <PrefetchLink 
+        <PrefetchLink
           href="/campaigns/new"
-          className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-white/5"
+          className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl font-medium text-sm transition-all shadow-lg shadow-primary-900/30 emerald-glow"
         >
+          <Send size={14} />
           Campanha Rápida
         </PrefetchLink>
       </div>
@@ -162,21 +165,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Chart Section */}
-        <div className="lg:col-span-2 glass-panel p-8 rounded-2xl">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-semibold text-white" id="chart-title">Volume de Mensagens</h3>
-            <div className="flex gap-2" role="group" aria-label="Período do gráfico">
+        <div className="lg:col-span-2 glass-panel p-6 rounded-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-semibold text-zinc-200" id="chart-title">Volume de Mensagens</h3>
+            <div className="flex gap-1 p-0.5 bg-zinc-800/80 rounded-lg border border-zinc-700/50" role="group" aria-label="Período do gráfico">
               {[
                 { key: '1H', label: 'Última hora' },
                 { key: '24H', label: 'Últimas 24 horas' },
                 { key: '7D', label: 'Últimos 7 dias' },
                 { key: '30D', label: 'Últimos 30 dias' }
               ].map((t) => (
-                <button 
-                  key={t.key} 
+                <button
+                  key={t.key}
                   aria-label={t.label}
                   aria-pressed={t.key === '7D'}
-                  className={`text-xs px-3 py-1 rounded-lg transition-colors ${t.key === '7D' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${t.key === '7D' ? 'bg-zinc-700 text-white font-medium shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
                   {t.key}
                 </button>
@@ -236,13 +239,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
 
         {/* Recent Activity */}
         <div className="glass-panel rounded-2xl flex flex-col">
-          <div className="p-6 border-b border-white/5 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-white">Campanhas Recentes</h3>
-            <button 
+          <div className="p-5 border-b border-white/5 flex justify-between items-center">
+            <h3 className="text-sm font-semibold text-zinc-200">Campanhas Recentes</h3>
+            <button
               aria-label="Mais opções"
-              className="text-gray-500 hover:text-white"
+              className="text-zinc-600 hover:text-zinc-300 p-1 rounded-lg hover:bg-zinc-800 transition-all"
             >
-              <MoreHorizontal size={20} aria-hidden="true" />
+              <MoreHorizontal size={16} aria-hidden="true" />
             </button>
           </div>
           <div className="flex-1 overflow-auto">
