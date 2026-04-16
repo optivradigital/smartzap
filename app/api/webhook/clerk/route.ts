@@ -93,19 +93,43 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (!existing) {
+        // Create org for new user (trial: 14 days)
+        const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+        const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+
+        const { data: org } = await supabase
+          .from('organizations')
+          .insert({
+            name: name || email,
+            slug: `${slug}-${data.id.slice(-6)}`,
+            plan: 'basic',
+            trial_ends_at: trialEndsAt,
+            subscription_status: 'trial',
+          })
+          .select('id')
+          .single()
+
         const { error } = await supabase.from('smartzap_users').insert({
           email: email.toLowerCase(),
           name: name || email,
-          role: 'user',
-          password_hash: '', // no longer used with Clerk
+          role: 'manager',
+          password_hash: '',
+          clerk_user_id: data.id,
+          organization_id: org?.id ?? null,
           created_at: new Date(data.created_at).toISOString(),
         })
         if (error) {
           console.error('[clerk-webhook] Erro ao criar usuário:', error.message)
         } else {
-          console.log(`[clerk-webhook] Usuário criado: ${email}`)
+          console.log(`[clerk-webhook] Usuário + org criados: ${email}`)
         }
       } else {
+        // Update clerk_user_id if missing
+        await supabase
+          .from('smartzap_users')
+          .update({ clerk_user_id: data.id })
+          .eq('email', email.toLowerCase())
+          .is('clerk_user_id', null)
         console.log(`[clerk-webhook] Usuário já existe: ${email}`)
       }
     }

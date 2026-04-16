@@ -1,19 +1,19 @@
 'use client'
 
-import { SignIn } from '@clerk/nextjs'
+import { SignUp } from '@clerk/nextjs'
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 gap-6">
-      {/* Logo */}
       <div className="text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 mb-4">
           <span className="text-3xl font-bold text-white">S</span>
         </div>
         <h1 className="text-2xl font-bold text-white">SmartZap</h1>
+        <p className="text-zinc-400 text-sm mt-1">14 dias grátis. Sem cartão de crédito.</p>
       </div>
 
-      <SignIn
+      <SignUp
         appearance={{
           elements: {
             rootBox: 'w-full max-w-md',
@@ -27,20 +27,11 @@ export default function LoginPage() {
             formButtonPrimary:
               'bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl',
             footerActionLink: 'text-emerald-400 hover:text-emerald-300',
-            identityPreviewText: 'text-zinc-300',
-            identityPreviewEditButtonIcon: 'text-zinc-400',
           },
         }}
         fallbackRedirectUrl="/"
-        signUpUrl={undefined}
+        signInUrl="/login"
       />
-
-      <p className="text-zinc-500 text-sm">
-        Não tem conta?{' '}
-        <a href="/signup" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-          Criar conta grátis
-        </a>
-      </p>
 
       <p className="text-zinc-600 text-sm">
         SmartZap © {new Date().getFullYear()}

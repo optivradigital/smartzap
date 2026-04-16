@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials';
 import { settingsDb } from '@/lib/supabase-db';
-import { getCurrentUser } from '@/lib/multi-user-auth';
+import { getCurrentUser } from '@/lib/clerk-auth';
 import { requireManager } from '@/lib/role-guard';
 
 const META_API_VERSION = 'v24.0';

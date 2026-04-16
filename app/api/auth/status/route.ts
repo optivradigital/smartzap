@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { auth, currentUser } from '@clerk/nextjs/server'
-import { getActiveOrgId } from '@/lib/multi-user-auth'
+import { getActiveOrgId } from '@/lib/clerk-auth'
 import { supabase } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
