@@ -53,6 +53,7 @@ export function WhatsAppProviderSettings() {
   const [saving, setSaving] = useState(false)
   const [refreshingQR, setRefreshingQR] = useState(false)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [generatingQR, setGeneratingQR] = useState(false)
   const { user } = useCurrentUser()
 
   const fetchConfig = useCallback(async () => {
@@ -122,6 +123,23 @@ export function WhatsAppProviderSettings() {
       }
     } finally {
       setDisconnecting(false)
+    }
+  }
+
+  const handleGenerateQR = async () => {
+    setGeneratingQR(true)
+    try {
+      const res = await fetch('/api/whatsapp/reconnect', { method: 'POST' })
+      const data = await res.json()
+      if (data.qrCode) {
+        setStatus(prev => ({ ...prev!, connected: false, qrCode: data.qrCode, error: undefined }))
+      } else {
+        toast.error(data.error || 'Não foi possível gerar QR code')
+      }
+    } catch {
+      toast.error('Erro ao gerar QR code')
+    } finally {
+      setGeneratingQR(false)
     }
   }
 
@@ -370,16 +388,29 @@ export function WhatsAppProviderSettings() {
                 </p>
               </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                  <WifiOff size={20} className="text-red-400" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <WifiOff size={20} className="text-red-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-red-400">Desconectado</p>
+                    <p className="text-xs text-gray-400">
+                      {status?.error || 'Clique em "Gerar QR Code" para conectar'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-red-400">Desconectado</p>
-                  <p className="text-xs text-gray-400">
-                    {status?.error || 'Salve as configurações para conectar'}
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleGenerateQR}
+                  disabled={generatingQR}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 hover:bg-green-600/30 disabled:opacity-50 text-green-400 text-sm font-medium transition-colors"
+                >
+                  {generatingQR
+                    ? <><Loader2 size={15} className="animate-spin" /> Gerando QR Code...</>
+                    : <><QrCode size={15} /> Gerar QR Code</>
+                  }
+                </button>
               </div>
             )}
           </div>

@@ -231,6 +231,28 @@ export class EvolutionProvider implements IWhatsAppProvider {
     )
   }
 
+  /** Clear stale session and generate a fresh QR code */
+  async forceReconnect(): Promise<ConnectionStatus> {
+    // Logout to clear any stale WhatsApp session (non-fatal)
+    await fetch(
+      `${this.baseUrl}/instance/logout/${this.instance}`,
+      { method: 'DELETE', headers: this.headers }
+    ).catch(() => {})
+
+    // Give Evolution time to process the logout
+    await sleep(800)
+
+    const qrCode = await this.fetchQrCode()
+    return {
+      connected: false,
+      state: qrCode ? 'connecting' : 'error',
+      qrCode,
+      error: qrCode
+        ? undefined
+        : 'Não foi possível gerar o QR code. Verifique a URL e a API key do Evolution.',
+    }
+  }
+
   /** Check which numbers have active WhatsApp accounts.
    *  Returns a Set of valid phone numbers (digits only).
    *  Falls back to treating all as valid if the API fails.
