@@ -72,7 +72,9 @@ export async function createWhatsAppProvider(
   orgId?: string | null
 ): Promise<IWhatsAppProvider> {
   const config = await loadProviderConfig(orgId);
-  const providerType: WhatsAppProviderType = config?.type || "meta";
+  // If no saved config but EVOLUTION_API_URL is set in env, use evolution
+  const providerType: WhatsAppProviderType =
+    config?.type || (process.env.EVOLUTION_API_URL ? "evolution" : "meta");
 
   if (providerType === "evolution") {
     const url =
