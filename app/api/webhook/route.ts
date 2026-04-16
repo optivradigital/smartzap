@@ -378,6 +378,17 @@ export async function POST(request: NextRequest) {
     const evolutionUrl = orgConfig?.evolutionUrl || process.env.EVOLUTION_API_URL || ''
     const evolutionApiKey = orgConfig?.evolutionApiKey || process.env.EVOLUTION_API_KEY || ''
 
+    // Mark message as read → sends blue ticks to sender
+    if (evolutionUrl && evolutionApiKey && msg.key?.id && remoteJid) {
+      fetch(`${evolutionUrl}/chat/markMessageAsRead/${encodeURIComponent(instanceName)}`, {
+        method: 'POST',
+        headers: { apikey: evolutionApiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          readMessages: [{ remoteJid, fromMe: false, id: msg.key.id }],
+        }),
+      }).catch(() => { /* non-fatal */ })
+    }
+
     handleIncomingMessage(phone, text, msg.key?.id, {
       type: 'evolution', evolutionUrl, evolutionApiKey, instanceName,
     }, orgId).catch(e => console.error('[Agent/Evolution]', e))
