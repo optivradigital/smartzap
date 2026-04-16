@@ -16,11 +16,15 @@ export async function GET() {
     const user = await getCurrentUser()
     const orgId = user?.organizationId
 
-    // If org has no credentials saved, return not-configured (don't fall back to env/global)
+    // If org has no credentials saved, check env vars before giving up
     const { loadProviderConfig } = await import('@/lib/whatsapp-provider/factory')
     const config = await loadProviderConfig(orgId)
+    const hasEnvEvolution = !!(process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY)
+    const hasEnvMeta = !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID)
     if (!config || (!config.phoneNumberId && !config.evolutionUrl)) {
-      return NextResponse.json({ connected: false, notConfigured: true })
+      if (!hasEnvEvolution && !hasEnvMeta) {
+        return NextResponse.json({ connected: false, notConfigured: true })
+      }
     }
 
     const provider = await createWhatsAppProvider(orgId)
