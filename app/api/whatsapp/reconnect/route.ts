@@ -19,14 +19,15 @@ export async function POST() {
 
     const provider = await createWhatsAppProvider(orgId)
 
-    if (!(provider instanceof EvolutionProvider)) {
+    // Use provider.type instead of instanceof to avoid Next.js module identity issues
+    if (provider.type !== 'evolution') {
       return NextResponse.json(
         { error: 'Reconnect disponível apenas para Evolution API' },
         { status: 400 }
       )
     }
 
-    const status = await provider.forceReconnect()
+    const status = await (provider as EvolutionProvider).forceReconnect()
     return NextResponse.json(status)
   } catch (err) {
     return NextResponse.json({
