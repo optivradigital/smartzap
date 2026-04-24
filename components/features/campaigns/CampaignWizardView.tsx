@@ -1542,7 +1542,7 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
             )}
 
             {/* Navigation */}
-            <div className="flex justify-between items-center p-6 border-t border-white/5 bg-zinc-900/30 mt-auto">
+            <div className="sticky bottom-0 flex justify-between items-center p-6 border-t border-white/5 bg-zinc-900/80 backdrop-blur-sm mt-auto z-10">
               {step > 1 ? (
                 <button
                   onClick={handleBack}

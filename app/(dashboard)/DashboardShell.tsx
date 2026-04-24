@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useClerk } from '@clerk/nextjs'
+import { useTheme } from 'next-themes'
 import {
     LayoutDashboard,
     MessageSquare,
@@ -27,7 +28,9 @@ import {
     ChevronRight,
     ChevronDown,
     Building2,
-    Workflow
+    Workflow,
+    Sun,
+    Moon
 } from 'lucide-react'
 import React from 'react'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -154,7 +157,7 @@ const OnboardingOverlay = ({
         .every(s => s.status === 'configured')
 
     return (
-        <div className="min-h-screen bg-grid-dots flex items-center justify-center p-6">
+        <div className="min-h-screen flex items-center justify-center p-6">
             <div className="max-w-2xl w-full">
                 {/* Header */}
                 <div className="text-center mb-10">
@@ -467,6 +470,7 @@ export function DashboardShell({
     const queryClient = useQueryClient()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const { theme, setTheme } = useTheme()
 
     // Enable real-time toast notifications for global events
     // This shows toasts when campaigns complete, new contacts are added, etc.
@@ -545,15 +549,17 @@ export function DashboardShell({
         healthStatus.services.redis.status !== 'ok' ||
         healthStatus.services.qstash.status !== 'ok'
 
-    const navItems = [
+    const mainNavItems = [
         { path: '/', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/campaigns', label: 'Campanhas', icon: MessageSquare },
-        { path: '/workflows', label: 'Workflows', icon: Workflow, hidden: true }, // TODO: In development
-        { path: '/conversations', label: 'Conversas', icon: MessageCircle, hidden: true },
         { path: '/templates', label: 'Templates', icon: FileText },
         { path: '/contacts', label: 'Contatos', icon: Users },
-        { path: '/settings', label: 'Configurações', icon: Settings },
-    ].filter(item => !item.hidden)
+    ]
+
+    const systemNavItems = [
+        { path: '/workflows', label: 'Workflows', icon: Workflow },
+        { path: '/conversations', label: 'Conversas', icon: MessageCircle },
+    ]
 
     const getPageTitle = (path: string) => {
         if (path === '/') return 'Dashboard'
@@ -581,7 +587,7 @@ export function DashboardShell({
     }
 
     return (
-        <div className="min-h-screen bg-grid-dots text-gray-100 flex font-sans selection:bg-primary-500/30">
+        <div className="min-h-screen text-gray-100 flex font-sans selection:bg-primary-500/30">
             {/* Mobile Overlay */}
             {isMobileMenuOpen && (
                 <div
@@ -633,7 +639,7 @@ export function DashboardShell({
 
                         <div className="space-y-0.5">
                             <p className="px-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-2">Menu</p>
-                            {navItems.map((item) => (
+                            {mainNavItems.map((item) => (
                                 <SidebarItem
                                     key={item.path}
                                     href={item.path}
@@ -645,10 +651,34 @@ export function DashboardShell({
                                 />
                             ))}
                         </div>
+
+                        <div className="space-y-0.5">
+                            <p className="px-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-2">Sistema</p>
+                            {systemNavItems.map((item) => (
+                                <PrefetchLink
+                                    key={item.path}
+                                    href={item.path}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 text-zinc-600 hover:bg-white/5 hover:text-zinc-400 border border-transparent"
+                                >
+                                    <item.icon size={18} className="text-zinc-700" />
+                                    <span className="text-sm">{item.label}</span>
+                                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700">beta</span>
+                                </PrefetchLink>
+                            ))}
+                        </div>
                     </nav>
 
-                    {/* User Profile */}
-                    <div className="pt-3 mt-3 border-t border-white/5">
+                    {/* Footer: Configurações + User card */}
+                    <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
+                        <SidebarItem
+                            href="/settings"
+                            icon={Settings}
+                            label="Configurações"
+                            isActive={pathname?.startsWith('/settings') ?? false}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            onMouseEnter={() => prefetchRoute('/settings')}
+                        />
                         <button
                             onClick={handleLogout}
                             disabled={isLoggingOut}
@@ -671,7 +701,7 @@ export function DashboardShell({
                                 <LogOut size={14} className="text-zinc-600 group-hover:text-zinc-300 transition-colors flex-shrink-0" />
                             )}
                         </button>
-                        <p className="text-center text-[10px] text-zinc-700 font-mono mt-2">v2.0.0</p>
+                        <p className="text-center text-[10px] text-zinc-700 font-mono mt-1">v2.0.0</p>
                     </div>
                 </div>
             </aside>
@@ -739,6 +769,16 @@ export function DashboardShell({
                             </span>
                           </div>
                         ) : null}
+                        <button
+                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                            className="p-1.5 rounded-lg hover:bg-zinc-800 transition-colors group"
+                            title="Alternar tema"
+                        >
+                            {theme === 'dark'
+                                ? <Sun size={17} className="text-zinc-500 group-hover:text-zinc-200 transition-colors" />
+                                : <Moon size={17} className="text-zinc-500 group-hover:text-zinc-200 transition-colors" />
+                            }
+                        </button>
                         <button className="relative p-1.5 rounded-lg hover:bg-zinc-800 transition-colors group">
                             <Bell size={17} className="text-zinc-500 group-hover:text-zinc-200 transition-colors" />
                             <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full border border-zinc-950"></span>

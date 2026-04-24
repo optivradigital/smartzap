@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="pt-BR" className={`dark ${inter.variable}`} suppressHydrationWarning>
+      <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
         <body className="font-sans antialiased">
           <Providers>
             <Toaster richColors position="top-right" theme="dark" />

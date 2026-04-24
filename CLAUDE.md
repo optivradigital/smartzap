@@ -16,18 +16,20 @@ construída sobre a Evolution API. O objetivo atual é corrigir problemas existe
 ## Infraestrutura
 - Servidor: AWS (produção)
 - Versionamento: Git com CI/CD configurado
-- **Todo push vai direto para produção — revisar com cuidado antes de commitar**
+- **Fluxo de branches: `develop` → staging | `main` → produção**
+- Push vai para `develop`. Produção só após PR aprovado e merge em `main`.
+- Migrações de banco precisam ser aplicadas manualmente no Supabase (staging e produção separados).
 
 ## Objetivo atual
-Corrigir bugs e problemas existentes — sem refatorações desnecessárias.
+Corrigir bugs e evoluir o produto — sem refatorações desnecessárias.
 
 ## Regras de trabalho
 - NUNCA editar arquivos sem aprovação explícita
 - NUNCA commitar sem revisar o diff completo
-- Uma correção por sessão — não acumular mudanças
+- Não acumular mudanças não relacionadas num mesmo commit
 - Não refatorar código que está funcionando
 - Não atualizar dependências sem necessidade
-- Não fazer push sem entender o impacto — CI/CD leva direto para produção
+- Trabalhar sempre na branch `develop` — nunca commitar direto em `main`
 
 ## Fluxo de sessão padrão
 1. Descrever o problema específico desta sessão
@@ -35,8 +37,8 @@ Corrigir bugs e problemas existentes — sem refatorações desnecessárias.
 3. Claude propõe correção com explicação clara
 4. Aprovação antes de qualquer edição
 5. Revisão do diff antes do commit
-6. git commit com mensagem descritiva
-7. git push → CI/CD cuida do deploy
+6. git commit com mensagem descritiva na branch `develop`
+7. PR aberto para revisão — merge em `main` é aprovado pelo usuário
 
 ## Estrutura principal
 - app/          → rotas Next.js e API routes

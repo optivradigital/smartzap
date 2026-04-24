@@ -126,11 +126,22 @@
   --color-primary-950: var(--color-primary-950);
 }
 
+/* Brand color — overridden dynamically by BrandingSettings via style tag */
+:root {
+  --brand-primary: #10b981;
+  --brand-primary-hover: #059669;
+}
+
 /* Base styles */
 body {
   font-family: 'Inter', sans-serif;
   background-color: #09090b;
   color: #f4f4f5;
+}
+
+.light body {
+  background-color: #ffffff;
+  color: #09090b;
 }
 
 /* ================================

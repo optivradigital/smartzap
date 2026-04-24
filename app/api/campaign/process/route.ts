@@ -83,7 +83,8 @@ async function registerInGptMaker(
   templateName: string,
   contactName: string,
   orgId?: string | null,
-  templateVariables: string[] = []
+  templateVariables: string[] = [],
+  renderedText?: string
 ) {
   // Load per-org credentials first, fall back to global env
   let agentId = process.env.GPTMAKER_AGENT_ID;
@@ -104,8 +105,8 @@ async function registerInGptMaker(
     return;
   }
 
-  // Usa renderTemplateText (busca no banco local — funciona para Evolution)
-  let templateText = await renderTemplateText(templateName, contactName, templateVariables);
+  // Se o texto já foi renderizado (Evolution), usa diretamente; senão busca no banco local
+  let templateText = renderedText ?? await renderTemplateText(templateName, contactName, templateVariables);
 
   // Se retornou fallback genérico (template não está no banco local, ex: orgs Meta),
   // busca o corpo real na Meta API
@@ -380,10 +381,12 @@ export async function POST(request: NextRequest) {
 
       let messageId: string | undefined;
       let sendError: string | undefined;
+      let renderedText: string | undefined;
 
       if (isEvolution) {
         // ── Evolution API: send free-text rendered from template body ────────
         const text = await renderTemplateText(chosenTemplate, contact.name, templateVariables);
+        renderedText = text;
         const evoProvider = new EvolutionProvider(
           orgConfig!.evolutionUrl || process.env.EVOLUTION_API_URL || "http://evolution_api:8080",
           orgConfig!.evolutionApiKey || process.env.EVOLUTION_API_KEY || "",
@@ -455,12 +458,12 @@ export async function POST(request: NextRequest) {
               type: "template",
               content: {
                 templateName: chosenTemplate,
-                text: `Template "${chosenTemplate}" enviado para ${contact.name || contact.phone}`,
+                text: renderedText ?? `Template "${chosenTemplate}" enviado para ${contact.name || contact.phone}`,
               },
               status: "sent",
             });
             if (!orgConfig?.gptmakerDirectChannel) {
-              await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, templateVariables);
+              await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, templateVariables, renderedText);
             }
           } catch (e) {
             console.error("[Campaign] Failed to log template dispatch:", e);

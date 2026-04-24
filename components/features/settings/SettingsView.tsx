@@ -146,6 +146,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   // Selected domain for webhook URL
   const [selectedDomainUrl, setSelectedDomainUrl] = useState<string>('');
 
+  // Active settings section
+  const [activeSection, setActiveSection] = useState<string>('conexao');
+
   // Compute the actual webhook URL based on selected domain
   const computedWebhookUrl = selectedDomainUrl
     ? `${selectedDomainUrl}${webhookPath || '/api/webhook'}`
@@ -328,6 +331,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     ];
   };
 
+  const NavItem = ({ section, label }: { section: string; label: string }) => (
+    <button
+      onClick={() => setActiveSection(section)}
+      className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left ${
+        activeSection === section
+          ? 'bg-zinc-800 text-white font-medium'
+          : 'text-zinc-500 hover:bg-zinc-800/50 hover:text-zinc-300'
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   if (isLoading) return <div className="text-white">Carregando configurações...</div>;
 
   return (
@@ -335,29 +351,45 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {!hideHeader && (
         <>
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Configurações</h1>
-          <p className="text-gray-400 mb-10">Gerencie sua conexão com a WhatsApp Business API</p>
+          <p className="text-gray-400 mb-6">Gerencie integrações, equipe e preferências da conta.</p>
         </>
       )}
 
-      {/* Quick Navigation */}
-      <div className="flex flex-wrap gap-2 mb-2">
-        {[
-          {href: "#whatsapp", label: "📱 WhatsApp", show: isManager},
-          {href: "#usuarios", label: "👥 Usuários", show: isManager},
-          {href: "#billing", label: "💳 Plano & Faturamento", show: isManager},
-          {href: "#branding", label: "🎨 Branding", show: isSuperAdmin},
-          {href: "#organizacoes", label: "🏢 Organizações", show: isSuperAdmin},
-        ].filter(l => l.show).map(link => (
-          <a key={link.href} href={link.href}
-            className="px-4 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-full border border-zinc-700 transition-colors">
-            {link.label}
-          </a>
-        ))}
-      </div>
+      <div className="flex gap-6 items-start">
+        {/* Settings sidebar nav */}
+        <nav className="w-44 flex-shrink-0 pt-1 space-y-0.5">
+          {isManager && (
+            <>
+              <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pb-1">Integrações</p>
+              <NavItem section="conexao" label="Conexão WhatsApp" />
+              {isSuperAdmin && <NavItem section="agente" label="Agente IA" />}
+              <NavItem section="webhooks" label="Webhooks" />
+              <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pt-3 pb-1">Conta</p>
+              <NavItem section="equipe" label="Equipe" />
+              <NavItem section="faturamento" label="Faturamento" />
+              {isSuperAdmin && <NavItem section="aparencia" label="Aparência" />}
+            </>
+          )}
+          {isSuperAdmin && !isManager && (
+            <>
+              <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pb-1">Integrações</p>
+              <NavItem section="agente" label="Agente IA" />
+              <NavItem section="webhooks" label="Webhooks" />
+              <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pt-3 pb-1">Conta</p>
+              <NavItem section="aparencia" label="Aparência" />
+            </>
+          )}
+          {isSuperAdmin && (
+            <>
+              <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pt-3 pb-1">Sistema</p>
+              <NavItem section="organizacoes" label="Organizações" />
+            </>
+          )}
+        </nav>
 
-      <div className="space-y-8">
-        {/* WhatsApp Provider Section — manager+ only */}
-        {isManager && (
+        <div className="flex-1 min-w-0 space-y-8">
+        {/* ── Conexão WhatsApp ──────────────────────── */}
+        {activeSection === 'conexao' && isManager && (
         <div id="whatsapp" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-green-500 rounded-full"></span>
@@ -367,8 +399,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
         )}
 
-        {/* Status Card */}
-        <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
+        {activeSection === 'conexao' && <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
           <div className={`p-4 rounded-2xl ${settings.isConnected ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
             {settings.isConnected ? <Wifi size={32} /> : <AlertTriangle size={32} />}
           </div>
@@ -462,10 +493,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             </div>
           )}
-        </div>
+        </div>}
 
-        {/* AI Settings Section — super_admin only */}
-        {isSuperAdmin && settings.isConnected && saveAIConfig && (
+        {/* ── Agente IA ──────────────────────────────── */}
+        {activeSection === 'agente' && isSuperAdmin && settings.isConnected && saveAIConfig && (
           <AISettings
             key={activeOrgId ?? 'default'}
             settings={aiSettings}
@@ -476,8 +507,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           />
         )}
 
+        {/* ── Conexão (cont.) ──────────────────────── */}
         {/* Form - Only visible if disconnected OR editing */}
-        {(!settings.isConnected || isEditing) && !isManager && (
+        {activeSection === 'conexao' && (!settings.isConnected || isEditing) && !isManager && (
           <div className="glass-panel rounded-2xl p-8 animate-in slide-in-from-top-4 duration-300">
             <h3 className="text-lg font-semibold text-white mb-8 flex items-center gap-2">
               <span className="w-1 h-6 bg-primary-500 rounded-full"></span>
@@ -560,7 +592,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         )}
 
         {/* Test Contact Section */}
-        {settings.isConnected && (
+        {activeSection === 'conexao' && settings.isConnected && (
           <div className="glass-panel rounded-2xl p-8">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <span className="w-1 h-6 bg-amber-500 rounded-full"></span>
@@ -656,8 +688,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         )}
 
-        {/* Webhook Configuration Section */}
-        {settings.isConnected && webhookUrl && (
+        {/* ── Webhooks ──────────────────────────────── */}
+        {activeSection === 'webhooks' && settings.isConnected && webhookUrl && (
           <div className="glass-panel rounded-2xl p-8">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -1158,8 +1190,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
         )}
-      {/* User Management Section */}
-        {isManager && (
+        {/* ── Equipe ────────────────────────────────── */}
+        {activeSection === 'equipe' && isManager && (
         <div id="usuarios" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
@@ -1172,15 +1204,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
         )}
 
-        {/* Billing Section — manager+ */}
-        {isManager && (
+        {/* ── Faturamento ───────────────────────────── */}
+        {activeSection === 'faturamento' && isManager && (
         <div id="billing" className="glass-panel rounded-2xl p-8">
           <BillingSettings />
         </div>
         )}
 
-        {/* Branding Section — super_admin only */}
-        {isSuperAdmin && (
+        {/* ── Aparência ─────────────────────────────── */}
+        {activeSection === 'aparencia' && isSuperAdmin && (
         <div id="branding" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-pink-500 rounded-full"></span>
@@ -1193,8 +1225,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
         )}
 
-        {/* Organizations Section — super_admin only */}
-        {isSuperAdmin && (
+        {/* ── Organizações ─────────────────────────── */}
+        {activeSection === 'organizacoes' && isSuperAdmin && (
         <div id="organizacoes" className="glass-panel rounded-2xl p-8">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-orange-500 rounded-full"></span>
@@ -1206,7 +1238,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <OrganizationManagement />
         </div>
         )}
-      </div>
+        </div>{/* flex-1 content panel */}
+      </div>{/* flex wrapper */}
     </div>
   );
 };
