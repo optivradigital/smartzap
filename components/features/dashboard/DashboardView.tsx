@@ -23,7 +23,6 @@ interface StatCardProps {
 const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardProps) => {
   const colorStyles: Record<string, { bg: string; text: string; glow: string; bar: string }> = {
     'bg-blue-500':    { bg: 'bg-blue-500/10',    text: 'text-blue-400',    glow: 'shadow-blue-500/10',    bar: 'bg-blue-500' },
-    'bg-blue-500': { bg: 'bg-blue-500/10',  text: 'text-blue-400', glow: 'shadow-blue-500/10', bar: 'bg-blue-500' },
     'bg-purple-500':  { bg: 'bg-purple-500/10',   text: 'text-purple-400',  glow: 'shadow-purple-500/10',  bar: 'bg-purple-500' },
     'bg-red-500':     { bg: 'bg-red-500/10',      text: 'text-red-400',     glow: 'shadow-red-500/10',     bar: 'bg-red-500' },
   };
