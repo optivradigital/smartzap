@@ -279,19 +279,19 @@ function EmptyState() {
 function LoadingSkeleton() {
   return (
     <div className="flex-1 flex flex-col">
-      <div className="p-4 border-b border-zinc-800 animate-pulse">
+      <div className="p-4 border-b border-border animate-pulse">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-zinc-800" />
+          <div className="w-10 h-10 rounded-full bg-muted" />
           <div className="space-y-2">
-            <div className="h-4 bg-zinc-800 rounded w-32" />
-            <div className="h-3 bg-zinc-800 rounded w-24" />
+            <div className="h-4 bg-muted rounded w-32" />
+            <div className="h-3 bg-muted rounded w-24" />
           </div>
         </div>
       </div>
       <div className="flex-1 p-4 space-y-3">
         {[...Array(5)].map((_, i) => (
           <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
-            <div className={`h-16 bg-zinc-800 rounded-2xl ${i % 2 === 0 ? 'w-48' : 'w-56'}`} />
+            <div className={`h-16 bg-muted rounded-2xl ${i % 2 === 0 ? 'w-48' : 'w-56'}`} />
           </div>
         ))}
       </div>
