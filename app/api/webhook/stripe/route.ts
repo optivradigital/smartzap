@@ -3,6 +3,15 @@ import { stripe } from '@/lib/stripe'
 import { supabase } from '@/lib/supabase'
 import type Stripe from 'stripe'
 
+function calculateExtraNumbers(items: Stripe.SubscriptionItem[]): number {
+  return items.reduce((sum, item) => {
+    if (item.price.id === process.env.STRIPE_PRICE_EXTRA_NUMBER) {
+      return sum + (item.quantity ?? 0)
+    }
+    return sum
+  }, 0)
+}
+
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
@@ -39,31 +48,27 @@ export async function POST(req: NextRequest) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sub = subscription as any
-        const extraNumbers = subscription.items.data.reduce((sum, item) => {
-          if (item.price.id === process.env.STRIPE_PRICE_EXTRA_NUMBER) {
-            return sum + (item.quantity ?? 0)
-          }
-          return sum
-        }, 0)
+        const extraNumbers = calculateExtraNumbers(subscription.items.data)
 
-        await supabase.from('subscriptions').upsert({
-          id: orgId,
-          organization_id: orgId,
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: subscriptionId,
-          status: 'active',
-          plan: 'basic',
-          extra_numbers: extraNumbers,
-          current_period_start: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
-          current_period_end: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
-          cancel_at_period_end: subscription.cancel_at_period_end,
-          updated_at: new Date().toISOString(),
-        })
-
-        await supabase
-          .from('organizations')
-          .update({ subscription_status: 'active', stripe_customer_id: session.customer as string })
-          .eq('id', orgId)
+        await Promise.all([
+          supabase.from('subscriptions').upsert({
+            id: orgId,
+            organization_id: orgId,
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: subscriptionId,
+            status: 'active',
+            plan: 'basic',
+            extra_numbers: extraNumbers,
+            current_period_start: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
+            current_period_end: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            updated_at: new Date().toISOString(),
+          }),
+          supabase
+            .from('organizations')
+            .update({ subscription_status: 'active', stripe_customer_id: session.customer as string })
+            .eq('id', orgId),
+        ])
 
         console.log(`[stripe-webhook] Assinatura ativada: ${orgId}`)
         break
@@ -76,27 +81,23 @@ export async function POST(req: NextRequest) {
         const orgId = subscription.metadata?.organization_id
         if (!orgId) break
 
-        const extraNumbers = subscription.items.data.reduce((sum, item) => {
-          if (item.price.id === process.env.STRIPE_PRICE_EXTRA_NUMBER) {
-            return sum + (item.quantity ?? 0)
-          }
-          return sum
-        }, 0)
-
-        await supabase.from('subscriptions').upsert({
-          id: orgId,
-          organization_id: orgId,
-          stripe_subscription_id: subscription.id,
-          status: subscription.status,
-          extra_numbers: extraNumbers,
-          current_period_start: subUpdated.current_period_start ? new Date(subUpdated.current_period_start * 1000).toISOString() : null,
-          current_period_end: subUpdated.current_period_end ? new Date(subUpdated.current_period_end * 1000).toISOString() : null,
-          cancel_at_period_end: subscription.cancel_at_period_end,
-          updated_at: new Date().toISOString(),
-        })
-
+        const extraNumbers = calculateExtraNumbers(subscription.items.data)
         const orgStatus = subscription.status === 'active' ? 'active' : 'inactive'
-        await supabase.from('organizations').update({ subscription_status: orgStatus }).eq('id', orgId)
+
+        await Promise.all([
+          supabase.from('subscriptions').upsert({
+            id: orgId,
+            organization_id: orgId,
+            stripe_subscription_id: subscription.id,
+            status: subscription.status,
+            extra_numbers: extraNumbers,
+            current_period_start: subUpdated.current_period_start ? new Date(subUpdated.current_period_start * 1000).toISOString() : null,
+            current_period_end: subUpdated.current_period_end ? new Date(subUpdated.current_period_end * 1000).toISOString() : null,
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            updated_at: new Date().toISOString(),
+          }),
+          supabase.from('organizations').update({ subscription_status: orgStatus }).eq('id', orgId),
+        ])
         break
       }
 
@@ -105,15 +106,16 @@ export async function POST(req: NextRequest) {
         const orgId = subscription.metadata?.organization_id
         if (!orgId) break
 
-        await supabase
-          .from('subscriptions')
-          .update({ status: 'canceled', updated_at: new Date().toISOString() })
-          .eq('organization_id', orgId)
-
-        await supabase
-          .from('organizations')
-          .update({ subscription_status: 'inactive' })
-          .eq('id', orgId)
+        await Promise.all([
+          supabase
+            .from('subscriptions')
+            .update({ status: 'canceled', updated_at: new Date().toISOString() })
+            .eq('organization_id', orgId),
+          supabase
+            .from('organizations')
+            .update({ subscription_status: 'inactive' })
+            .eq('id', orgId),
+        ])
 
         console.log(`[stripe-webhook] Assinatura cancelada: ${orgId}`)
         break

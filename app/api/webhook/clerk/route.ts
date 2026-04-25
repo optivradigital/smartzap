@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
   }
 
-  // Verify signature
   const svixId = req.headers.get('svix-id')
   const svixTimestamp = req.headers.get('svix-timestamp')
   const svixSignature = req.headers.get('svix-signature')
@@ -85,7 +84,6 @@ export async function POST(req: NextRequest) {
       const email = getPrimaryEmail(data)
       const name = getFullName(data)
 
-      // Check if already exists (e.g. pre-created during migration)
       const { data: existing } = await supabase
         .from('smartzap_users')
         .select('id')
@@ -93,7 +91,6 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (!existing) {
-        // Create org for new user (trial: 14 days)
         const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
         const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -124,7 +121,6 @@ export async function POST(req: NextRequest) {
           console.log(`[clerk-webhook] Usuário + org criados: ${email}`)
         }
       } else {
-        // Update clerk_user_id if missing
         await supabase
           .from('smartzap_users')
           .update({ clerk_user_id: data.id })

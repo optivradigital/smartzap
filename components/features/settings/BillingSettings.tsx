@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { CreditCard, Zap, CheckCircle, AlertCircle, Plus, Minus } from 'lucide-react'
 
+const BASE_PRICE = 197
+const EXTRA_PRICE = 97
+
 interface Subscription {
   status: string
   plan: string
@@ -60,8 +63,6 @@ export function BillingSettings() {
   }
 
   const isActive = subscription?.status === 'active'
-  const basePrice = 197
-  const extraPrice = 97
 
   return (
     <section id="billing" className="space-y-6">
@@ -87,8 +88,6 @@ export function BillingSettings() {
           setExtraNumbers={setExtraNumbers}
           onCheckout={handleCheckout}
           redirecting={redirecting}
-          basePrice={basePrice}
-          extraPrice={extraPrice}
         />
       )}
     </section>
@@ -126,7 +125,7 @@ function ActiveSubscription({
 
       <div className="flex items-center gap-3 pt-2 border-t border-zinc-800">
         <span className="text-2xl font-bold text-white">
-          R$ {(197 + subscription.extra_numbers * 97).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+          R$ {(BASE_PRICE + subscription.extra_numbers * EXTRA_PRICE).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
         </span>
         <span className="text-zinc-400 text-sm">/mês</span>
       </div>
@@ -147,17 +146,13 @@ function PricingCard({
   setExtraNumbers,
   onCheckout,
   redirecting,
-  basePrice,
-  extraPrice,
 }: {
   extraNumbers: number
   setExtraNumbers: (n: number) => void
   onCheckout: () => void
   redirecting: boolean
-  basePrice: number
-  extraPrice: number
 }) {
-  const total = basePrice + extraNumbers * extraPrice
+  const total = BASE_PRICE + extraNumbers * EXTRA_PRICE
 
   return (
     <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 space-y-6">
@@ -187,7 +182,7 @@ function PricingCard({
 
         <div className="border-t border-zinc-700 pt-4">
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-white">R$ {basePrice}</span>
+            <span className="text-2xl font-bold text-white">R$ {BASE_PRICE}</span>
             <span className="text-zinc-400 text-sm">/mês</span>
           </div>
         </div>
@@ -195,7 +190,7 @@ function PricingCard({
 
       {/* Extra numbers */}
       <div className="space-y-2">
-        <label className="text-sm text-zinc-300 font-medium">Números adicionais (R$ {extraPrice}/mês cada)</label>
+        <label className="text-sm text-zinc-300 font-medium">Números adicionais (R$ {EXTRA_PRICE}/mês cada)</label>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setExtraNumbers(Math.max(0, extraNumbers - 1))}

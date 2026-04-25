@@ -26,7 +26,6 @@ export default async function DashboardLayout({
     ? `${clerkUser.firstName} ${clerkUser.lastName ?? ''}`.trim()
     : email
 
-  // Check trial status
   let trialExpired = false
   let trialDaysLeft: number | null = null
   if (smartzapUser?.organizationId) {
@@ -34,7 +33,7 @@ export default async function DashboardLayout({
       .from('organizations')
       .select('trial_ends_at, subscription_status')
       .eq('id', smartzapUser.organizationId)
-      .single()
+      .maybeSingle()
 
     if (org?.subscription_status === 'trial' && org?.trial_ends_at) {
       const now = new Date()
