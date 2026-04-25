@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useClerk } from '@clerk/nextjs'
-import { useTheme } from 'next-themes'
 import {
     LayoutDashboard,
     MessageSquare,
@@ -29,8 +28,6 @@ import {
     ChevronDown,
     Building2,
     Workflow,
-    Sun,
-    Moon
 } from 'lucide-react'
 import React from 'react'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -470,8 +467,6 @@ export function DashboardShell({
     const queryClient = useQueryClient()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
-    const { theme, setTheme } = useTheme()
-
     // Enable real-time toast notifications for global events
     // This shows toasts when campaigns complete, new contacts are added, etc.
     const { useRealtimeNotifications } = require('@/hooks/useRealtimeNotifications')
@@ -769,16 +764,6 @@ export function DashboardShell({
                             </span>
                           </div>
                         ) : null}
-                        <button
-                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                            className="p-1.5 rounded-lg hover:bg-zinc-800 transition-colors group"
-                            title="Alternar tema"
-                        >
-                            {theme === 'dark'
-                                ? <Sun size={17} className="text-zinc-500 group-hover:text-zinc-200 transition-colors" />
-                                : <Moon size={17} className="text-zinc-500 group-hover:text-zinc-200 transition-colors" />
-                            }
-                        </button>
                         <button className="relative p-1.5 rounded-lg hover:bg-zinc-800 transition-colors group">
                             <Bell size={17} className="text-zinc-500 group-hover:text-zinc-200 transition-colors" />
                             <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full border border-zinc-950"></span>

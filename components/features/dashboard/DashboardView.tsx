@@ -23,6 +23,7 @@ interface StatCardProps {
 const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardProps) => {
   const colorStyles: Record<string, { bg: string; text: string; glow: string; bar: string }> = {
     'bg-blue-500':    { bg: 'bg-blue-500/10',    text: 'text-blue-400',    glow: 'shadow-blue-500/10',    bar: 'bg-blue-500' },
+    'bg-cyan-500':    { bg: 'bg-cyan-500/10',    text: 'text-cyan-400',    glow: 'shadow-cyan-500/10',    bar: 'bg-cyan-500' },
     'bg-purple-500':  { bg: 'bg-purple-500/10',   text: 'text-purple-400',  glow: 'shadow-purple-500/10',  bar: 'bg-purple-500' },
     'bg-red-500':     { bg: 'bg-red-500/10',      text: 'text-red-400',     glow: 'shadow-red-500/10',     bar: 'bg-red-500' },
   };
@@ -134,17 +135,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
           </>
         ) : (
           <>
-            <StatCard 
-              title="Total Enviado" 
-              value={stats.sent24h} 
-              icon={Send} 
+            <StatCard
+              title="Total Enviado"
+              value={stats.sent24h}
+              icon={Send}
               color="bg-blue-500"
             />
-            <StatCard 
-              title="Taxa de Entrega" 
-              value={stats.deliveryRate} 
-              icon={CheckCircle2} 
-              color="bg-blue-500"
+            <StatCard
+              title="Taxa de Entrega"
+              value={stats.deliveryRate}
+              icon={CheckCircle2}
+              color="bg-cyan-500"
             />
             <StatCard 
               title="Campanhas Ativas" 
@@ -195,10 +196,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                 <AreaChart data={stats.chartData} aria-hidden="true">
                   <defs>
                     <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
                 <XAxis 
                   dataKey="name" 
@@ -212,19 +213,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                   tickLine={false} 
                   tick={{fill: '#71717a', fontSize: 12}} 
                 />
-                <Tooltip 
-                  contentStyle={{backgroundColor: '#18181b', borderRadius: '12px', border: '1px solid #27272a', color: '#fff'}}
-                  itemStyle={{color: '#10b981'}}
-                  labelStyle={{color: '#gray'}}
+                <Tooltip
+                  contentStyle={{backgroundColor: '#0d1b2e', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)', color: '#fff'}}
+                  itemStyle={{color: '#60a5fa'}}
+                  labelStyle={{color: '#71717a'}}
                   formatter={(value: number) => [value, 'Enviadas']}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="sent" 
-                  stroke="#10b981" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorSent)" 
+                <Area
+                  type="monotone"
+                  dataKey="sent"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorSent)"
                 />
               </AreaChart>
             </ResponsiveContainer>
