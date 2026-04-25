@@ -449,10 +449,10 @@ const SidebarItem = ({ href, icon: Icon, label, isActive, onClick, onMouseEnter 
         onMouseEnter={onMouseEnter}
         className={`nav-active-bar flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 ${isActive
             ? 'bg-gradient-to-r from-primary-500/15 to-primary-500/5 text-primary-400 font-medium border border-primary-500/20'
-            : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100 border border-transparent'
+            : 'text-zinc-400 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-800 dark:hover:text-zinc-100 border border-transparent'
             }`}
     >
-        <Icon size={18} className={isActive ? 'text-primary-400' : 'text-zinc-500'} />
+        <Icon size={18} className={isActive ? 'text-primary-400' : 'text-zinc-400 dark:text-zinc-500'} />
         <span className="text-sm">{label}</span>
     </PrefetchLink>
 )
@@ -596,7 +596,7 @@ export function DashboardShell({
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-[#0d1b2e] border-r border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#0d1b2e] border-r border-zinc-200 dark:border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     }`}
             >
                 <div className="h-full flex flex-col p-3">
@@ -609,15 +609,15 @@ export function DashboardShell({
                             {branding.brand_logo_url ? (
                               <img src={branding.brand_logo_url} alt={branding.brand_name} className="h-8 object-contain" />
                             ) : (
-                              <span className="text-base font-bold text-white tracking-tight block leading-none">{branding.brand_name}</span>
+                              <span className="text-base font-bold text-zinc-900 dark:text-white tracking-tight block leading-none">{branding.brand_name}</span>
                             )}
-                            <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-medium">by Optivra</span>
+                            <span className="text-[9px] text-zinc-400 dark:text-zinc-600 uppercase tracking-widest font-medium">by Optivra</span>
                         </div>
                         <button
                             className="ml-auto lg:hidden"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
-                            <X size={18} className="text-zinc-500" />
+                            <X size={18} className="text-zinc-400 dark:text-zinc-500" />
                         </button>
                     </div>
 
@@ -636,7 +636,7 @@ export function DashboardShell({
                         </div>
 
                         <div className="space-y-0.5">
-                            <p className="px-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-2">Menu</p>
+                            <p className="px-4 text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2">Menu</p>
                             {mainNavItems.map((item) => (
                                 <SidebarItem
                                     key={item.path}
@@ -651,24 +651,24 @@ export function DashboardShell({
                         </div>
 
                         <div className="space-y-0.5">
-                            <p className="px-4 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-2">Sistema</p>
+                            <p className="px-4 text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2">Sistema</p>
                             {systemNavItems.map((item) => (
                                 <PrefetchLink
                                     key={item.path}
                                     href={item.path}
                                     onClick={() => setIsMobileMenuOpen(false)}
-                                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 text-zinc-600 hover:bg-white/5 hover:text-zinc-400 border border-transparent"
+                                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 text-zinc-400 dark:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-700 dark:hover:text-zinc-400 border border-transparent"
                                 >
-                                    <item.icon size={18} className="text-zinc-700" />
+                                    <item.icon size={18} className="text-zinc-400 dark:text-zinc-700" />
                                     <span className="text-sm">{item.label}</span>
-                                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700">beta</span>
+                                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700">beta</span>
                                 </PrefetchLink>
                             ))}
                         </div>
                     </nav>
 
                     {/* Footer: Configurações + User card */}
-                    <div className="pt-3 mt-3 border-t border-white/5 space-y-1">
+                    <div className="pt-3 mt-3 border-t border-zinc-200 dark:border-white/5 space-y-1">
                         <SidebarItem
                             href="/settings"
                             icon={Settings}
@@ -680,7 +680,7 @@ export function DashboardShell({
                         <button
                             onClick={handleLogout}
                             disabled={isLoggingOut}
-                            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-zinc-800/60 cursor-pointer transition-all duration-200 group border border-transparent hover:border-zinc-700/50"
+                            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-all duration-200 group border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700/50"
                         >
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-600/30 to-primary-800/30 border border-primary-500/20 flex items-center justify-center flex-shrink-0">
                                 <span className="text-sm font-bold text-primary-400">
@@ -688,18 +688,18 @@ export function DashboardShell({
                                 </span>
                             </div>
                             <div className="flex-1 min-w-0 text-left">
-                                <p className="text-xs font-semibold text-zinc-200 truncate leading-none mb-0.5">{companyName || 'SmartZap'}</p>
-                                <p className="text-[10px] text-zinc-600 truncate">
+                                <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate leading-none mb-0.5">{companyName || 'SmartZap'}</p>
+                                <p className="text-[10px] text-zinc-400 dark:text-zinc-600 truncate">
                                   {currentAuthUser?.role === 'super_admin' ? 'Super Admin' : currentAuthUser?.role === 'manager' ? 'Manager' : 'Usuário'}
                                 </p>
                             </div>
                             {isLoggingOut ? (
                                 <div className="w-3.5 h-3.5 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
                             ) : (
-                                <LogOut size={14} className="text-zinc-600 group-hover:text-zinc-300 transition-colors flex-shrink-0" />
+                                <LogOut size={14} className="text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors flex-shrink-0" />
                             )}
                         </button>
-                        <p className="text-center text-[10px] text-zinc-700 font-mono mt-1">v2.0.0</p>
+                        <p className="text-center text-[10px] text-zinc-400 dark:text-zinc-700 font-mono mt-1">v2.0.0</p>
                     </div>
                 </div>
             </aside>
