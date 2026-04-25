@@ -729,30 +729,30 @@ export function DashboardShell({
                           <div className="relative hidden sm:block">
                             <button
                               onClick={() => setOrgDropdownOpen(o => !o)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:border-zinc-500 transition-colors"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700 hover:border-primary-500/50 transition-colors"
                             >
-                              <Building2 size={13} className="text-purple-400" />
-                              <span className="text-xs text-gray-300 font-medium max-w-[120px] truncate">
+                              <Building2 size={13} className="text-purple-500 dark:text-purple-400" />
+                              <span className="text-xs text-foreground font-medium max-w-[120px] truncate">
                                 {authOrgs.find(o => o.id === authActiveOrgId)?.name || 'Selecionar org'}
                               </span>
-                              <ChevronDown size={12} className="text-gray-500" />
-                              <span className="text-xs px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 font-semibold">Admin</span>
+                              <ChevronDown size={12} className="text-muted-foreground" />
+                              <span className="text-xs px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold">Admin</span>
                             </button>
                             {orgDropdownOpen && (
-                              <div className="absolute right-0 top-full mt-1 w-56 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                                <div className="px-3 py-2 border-b border-zinc-800">
-                                  <p className="text-xs text-gray-500 uppercase tracking-wide">Organização ativa</p>
+                              <div className="absolute right-0 top-full mt-1 w-56 bg-background border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                                <div className="px-3 py-2 border-b border-border">
+                                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Organização ativa</p>
                                 </div>
                                 <div className="max-h-60 overflow-y-auto">
                                   {authOrgs.map(org => (
                                     <button
                                       key={org.id}
                                       onClick={() => { authSwitchOrg(org.id); setOrgDropdownOpen(false) }}
-                                      className={`w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-zinc-800 transition-colors ${org.id === authActiveOrgId ? 'bg-zinc-800/60' : ''}`}
+                                      className={`w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-muted dark:hover:bg-zinc-800 transition-colors ${org.id === authActiveOrgId ? 'bg-muted dark:bg-zinc-800/60' : ''}`}
                                     >
-                                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${org.id === authActiveOrgId ? 'bg-green-500' : 'bg-zinc-600'}`}></span>
-                                      <span className="text-sm text-gray-300 truncate">{org.name}</span>
-                                      {org.id === authActiveOrgId && <span className="ml-auto text-xs text-green-400">✓</span>}
+                                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${org.id === authActiveOrgId ? 'bg-green-500' : 'bg-zinc-400 dark:bg-zinc-600'}`}></span>
+                                      <span className="text-sm text-foreground truncate">{org.name}</span>
+                                      {org.id === authActiveOrgId && <span className="ml-auto text-xs text-green-500 dark:text-green-400">✓</span>}
                                     </button>
                                   ))}
                                 </div>
@@ -760,9 +760,9 @@ export function DashboardShell({
                             )}
                           </div>
                         ) : currentAuthUser?.organizationId ? (
-                          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700">
+                          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700">
                             <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span className="text-xs text-gray-300 font-medium">
+                            <span className="text-xs text-foreground font-medium">
                               {branding.brand_name !== 'SmartZap' ? branding.brand_name : (currentAuthUser?.name || 'Organização')}
                             </span>
                           </div>

@@ -114,17 +114,17 @@ export default function TemplatesPage() {
 
       {/* TABS — hide Projects tab for Evolution orgs */}
       {!isEvolution && (
-        <div className="flex gap-1 bg-zinc-900 border border-white/5 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 bg-muted dark:bg-zinc-900 border border-border dark:border-white/5 p-1 rounded-xl w-fit">
           <button
             onClick={() => setActiveTab('projects')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === 'projects' ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === 'projects' ? 'bg-background dark:bg-white/10 text-foreground dark:text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-background/60 dark:hover:bg-white/5'}`}
           >
             <LayoutGrid className="w-4 h-4" />
             Projetos (Fábrica)
           </button>
           <button
             onClick={() => setActiveTab('approved')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === 'approved' ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === 'approved' ? 'bg-background dark:bg-white/10 text-foreground dark:text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-background/60 dark:hover:bg-white/5'}`}
           >
             <CheckCircle className="w-4 h-4" />
             Aprovados (Meta)
@@ -136,9 +136,9 @@ export default function TemplatesPage() {
       {!isEvolution && activeTab === 'projects' && (
         <>
           <div className="glass-panel p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 w-full sm:w-96 bg-zinc-900 border border-white/5 rounded-lg px-4 py-2.5 focus-within:border-primary-500/50 focus-within:ring-1 focus-within:ring-primary-500/50 transition-all">
-              <Search size={18} className="text-gray-500" />
-              <input type="text" placeholder="Buscar projetos..." className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-gray-600" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <div className="flex items-center gap-3 w-full sm:w-96 bg-muted dark:bg-zinc-900 border border-border dark:border-white/5 rounded-lg px-4 py-2.5 focus-within:border-primary-500/50 focus-within:ring-1 focus-within:ring-primary-500/50 transition-all">
+              <Search size={18} className="text-muted-foreground" />
+              <input type="text" placeholder="Buscar projetos..." className="bg-transparent border-none outline-none text-sm w-full text-foreground placeholder:text-muted-foreground" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
             <button onClick={() => refetch()} className="p-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg border border-white/10 transition-colors" title="Atualizar">
               <RefreshCw size={18} />
