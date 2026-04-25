@@ -18,18 +18,18 @@
   --color-gray-900: #18181b;
   --color-gray-950: #09090b;
 
-  /* Electric Emerald (WhatsApp Tech vibe) */
-  --color-primary-50: #ecfdf5;
-  --color-primary-100: #d1fae5;
-  --color-primary-200: #a7f3d0;
-  --color-primary-300: #6ee7b7;
-  --color-primary-400: #34d399;
-  --color-primary-500: #10b981;
-  --color-primary-600: #059669;
-  --color-primary-700: #047857;
-  --color-primary-800: #065f46;
-  --color-primary-900: #064e3b;
-  --color-primary-950: #022c22;
+  /* Tech Blue */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
 
   /* ================================
      LANGFLOW COLOR SYSTEM
@@ -128,8 +128,8 @@
 
 /* Brand color — overridden dynamically by BrandingSettings via style tag */
 :root {
-  --brand-primary: #10b981;
-  --brand-primary-hover: #059669;
+  --brand-primary: #3b82f6;
+  --brand-primary-hover: #2563eb;
 }
 
 /* Base styles */
@@ -186,7 +186,7 @@ a:focus-visible,
 [role="button"]:focus-visible {
   outline: 2px solid var(--color-primary-400);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
 input:focus-visible,
@@ -194,7 +194,7 @@ select:focus-visible,
 textarea:focus-visible {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 /* Remove default focus outline when using :focus-visible */
@@ -282,16 +282,16 @@ textarea:focus-visible {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(255, 255, 255, 0.04), rgba(16, 185, 129, 0.1));
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(255, 255, 255, 0.04), rgba(59, 130, 246, 0.1));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
 }
 
-/* Emerald glow for active elements */
+/* Blue glow for active elements */
 .emerald-glow {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15), 0 0 40px rgba(16, 185, 129, 0.05);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), 0 0 40px rgba(59, 130, 246, 0.08);
 }
 
 /* Stat card number shine */
@@ -313,7 +313,7 @@ textarea:focus-visible {
   width: 3px;
   height: 60%;
   border-radius: 0 3px 3px 0;
-  background: linear-gradient(to bottom, #10b981, #059669);
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
 }
 
 /* No scrollbar utility */
@@ -801,5 +801,5 @@ textarea:focus-visible {
 
 /* Handle que pode receber conexão */
 .react-flow__handle.valid {
-  box-shadow: 0 0 12px 4px rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 0 12px 4px rgba(59, 130, 246, 0.5) !important;
 }

@@ -161,7 +161,7 @@ const OnboardingOverlay = ({
             <div className="max-w-2xl w-full">
                 {/* Header */}
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-emerald-600 mb-6 shadow-lg shadow-primary-500/20">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 mb-6 shadow-lg shadow-primary-900/20">
                         <Sparkles size={40} className="text-white" />
                     </div>
                     <h1 className="text-4xl font-bold text-white tracking-tight mb-3">
@@ -196,7 +196,7 @@ const OnboardingOverlay = ({
                     </div>
                     <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-gradient-to-r from-primary-500 to-emerald-500 transition-all duration-500"
+                            className="h-full bg-gradient-to-r from-primary-400 to-primary-600 transition-all duration-500"
                             style={{ width: `${progressPercent}%` }}
                         />
                     </div>
@@ -484,7 +484,7 @@ export function DashboardShell({
     const companyName = initialAuthStatus?.company?.name
     const { user: currentAuthUser, isSuperAdmin: isAuthSuperAdmin, organizations: authOrgs, activeOrgId: authActiveOrgId, switchOrg: authSwitchOrg } = useCurrentUser()
     const [orgDropdownOpen, setOrgDropdownOpen] = React.useState(false)
-    const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#16a34a' })
+    const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#3b82f6' })
     React.useEffect(() => {
       fetch('/api/settings/branding').then(r => r.ok ? r.json() : null).then(d => { if (d) setBranding(d) }).catch(() => {})
     }, [])
@@ -598,13 +598,13 @@ export function DashboardShell({
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-zinc-950 border-r border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-[#0d1b2e] border-r border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     }`}
             >
                 <div className="h-full flex flex-col p-3">
                     {/* Logo */}
                     <div className="h-14 flex items-center px-2 mb-4">
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center mr-2.5 shadow-lg shadow-primary-900/30">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center mr-2.5 shadow-lg shadow-blue-900/30">
                             <Zap className="text-white" size={16} fill="currentColor" />
                         </div>
                         <div>

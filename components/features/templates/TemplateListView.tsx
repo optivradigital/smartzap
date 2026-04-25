@@ -8,7 +8,7 @@ import { BulkGenerationModal } from './BulkGenerationModal';
 
 const StatusBadge = ({ status }: { status: TemplateStatus }) => {
   const styles = {
-    APPROVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    APPROVED: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     REJECTED: 'bg-red-500/10 text-red-400 border-red-500/20',
   };
@@ -220,13 +220,13 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
           <div className="flex flex-col items-end px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-xl">
             <div className="flex items-center gap-2 text-[11px] font-medium text-zinc-500">
               <span>Uso</span>
-              <span className={`font-bold ${templates.length >= 250 ? 'text-red-400' : 'text-emerald-400'}`}>
+              <span className={`font-bold ${templates.length >= 250 ? 'text-red-400' : 'text-blue-400'}`}>
                 {templates.length}/250
               </span>
             </div>
             <div className="w-24 h-1 bg-zinc-800 rounded-full mt-1 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-500 ${templates.length >= 250 ? 'bg-red-500' : templates.length >= 200 ? 'bg-yellow-500' : 'bg-emerald-500'}`}
+                className={`h-full rounded-full transition-all duration-500 ${templates.length >= 250 ? 'bg-red-500' : templates.length >= 200 ? 'bg-yellow-500' : 'bg-blue-500'}`}
                 style={{ width: `${Math.min((templates.length / 250) * 100, 100)}%` }}
               />
             </div>
@@ -234,7 +234,7 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
 
           <button
             onClick={() => setIsBulkModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-emerald-900/20"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-blue-900/20"
           >
             <Zap size={15} className="text-yellow-300" />
             UTILITY em Massa
@@ -677,7 +677,7 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
                 {aiResult && (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center gap-2 mb-2">
-                      <Check size={16} className="text-emerald-400" />
+                      <Check size={16} className="text-blue-400" />
                       <span className="text-sm font-bold text-white">Resultado Gerado</span>
                     </div>
                     <div className="bg-zinc-900/80 border border-purple-500/30 rounded-xl p-4 relative group">
@@ -700,7 +700,7 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
                         <button
                           onClick={onSaveAiTemplate}
                           disabled={isSaving}
-                          className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                          className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50"
                         >
                           {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Salvar Template
                         </button>

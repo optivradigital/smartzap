@@ -399,8 +399,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
         )}
 
-        {activeSection === 'conexao' && <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
-          <div className={`p-4 rounded-2xl ${settings.isConnected ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+        {activeSection === 'conexao' && <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-blue-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
+          <div className={`p-4 rounded-2xl ${settings.isConnected ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
             {settings.isConnected ? <Wifi size={32} /> : <AlertTriangle size={32} />}
           </div>
           <div className="flex-1">
@@ -408,16 +408,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {settings.isConnected ? 'Sistema Online' : 'Desconectado'}
             </h3>
 
-            <div className={`text-sm mt-3 space-y-1.5 ${settings.isConnected ? 'text-emerald-400/80' : 'text-red-400/80'}`}>
+            <div className={`text-sm mt-3 space-y-1.5 ${settings.isConnected ? 'text-blue-400/80' : 'text-red-400/80'}`}>
               {settings.isConnected ? (
                 <>
                   <div className="flex items-center gap-2">
                     <span className="opacity-70">Conta Comercial:</span>
-                    <span className="font-mono text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded">{settings.businessAccountId}</span>
+                    <span className="font-mono text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded">{settings.businessAccountId}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="opacity-70">Telefone Verificado:</span>
-                    <span className="font-mono text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                    <span className="font-mono text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded">
                       {settings.displayPhoneNumber || settings.phoneNumberId}
                     </span>
                   </div>
@@ -445,7 +445,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <RefreshCw size={10} className="ml-1" />
                   </button>
                 ) : (
-                  <span className="px-3 py-1.5 bg-zinc-900 rounded-lg text-xs font-medium text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                  <span className="px-3 py-1.5 bg-zinc-900 rounded-lg text-xs font-medium text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
                     <Wifi size={12} />
                     Limite: {accountLimits?.maxUniqueUsersPerDay?.toLocaleString('pt-BR')} msgs/dia
                   </span>
@@ -454,7 +454,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 {/* Quality Status */}
                 {!limitsError && !limitsLoading && (
                   <span className={`px-3 py-1.5 bg-zinc-900 rounded-lg text-xs font-medium border flex items-center gap-1.5 ${accountLimits?.qualityScore === 'GREEN'
-                    ? 'text-emerald-400 border-emerald-500/20'
+                    ? 'text-blue-400 border-blue-500/20'
                     : accountLimits?.qualityScore === 'YELLOW'
                       ? 'text-yellow-400 border-yellow-500/20'
                       : accountLimits?.qualityScore === 'RED'
@@ -754,7 +754,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     title="Copiar URL"
                   >
                     {copiedField === 'url' ? (
-                      <Check size={16} className="text-emerald-400" />
+                      <Check size={16} className="text-blue-400" />
                     ) : (
                       <Copy size={16} className="text-gray-400" />
                     )}
@@ -771,7 +771,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     title="Copiar Token"
                   >
                     {copiedField === 'token' ? (
-                      <Check size={12} className="text-emerald-400" />
+                      <Check size={12} className="text-blue-400" />
                     ) : (
                       <Copy size={12} className="text-gray-400" />
                     )}
@@ -782,7 +782,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* Webhook Status */}
               {webhookStats?.lastEventAt && (
                 <div className="mt-3 pt-3 border-t border-blue-500/20 flex items-center gap-2 text-xs text-blue-300/70">
-                  <Check size={12} className="text-emerald-400" />
+                  <Check size={12} className="text-blue-400" />
                   Último evento: {new Date(webhookStats.lastEventAt).toLocaleString('pt-BR')}
                   <span className="text-gray-500">·</span>
                   <span>{webhookStats.todayDelivered || 0} delivered</span>
@@ -826,7 +826,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <div
                           key={phone.id}
                           className={`border rounded-xl overflow-hidden transition-all ${cardColor === 'emerald'
-                            ? 'bg-emerald-500/5 border-emerald-500/20'
+                            ? 'bg-blue-500/5 border-blue-500/20'
                             : cardColor === 'amber'
                               ? 'bg-amber-500/5 border-amber-500/20'
                               : cardColor === 'blue'
@@ -839,7 +839,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className={`p-2.5 rounded-xl ${cardColor === 'emerald'
-                                  ? 'bg-emerald-500/20 text-emerald-400'
+                                  ? 'bg-blue-500/20 text-blue-400'
                                   : cardColor === 'amber'
                                     ? 'bg-amber-500/20 text-amber-400'
                                     : cardColor === 'blue'
@@ -857,7 +857,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                   </div>
                                   {/* Status line - sempre visível */}
                                   <div className={`text-xs mt-1.5 flex items-center gap-1.5 ${cardColor === 'emerald'
-                                    ? 'text-emerald-400/80'
+                                    ? 'text-blue-400/80'
                                     : cardColor === 'amber'
                                       ? 'text-amber-400/80'
                                       : cardColor === 'blue'
@@ -899,7 +899,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                 <button
                                   onClick={() => setExpandedFunnelPhoneId(isFunnelExpanded ? null : phone.id)}
                                   className={`px-2.5 py-1 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-all hover:ring-2 hover:ring-white/20 ${cardColor === 'emerald'
-                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                    ? 'bg-blue-500/20 text-blue-400'
                                     : cardColor === 'amber'
                                       ? 'bg-amber-500/20 text-amber-400'
                                       : cardColor === 'blue'
@@ -922,7 +922,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                       <button
                                         onClick={() => handleSetZapflowWebhook(phone.id)}
                                         disabled={isSavingOverride}
-                                        className="px-3 py-1.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 text-white rounded-lg transition-colors flex items-center gap-1"
+                                        className="px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 text-white rounded-lg transition-colors flex items-center gap-1"
                                       >
                                         {isSavingOverride ? (
                                           <Loader2 size={12} className="animate-spin" />
@@ -963,9 +963,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                     const isLast = index === funnelLevels.length - 1;
                                     const colorClasses = {
                                       emerald: {
-                                        active: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400',
-                                        inactive: 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400/50',
-                                        arrow: 'text-emerald-500/30'
+                                        active: 'bg-blue-500/20 border-blue-500/40 text-blue-400',
+                                        inactive: 'bg-blue-500/5 border-blue-500/10 text-blue-400/50',
+                                        arrow: 'text-blue-500/30'
                                       },
                                       blue: {
                                         active: 'bg-blue-500/20 border-blue-500/40 text-blue-400',
@@ -985,13 +985,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                         {/* Level Box */}
                                         <div
                                           className={`relative rounded-lg border p-3 transition-all ${level.isActive ? colors.active : colors.inactive
-                                            } ${level.isActive ? `ring-2 ring-offset-2 ring-offset-zinc-900 ${level.color === 'emerald' ? 'ring-emerald-500/30' : level.color === 'blue' ? 'ring-blue-500/30' : 'ring-zinc-500/30'}` : ''}`}
+                                            } ${level.isActive ? `ring-2 ring-offset-2 ring-offset-zinc-900 ${level.color === 'emerald' ? 'ring-blue-500/30' : level.color === 'blue' ? 'ring-blue-500/30' : 'ring-zinc-500/30'}` : ''}`}
                                         >
                                           <div className="flex items-center justify-between gap-3">
                                             <div className="flex items-center gap-2">
                                               {/* Status icon */}
                                               {level.isActive ? (
-                                                <CheckCircle2 size={16} className={level.isSmartZap ? 'text-emerald-400' : ''} />
+                                                <CheckCircle2 size={16} className={level.isSmartZap ? 'text-blue-400' : ''} />
                                               ) : level.url ? (
                                                 <Circle size={16} className="opacity-40" />
                                               ) : (
@@ -1004,7 +1004,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                                   <span className="font-bold text-sm">#{level.level}</span>
                                                   <span className="font-medium text-sm">{level.name}</span>
                                                   {level.isActive && level.isSmartZap && (
-                                                    <span className="px-1.5 py-0.5 bg-emerald-500/30 text-emerald-300 text-[10px] font-bold rounded">
+                                                    <span className="px-1.5 py-0.5 bg-blue-500/30 text-blue-300 text-[10px] font-bold rounded">
                                                       ZAPFLOW
                                                     </span>
                                                   )}
@@ -1140,13 +1140,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </p>
 
                   <div className="space-y-3">
-                    <div className="flex gap-3 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
-                      <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center text-emerald-400 font-bold text-sm flex-shrink-0">
+                    <div className="flex gap-3 p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-400 font-bold text-sm flex-shrink-0">
                         #1
                       </div>
                       <div>
-                        <div className="font-medium text-emerald-300">NÚMERO</div>
-                        <p className="text-xs text-emerald-200/60 mt-0.5">
+                        <div className="font-medium text-blue-300">NÚMERO</div>
+                        <p className="text-xs text-blue-200/60 mt-0.5">
                           Webhook específico deste número. Ignora os níveis abaixo.
                         </p>
                         <p className="text-xs text-gray-500 mt-1">

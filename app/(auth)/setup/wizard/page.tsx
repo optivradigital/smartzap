@@ -634,8 +634,8 @@ function WizardContent() {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/20 mb-6">
-            <Check className="w-10 h-10 text-emerald-500" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-500/20 mb-6">
+            <Check className="w-10 h-10 text-blue-500" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-3">
             Setup Concluído!
@@ -649,7 +649,7 @@ function WizardContent() {
             <p className="text-sm text-zinc-500 mb-2">Ou acesse manualmente:</p>
             <a
               href="/login"
-              className="text-emerald-500 hover:underline font-medium"
+              className="text-blue-500 hover:underline font-medium"
             >
               https://smartzapv.vercel.app/login
             </a>
@@ -662,7 +662,7 @@ function WizardContent() {
   if (!projectInfo) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
       </div>
     )
   }
@@ -672,7 +672,7 @@ function WizardContent() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 mb-4">
             <span className="text-3xl font-bold text-white">S</span>
           </div>
           <h1 className="text-2xl font-bold text-white">SmartZap</h1>
@@ -683,7 +683,7 @@ function WizardContent() {
         <div className="flex items-center justify-center gap-1 mb-8">
           {STEPS.map((s, i) => (
             <div key={s.id} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step > s.id ? 'bg-emerald-500' : step === s.id ? 'bg-emerald-600' : 'bg-zinc-800'
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step > s.id ? 'bg-blue-500' : step === s.id ? 'bg-blue-600' : 'bg-zinc-800'
                 }`}>
                 {step > s.id ? (
                   <Check className="w-4 h-4 text-white" />
@@ -692,7 +692,7 @@ function WizardContent() {
                 )}
               </div>
               {i < STEPS.length - 1 && (
-                <div className={`w-6 h-0.5 ${step > s.id ? 'bg-emerald-500' : 'bg-zinc-700'}`} />
+                <div className={`w-6 h-0.5 ${step > s.id ? 'bg-blue-500' : 'bg-zinc-700'}`} />
               )}
             </div>
           ))}
@@ -718,7 +718,7 @@ function WizardContent() {
                     value={data.password}
                     onChange={(e) => updateField('password', e.target.value)}
                     placeholder="Senha"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-11 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-11 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     autoFocus
                   />
                   <button
@@ -737,10 +737,10 @@ function WizardContent() {
                     value={data.confirmPassword}
                     onChange={(e) => updateField('confirmPassword', e.target.value)}
                     placeholder="Confirmar senha"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   {data.confirmPassword && data.password === data.confirmPassword && (
-                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
                   )}
                 </div>
 
@@ -751,7 +751,7 @@ function WizardContent() {
                       key={i}
                       className={`h-1 flex-1 rounded-full ${data.password.length >= i * 3
                         ? data.password.length >= 12
-                          ? 'bg-emerald-500'
+                          ? 'bg-blue-500'
                           : data.password.length >= 8
                             ? 'bg-yellow-500'
                             : 'bg-red-500'
@@ -778,7 +778,7 @@ function WizardContent() {
                 href="https://supabase.com/dashboard"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-emerald-500 text-sm hover:underline mb-6"
+                className="inline-flex items-center gap-1 text-blue-500 text-sm hover:underline mb-6"
               >
                 Acessar Supabase Dashboard <ExternalLink className="w-3 h-3" />
               </a>
@@ -813,7 +813,7 @@ function WizardContent() {
                     value={data.supabaseUrl}
                     onChange={(e) => updateField('supabaseUrl', e.target.value)}
                     placeholder="https://your-project.supabase.co"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                     autoFocus
                   />
                 </div>
@@ -825,7 +825,7 @@ function WizardContent() {
                     value={data.supabaseAnonKey}
                     onChange={(e) => updateField('supabaseAnonKey', e.target.value)}
                     placeholder="eyJhbG..."
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
                 </div>
 
@@ -836,7 +836,7 @@ function WizardContent() {
                     value={data.supabaseServiceKey}
                     onChange={(e) => updateField('supabaseServiceKey', e.target.value)}
                     placeholder="eyJhbG..."
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
                   <p className="text-xs text-zinc-500 mt-1">Usada para tarefas administrativas no backend.</p>
                 </div>
@@ -856,7 +856,7 @@ function WizardContent() {
                         value={data.databaseUrl || ''}
                         onChange={(e) => updateField('databaseUrl', e.target.value)}
                         placeholder="postgres://postgres.xxx:pass@aws-0-sa-east-1.pooler.supabase.com:6543/postgres"
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                       />
                       <div className="absolute -bottom-5 left-0 text-[10px] text-zinc-500">
                         Use o "Connection Pooler" (porta 6543) para melhor compatibilidade
@@ -888,7 +888,7 @@ function WizardContent() {
                           <button
                             onClick={() => runMigration('migrate')}
                             disabled={migrating}
-                            className="flex-1 py-3 rounded-xl font-medium transition-all duration-300 bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center gap-2"
+                            className="flex-1 py-3 rounded-xl font-medium transition-all duration-300 bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center gap-2"
                           >
                             {migrating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                             Manter Dados
@@ -899,7 +899,7 @@ function WizardContent() {
                           onClick={checkDatabase}
                           disabled={migrating || !data.databaseUrl}
                           className={`w-full py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${migrationSuccess
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50'
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
                             : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700'
                             }`}
                         >
@@ -935,7 +935,7 @@ function WizardContent() {
                 href="https://console.upstash.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-emerald-500 text-sm hover:underline mb-6"
+                className="inline-flex items-center gap-1 text-blue-500 text-sm hover:underline mb-6"
               >
                 Acessar Upstash Console <ExternalLink className="w-3 h-3" />
               </a>
@@ -948,7 +948,7 @@ function WizardContent() {
                     value={data.redisUrl}
                     onChange={(e) => updateField('redisUrl', e.target.value)}
                     placeholder="https://...upstash.io"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                     autoFocus
                   />
                 </div>
@@ -960,7 +960,7 @@ function WizardContent() {
                     value={data.redisToken}
                     onChange={(e) => updateField('redisToken', e.target.value)}
                     placeholder="AX..."
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
                 </div>
 
@@ -971,7 +971,7 @@ function WizardContent() {
                     value={data.qstashToken}
                     onChange={(e) => updateField('qstashToken', e.target.value)}
                     placeholder="eyJ..."
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
                 </div>
 
@@ -991,7 +991,7 @@ function WizardContent() {
                         value={data.upstashEmail}
                         onChange={(e) => updateField('upstashEmail', e.target.value)}
                         placeholder="seu@email.com"
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                       />
                     </div>
                     <div>
@@ -1001,7 +1001,7 @@ function WizardContent() {
                         value={data.upstashApiKey}
                         onChange={(e) => updateField('upstashApiKey', e.target.value)}
                         placeholder="Obter em Account > Management API"
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                       />
                     </div>
                     <div>
@@ -1011,7 +1011,7 @@ function WizardContent() {
                         value={data.upstashConsoleUrl}
                         onChange={(e) => updateField('upstashConsoleUrl', e.target.value)}
                         placeholder="https://console.upstash.com/redis/..."
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                       />
                       <p className="text-xs text-zinc-500 mt-1">Usado para identificar o ID do banco de dados automaticamente.</p>
                     </div>
@@ -1035,7 +1035,7 @@ function WizardContent() {
                 href="https://developers.facebook.com/apps"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-emerald-500 text-sm hover:underline mb-6"
+                className="inline-flex items-center gap-1 text-blue-500 text-sm hover:underline mb-6"
               >
                 Meta for Developers <ExternalLink className="w-3 h-3" />
               </a>
@@ -1048,7 +1048,7 @@ function WizardContent() {
                     value={data.whatsappPhoneId}
                     onChange={(e) => updateField('whatsappPhoneId', e.target.value)}
                     placeholder="1234567890"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                     autoFocus
                   />
                 </div>
@@ -1060,7 +1060,7 @@ function WizardContent() {
                     value={data.whatsappBusinessId}
                     onChange={(e) => updateField('whatsappBusinessId', e.target.value)}
                     placeholder="1234567890"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
                 </div>
 
@@ -1071,7 +1071,7 @@ function WizardContent() {
                     value={data.whatsappToken}
                     onChange={(e) => updateField('whatsappToken', e.target.value)}
                     placeholder="EAA..."
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
                 </div>
               </div>
@@ -1096,7 +1096,7 @@ function WizardContent() {
                     value={data.companyName}
                     onChange={(e) => updateField('companyName', e.target.value)}
                     placeholder="Nome da empresa"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     autoFocus
                   />
                 </div>
@@ -1108,10 +1108,10 @@ function WizardContent() {
                     value={data.email}
                     onChange={(e) => updateField('email', e.target.value)}
                     placeholder="E-mail"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   {data.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) && (
-                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
                   )}
                 </div>
 
@@ -1122,10 +1122,10 @@ function WizardContent() {
                     value={data.phone}
                     onChange={(e) => updateField('phone', formatPhone(e.target.value))}
                     placeholder="(11) 99999-9999"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   {data.phone.replace(/\D/g, '').length >= 10 && (
-                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
                   )}
                 </div>
               </div>
@@ -1157,7 +1157,7 @@ function WizardContent() {
               type="button"
               onClick={handleNext}
               disabled={isLoading || isValidating}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -1226,8 +1226,8 @@ function WizardContent() {
                   setTimeout(() => setCopied(false), 2000)
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${copied
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-blue-600 hover:bg-blue-500 text-white'
                   }`}
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -1245,7 +1245,7 @@ export default function WizardPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
       </div>
     }>
       <WizardContent />

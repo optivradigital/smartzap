@@ -30,7 +30,7 @@ const MessageStatusBadge = ({ status }: { status: MessageStatus }) => {
   const styles: Record<string, string> = {
     [MessageStatus.PENDING]: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
     [MessageStatus.READ]: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    [MessageStatus.DELIVERED]: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    [MessageStatus.DELIVERED]: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
     [MessageStatus.SENT]: 'text-gray-400 bg-gray-500/10 border-gray-500/20',
     [MessageStatus.FAILED]: 'text-red-400 bg-red-500/10 border-red-500/20',
     [MessageStatus.NOT_EXISTS]: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
@@ -38,7 +38,7 @@ const MessageStatusBadge = ({ status }: { status: MessageStatus }) => {
     // Fallback para valores antigos em inglês
     'Pending': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
     'Read': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    'Delivered': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    'Delivered': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
     'Sent': 'text-gray-400 bg-gray-500/10 border-gray-500/20',
     'Failed': 'text-red-400 bg-red-500/10 border-red-500/20',
   };
@@ -179,7 +179,7 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
           </PrefetchLink>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             {campaign.name}
-            <span className={`text-xs px-2 py-1 rounded border ${campaign.status === CampaignStatus.COMPLETED ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+            <span className={`text-xs px-2 py-1 rounded border ${campaign.status === CampaignStatus.COMPLETED ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
               campaign.status === CampaignStatus.SENDING ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
                 campaign.status === CampaignStatus.PAUSED ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
                   campaign.status === CampaignStatus.SCHEDULED ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' :

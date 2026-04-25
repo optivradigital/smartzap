@@ -171,11 +171,11 @@ const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelCo
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
           className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-all duration-200 ${
-            isDragging ? 'border-emerald-400 bg-emerald-500/10' : 'border-white/20 hover:border-white/40 bg-zinc-900/50'
+            isDragging ? 'border-blue-400 bg-blue-500/10' : 'border-white/20 hover:border-white/40 bg-zinc-900/50'
           }`}
         >
-          <div className="p-3 rounded-full bg-emerald-500/20">
-            <FileUp size={24} className="text-emerald-400" />
+          <div className="p-3 rounded-full bg-blue-500/20">
+            <FileUp size={24} className="text-blue-400" />
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-white">Arraste um arquivo aqui ou clique para selecionar</p>
@@ -187,12 +187,12 @@ const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelCo
           <input ref={inputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleChange} />
         </div>
       ) : (
-        <div className="bg-zinc-900/50 border border-emerald-500/30 rounded-xl p-5">
+        <div className="bg-zinc-900/50 border border-blue-500/30 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <FileSpreadsheet size={16} className="text-emerald-400" />
+              <FileSpreadsheet size={16} className="text-blue-400" />
               <span className="text-sm font-medium text-white">{fileName}</span>
-              <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">{excelContacts.length} contatos</span>
+              <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">{excelContacts.length} contatos</span>
             </div>
             <button
               onClick={() => { setExcelContacts([]); setFileName(null); }}
@@ -204,7 +204,7 @@ const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelCo
           <div className="space-y-1.5 max-h-[220px] overflow-y-auto custom-scrollbar">
             {excelContacts.slice(0, 50).map((c, i) => (
               <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800/50">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-xs text-emerald-400 font-bold flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-xs text-blue-400 font-bold flex-shrink-0">
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1228,7 +1228,7 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                       </div>
                     )}
                     <div className="flex items-center gap-4 w-full justify-center">
-                      <div className={`p-4 rounded-full ${recipientSource === 'excel' ? 'bg-gray-200 text-black' : 'bg-zinc-800 text-emerald-400'}`}>
+                      <div className={`p-4 rounded-full ${recipientSource === 'excel' ? 'bg-gray-200 text-black' : 'bg-zinc-800 text-blue-400'}`}>
                         <FileSpreadsheet size={24} />
                       </div>
                       <div className="text-left">

@@ -29,7 +29,7 @@ const steps = [
 ]
 
 const colorMap: Record<string, string> = {
-  emerald: 'bg-emerald-500/20 text-emerald-400',
+  emerald: 'bg-blue-500/20 text-blue-400',
   blue: 'bg-blue-500/20 text-blue-400',
   purple: 'bg-purple-500/20 text-purple-400',
 }
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
             <div
               key={s.id}
               className={`h-1 flex-1 rounded-full transition-colors ${
-                i <= step ? 'bg-emerald-500' : 'bg-zinc-800'
+                i <= step ? 'bg-blue-500' : 'bg-zinc-800'
               }`}
             />
           ))}
@@ -92,7 +92,7 @@ export default function OnboardingPage() {
 
           <button
             onClick={next}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {isLast ? 'Ir para o dashboard' : 'Próximo'}
             <ArrowRight className="w-4 h-4" />

@@ -186,7 +186,7 @@ export default function NewTemplateProjectPage() {
                     <div className="flex gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-fit">
                         <button
                             onClick={() => setMode('ai')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'ai' ? 'bg-emerald-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'ai' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
                         >
                             <Wand2 className="w-4 h-4" /> Gerar com IA
                         </button>
@@ -203,7 +203,7 @@ export default function NewTemplateProjectPage() {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 space-y-6">
                                 <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl">
-                                    <div className="flex items-center gap-2 mb-4 text-emerald-500">
+                                    <div className="flex items-center gap-2 mb-4 text-blue-500">
                                         <Sparkles className="w-5 h-5" />
                                         <h2 className="font-semibold">O que você deseja criar?</h2>
                                     </div>
@@ -211,7 +211,7 @@ export default function NewTemplateProjectPage() {
                                         value={prompt}
                                         onChange={e => setPrompt(e.target.value)}
                                         placeholder="Ex: Templates para confirmação de agendamento de consulta médica com opção de remarcar..."
-                                        className="w-full h-40 p-4 rounded-lg border border-zinc-700 bg-zinc-950 focus:ring-2 focus:ring-emerald-500 outline-none resize-none text-lg text-white"
+                                        className="w-full h-40 p-4 rounded-lg border border-zinc-700 bg-zinc-950 focus:ring-2 focus:ring-blue-500 outline-none resize-none text-lg text-white"
                                     />
                                     <div className="flex items-center justify-between mt-4 text-sm text-zinc-500">
                                         <span>Dica: Seja específico sobre o objetivo e tom de voz.</span>
@@ -262,7 +262,7 @@ export default function NewTemplateProjectPage() {
                                 <button
                                     onClick={handleGenerate}
                                     disabled={!prompt}
-                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Wand2 className="w-5 h-5" />
                                     Gerar Templates com IA
@@ -458,7 +458,7 @@ export default function NewTemplateProjectPage() {
                             {generatedTemplates.length > 0 && (
                                 <button
                                     onClick={handleGoToReview}
-                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium flex items-center justify-center gap-2"
                                 >
                                     <Save className="w-5 h-5" />
                                     Revisar e Salvar ({generatedTemplates.length} template{generatedTemplates.length !== 1 ? 's' : ''})
@@ -472,7 +472,7 @@ export default function NewTemplateProjectPage() {
             {/* ── STEP: GENERATING ── */}
             {step === 'generating' && (
                 <div className="flex flex-col items-center justify-center min-h-[400px]">
-                    <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mb-4" />
+                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
                     <h2 className="text-xl font-semibold mb-2">Criando seus templates...</h2>
                     <p className="text-zinc-500">O Agente está consultando as diretrizes da Meta e gerando variações.</p>
                 </div>
@@ -496,7 +496,7 @@ export default function NewTemplateProjectPage() {
                             <button
                                 onClick={handleSaveProject}
                                 disabled={isCreating || selectedIds.size === 0}
-                                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium flex items-center gap-2 disabled:opacity-50"
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 disabled:opacity-50"
                             >
                                 {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 Salvar Projeto
@@ -511,12 +511,12 @@ export default function NewTemplateProjectPage() {
                                 onClick={() => toggleSelect(t.id)}
                                 className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
                                     selectedIds.has(t.id)
-                                        ? 'border-emerald-500 bg-emerald-900/10'
+                                        ? 'border-blue-500 bg-blue-900/10'
                                         : 'border-transparent bg-zinc-900 shadow-sm'
                                 }`}
                             >
                                 {selectedIds.has(t.id) && (
-                                    <div className="absolute top-2 right-2 p-1 bg-emerald-500 text-white rounded-full">
+                                    <div className="absolute top-2 right-2 p-1 bg-blue-500 text-white rounded-full">
                                         <Check className="w-3 h-3" />
                                     </div>
                                 )}

@@ -23,7 +23,7 @@ interface StatCardProps {
 const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardProps) => {
   const colorStyles: Record<string, { bg: string; text: string; glow: string; bar: string }> = {
     'bg-blue-500':    { bg: 'bg-blue-500/10',    text: 'text-blue-400',    glow: 'shadow-blue-500/10',    bar: 'bg-blue-500' },
-    'bg-emerald-500': { bg: 'bg-emerald-500/10',  text: 'text-emerald-400', glow: 'shadow-emerald-500/10', bar: 'bg-emerald-500' },
+    'bg-blue-500': { bg: 'bg-blue-500/10',  text: 'text-blue-400', glow: 'shadow-blue-500/10', bar: 'bg-blue-500' },
     'bg-purple-500':  { bg: 'bg-purple-500/10',   text: 'text-purple-400',  glow: 'shadow-purple-500/10',  bar: 'bg-purple-500' },
     'bg-red-500':     { bg: 'bg-red-500/10',      text: 'text-red-400',     glow: 'shadow-red-500/10',     bar: 'bg-red-500' },
   };
@@ -40,7 +40,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardP
           <Icon size={18} className={styles.text} />
         </div>
         {trend ? (
-          <div className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full border ${trendUp ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+          <div className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full border ${trendUp ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
             {trendUp ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
             {trend}
           </div>
@@ -58,7 +58,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardP
 
 const StatusBadge = ({ status }: { status: CampaignStatus }) => {
   const styles = {
-    [CampaignStatus.COMPLETED]: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    [CampaignStatus.COMPLETED]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     [CampaignStatus.SENDING]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     [CampaignStatus.FAILED]: 'bg-red-500/10 text-red-400 border-red-500/20',
     [CampaignStatus.DRAFT]: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
@@ -117,7 +117,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
         </div>
         <PrefetchLink
           href="/campaigns/new"
-          className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl font-medium text-sm transition-all shadow-lg shadow-primary-900/30 emerald-glow"
+          className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl font-medium text-sm transition-all shadow-lg shadow-primary-900/30 blue-glow"
         >
           <Send size={14} />
           Campanha Rápida
@@ -145,7 +145,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
               title="Taxa de Entrega" 
               value={stats.deliveryRate} 
               icon={CheckCircle2} 
-              color="bg-emerald-500"
+              color="bg-blue-500"
             />
             <StatCard 
               title="Campanhas Ativas" 

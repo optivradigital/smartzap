@@ -67,7 +67,7 @@ export function BillingSettings() {
     <section id="billing" className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <CreditCard className="w-5 h-5 text-emerald-400" />
+          <CreditCard className="w-5 h-5 text-blue-400" />
           Plano &amp; Faturamento
         </h2>
         <p className="text-zinc-400 text-sm mt-1">Gerencie sua assinatura do SmartZap</p>
@@ -111,8 +111,8 @@ function ActiveSubscription({
   return (
     <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 space-y-4">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-          <CheckCircle className="w-4 h-4 text-emerald-400" />
+        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+          <CheckCircle className="w-4 h-4 text-blue-400" />
         </div>
         <div>
           <p className="text-white font-medium">Plano SmartZap{subscription.extra_numbers > 0 ? ` + ${subscription.extra_numbers} número${subscription.extra_numbers > 1 ? 's' : ''} extra` : ''}</p>
@@ -174,15 +174,15 @@ function PricingCard({
       {/* Pricing */}
       <div className="bg-zinc-800/50 rounded-xl p-5 space-y-4">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-emerald-400" />
+          <Zap className="w-4 h-4 text-blue-400" />
           <span className="text-white font-medium">SmartZap Basic</span>
         </div>
 
         <ul className="space-y-2 text-sm text-zinc-300">
-          <li className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> 1 número WhatsApp incluso</li>
-          <li className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> Campanhas ilimitadas</li>
-          <li className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> Agente IA incluso</li>
-          <li className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> Suporte prioritário</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-blue-400 shrink-0" /> 1 número WhatsApp incluso</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-blue-400 shrink-0" /> Campanhas ilimitadas</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-blue-400 shrink-0" /> Agente IA incluso</li>
+          <li className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-blue-400 shrink-0" /> Suporte prioritário</li>
         </ul>
 
         <div className="border-t border-zinc-700 pt-4">
@@ -223,7 +223,7 @@ function PricingCard({
       <button
         onClick={onCheckout}
         disabled={redirecting}
-        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl py-3 text-sm transition-colors"
+        className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl py-3 text-sm transition-colors"
       >
         {redirecting ? 'Redirecionando para o pagamento...' : 'Assinar agora'}
       </button>

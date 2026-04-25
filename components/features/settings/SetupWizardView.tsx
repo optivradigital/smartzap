@@ -53,7 +53,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-emerald-600 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-blue-600 mb-4">
           <Sparkles size={32} className="text-white" />
         </div>
         <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
@@ -82,7 +82,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
         </div>
         <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-primary-500 to-emerald-500 transition-all duration-500"
+            className="h-full bg-gradient-to-r from-primary-500 to-blue-500 transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -107,7 +107,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
               key={step.id}
               className={`relative rounded-2xl border transition-all duration-300 overflow-hidden ${
                 isConfigured
-                  ? 'bg-emerald-500/5 border-emerald-500/30'
+                  ? 'bg-blue-500/5 border-blue-500/30'
                   : isError
                     ? 'bg-red-500/5 border-red-500/30'
                     : isNextStep
@@ -118,7 +118,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
               {/* Step number badge */}
               <div className={`absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                 isConfigured
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : isError
                     ? 'bg-red-500 text-white'
                     : isNextStep
@@ -133,7 +133,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className={`font-semibold ${
-                        isConfigured ? 'text-emerald-400' : isError ? 'text-red-400' : 'text-white'
+                        isConfigured ? 'text-blue-400' : isError ? 'text-red-400' : 'text-white'
                       }`}>
                         {step.title}
                       </h3>
@@ -157,7 +157,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
 
                     {/* Success message */}
                     {isConfigured && (
-                      <div className="flex items-center gap-2 text-sm text-emerald-400">
+                      <div className="flex items-center gap-2 text-sm text-blue-400">
                         <Check size={14} />
                         <span>Configurado com sucesso</span>
                       </div>
@@ -188,7 +188,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
 
                   {/* Icon for configured state */}
                   {isConfigured && (
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
                       {step.icon}
                     </div>
                   )}
@@ -198,7 +198,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
               {/* Arrow connector */}
               {index < steps.length - 1 && (
                 <div className="absolute -bottom-4 left-7 z-10">
-                  <div className={`w-0.5 h-8 ${isConfigured ? 'bg-emerald-500/30' : 'bg-zinc-700'}`} />
+                  <div className={`w-0.5 h-8 ${isConfigured ? 'bg-blue-500/30' : 'bg-zinc-700'}`} />
                 </div>
               )}
             </div>
@@ -209,7 +209,7 @@ export const SetupWizardView: React.FC<SetupWizardViewProps> = ({
       {/* Bottom CTA */}
       {allConfigured ? (
         <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 mb-4">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-400 mb-4">
             <Check size={20} />
             <span className="font-medium">Tudo configurado!</span>
           </div>

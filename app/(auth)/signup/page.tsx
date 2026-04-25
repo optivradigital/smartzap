@@ -6,7 +6,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 gap-6">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 mb-4">
           <span className="text-3xl font-bold text-white">S</span>
         </div>
         <h1 className="text-2xl font-bold text-white">SmartZap</h1>
@@ -23,10 +23,10 @@ export default function SignupPage() {
             socialButtonsBlockButton: 'border-zinc-700 text-white hover:bg-zinc-800',
             formFieldLabel: 'text-zinc-300',
             formFieldInput:
-              'bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:ring-emerald-500 focus:border-emerald-500',
+              'bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:ring-blue-500 focus:border-blue-500',
             formButtonPrimary:
-              'bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl',
-            footerActionLink: 'text-emerald-400 hover:text-emerald-300',
+              'bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl',
+            footerActionLink: 'text-blue-400 hover:text-blue-300',
           },
         }}
         fallbackRedirectUrl="/onboarding"

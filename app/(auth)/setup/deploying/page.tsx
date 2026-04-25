@@ -190,7 +190,7 @@ export default function DeployingPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 mb-4">
             <span className="text-3xl font-bold text-white">S</span>
           </div>
           <h1 className="text-2xl font-bold text-white">SmartZap</h1>
@@ -221,7 +221,7 @@ export default function DeployingPage() {
                   href="https://vercel.com/dashboard"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center"
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center"
                 >
                   Ver no Vercel
                 </a>
@@ -229,8 +229,8 @@ export default function DeployingPage() {
             </div>
           ) : state === 'ready' ? (
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4">
-                <Check className="w-8 h-8 text-emerald-500" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/20 mb-4">
+                <Check className="w-8 h-8 text-blue-500" />
               </div>
               <h2 className="text-lg font-semibold text-white mb-2">
                 Tudo pronto!
@@ -241,11 +241,11 @@ export default function DeployingPage() {
             </div>
           ) : (
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/20 mb-4">
                 {state === 'saving-company' ? (
-                  <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
                 ) : (
-                  <Rocket className="w-8 h-8 text-emerald-500 animate-bounce" />
+                  <Rocket className="w-8 h-8 text-blue-500 animate-bounce" />
                 )}
               </div>
               <h2 className="text-lg font-semibold text-white mb-2">
@@ -258,7 +258,7 @@ export default function DeployingPage() {
               {/* Progress bar */}
               <div className="w-full bg-zinc-800 rounded-full h-2 mb-2">
                 <div
-                  className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
