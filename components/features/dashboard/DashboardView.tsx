@@ -4,6 +4,7 @@ import { Send, TrendingUp, AlertCircle, CheckCircle2, MoreHorizontal, ArrowUpRig
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Campaign, CampaignStatus } from '../../../types';
 import { DashboardStats } from '../../../services/dashboardService';
+import { CampaignStatusBadge } from '../../ui/CampaignStatusBadge';
 
 interface DashboardViewProps {
   stats: DashboardStats;
@@ -49,36 +50,10 @@ const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardP
         )}
       </div>
       <div>
-        <h3 className="text-2xl font-bold text-white tracking-tight leading-none mb-1.5">{value}</h3>
-        <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">{title}</p>
+        <h3 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-1.5">{value}</h3>
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{title}</p>
       </div>
     </div>
-  );
-};
-
-const StatusBadge = ({ status }: { status: CampaignStatus }) => {
-  const styles = {
-    [CampaignStatus.COMPLETED]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    [CampaignStatus.SENDING]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    [CampaignStatus.FAILED]: 'bg-red-500/10 text-red-400 border-red-500/20',
-    [CampaignStatus.DRAFT]: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-    [CampaignStatus.PAUSED]: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    [CampaignStatus.SCHEDULED]: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  };
-
-  const labels = {
-    [CampaignStatus.COMPLETED]: 'Concluído',
-    [CampaignStatus.SENDING]: 'Enviando',
-    [CampaignStatus.FAILED]: 'Falhou',
-    [CampaignStatus.DRAFT]: 'Rascunho',
-    [CampaignStatus.PAUSED]: 'Pausado',
-    [CampaignStatus.SCHEDULED]: 'Agendado',
-  };
-
-  return (
-    <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${styles[status]}`}>
-      {labels[status]}
-    </span>
   );
 };
 
@@ -112,8 +87,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight leading-none mb-1">Dashboard</h1>
-          <p className="text-sm text-zinc-500">Visão geral da performance de mensagens</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-1">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Visão geral da performance de mensagens</p>
         </div>
         <PrefetchLink
           href="/campaigns/new"
@@ -167,7 +142,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
         {/* Chart Section */}
         <div className="lg:col-span-2 glass-panel p-6 rounded-2xl">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-zinc-200" id="chart-title">Volume de Mensagens</h3>
+            <h3 className="text-sm font-semibold text-foreground" id="chart-title">Volume de Mensagens</h3>
             <div className="flex gap-1 p-0.5 bg-zinc-800/80 rounded-lg border border-zinc-700/50" role="group" aria-label="Período do gráfico">
               {[
                 { key: '1H', label: 'Última hora' },
@@ -240,7 +215,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
         {/* Recent Activity */}
         <div className="glass-panel rounded-2xl flex flex-col">
           <div className="p-5 border-b border-white/5 flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-zinc-200">Campanhas Recentes</h3>
+            <h3 className="text-sm font-semibold text-foreground">Campanhas Recentes</h3>
             <button
               aria-label="Mais opções"
               className="text-zinc-600 hover:text-zinc-300 p-1 rounded-lg hover:bg-zinc-800 transition-all"
@@ -265,11 +240,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                   {recentCampaigns.map((campaign) => (
                     <tr key={campaign.id} className="hover:bg-white/5 transition-colors group cursor-pointer">
                       <td className="px-6 py-5">
-                        <p className="font-medium text-white group-hover:text-primary-400 transition-colors">{campaign.name}</p>
-                        <p className="text-gray-500 text-xs mt-1 font-mono">{new Date(campaign.createdAt).toLocaleDateString('pt-BR')}</p>
+                        <p className="font-medium text-foreground group-hover:text-primary-400 transition-colors">{campaign.name}</p>
+                        <p className="text-muted-foreground text-xs mt-1 font-mono">{new Date(campaign.createdAt).toLocaleDateString('pt-BR')}</p>
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <StatusBadge status={campaign.status} />
+                        <CampaignStatusBadge status={campaign.status} />
                       </td>
                     </tr>
                   ))}

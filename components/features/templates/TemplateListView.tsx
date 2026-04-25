@@ -211,14 +211,14 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight leading-none mb-1">Templates</h1>
-          <p className="text-sm text-zinc-500">Gerencie seus modelos de mensagens aprovados pelo WhatsApp</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-1">Templates</h1>
+          <p className="text-sm text-muted-foreground">Gerencie seus modelos de mensagens aprovados pelo WhatsApp</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
 
           {/* Usage limit */}
-          <div className="flex flex-col items-end px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-xl">
-            <div className="flex items-center gap-2 text-[11px] font-medium text-zinc-500">
+          <div className="flex flex-col items-end px-3 py-1.5 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl">
+            <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
               <span>Uso</span>
               <span className={`font-bold ${templates.length >= 250 ? 'text-red-400' : 'text-blue-400'}`}>
                 {templates.length}/250
@@ -249,7 +249,7 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
           <button
             onClick={onSync}
             disabled={isSyncing}
-            className={`flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-xl text-sm font-medium hover:bg-zinc-800 hover:border-zinc-600 transition-all ${isSyncing ? 'opacity-75 cursor-wait' : ''}`}
+            className={`flex items-center gap-1.5 px-3.5 py-2 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 text-foreground rounded-xl text-sm font-medium hover:bg-accent transition-all ${isSyncing ? 'opacity-75 cursor-wait' : ''}`}
           >
             <RefreshCw size={15} className={isSyncing ? 'animate-spin' : ''} />
             {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
@@ -259,7 +259,7 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex gap-1 p-0.5 bg-zinc-900 border border-zinc-800 rounded-xl overflow-x-auto no-scrollbar">
+        <div className="flex gap-1 p-0.5 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl overflow-x-auto no-scrollbar">
           {[
             { value: 'ALL', label: 'Todos' },
             { value: 'MARKETING', label: 'Marketing' },
@@ -270,8 +270,8 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
               key={cat.value}
               onClick={() => setCategoryFilter(cat.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap ${categoryFilter === cat.value
-                ? 'bg-zinc-700 text-white shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-300'
+                ? 'bg-background dark:bg-zinc-700 text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               {cat.label}
@@ -279,12 +279,12 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center gap-2.5 bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 w-full md:w-64 focus-within:border-primary-500/40 focus-within:ring-1 focus-within:ring-primary-500/20 transition-all">
-          <Search size={15} className="text-zinc-500 flex-shrink-0" />
+        <div className="flex items-center gap-2.5 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl px-3.5 py-2.5 w-full md:w-64 focus-within:border-primary-500/40 focus-within:ring-1 focus-within:ring-primary-500/20 transition-all">
+          <Search size={15} className="text-muted-foreground flex-shrink-0" />
           <input
             type="text"
             placeholder="Buscar templates..."
-            className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-gray-600"
+            className="bg-transparent border-none outline-none text-sm w-full text-foreground placeholder:text-muted-foreground"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, RefreshCw, Copy, Trash2, Calendar, Play, Pause, Loader2 } from 'lucide-react';
 import { Campaign, CampaignStatus } from '../../../types';
+import { CampaignStatusBadge } from '../../ui/CampaignStatusBadge';
 
 interface CampaignListViewProps {
   campaigns: Campaign[];
@@ -23,37 +24,6 @@ interface CampaignListViewProps {
   duplicatingId?: string;
 }
 
-const StatusBadge = ({ status }: { status: CampaignStatus }) => {
-  const styles = {
-    [CampaignStatus.COMPLETED]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    [CampaignStatus.SENDING]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    [CampaignStatus.FAILED]: 'bg-red-500/10 text-red-400 border-red-500/20',
-    [CampaignStatus.DRAFT]: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-    [CampaignStatus.PAUSED]: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    [CampaignStatus.SCHEDULED]: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  };
-
-  const labels = {
-    [CampaignStatus.COMPLETED]: 'Concluído',
-    [CampaignStatus.SENDING]: 'Enviando',
-    [CampaignStatus.FAILED]: 'Falhou',
-    [CampaignStatus.DRAFT]: 'Rascunho',
-    [CampaignStatus.PAUSED]: 'Pausado',
-    [CampaignStatus.SCHEDULED]: 'Agendado',
-  };
-
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border ${styles[status]}`}>
-      {status === CampaignStatus.SENDING && (
-        <span className="relative flex h-2 w-2 mr-1.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-        </span>
-      )}
-      {labels[status]}
-    </span>
-  );
-};
 
 export const CampaignListView: React.FC<CampaignListViewProps> = ({
   campaigns,
@@ -100,19 +70,19 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight leading-none mb-1">Campanhas</h1>
-          <p className="text-sm text-zinc-500">Gerencie e acompanhe seus disparos de mensagens</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-1">Campanhas</h1>
+          <p className="text-sm text-muted-foreground">Gerencie e acompanhe seus disparos de mensagens</p>
         </div>
       </div>
 
       {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex items-center gap-2.5 flex-1 sm:max-w-sm bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 focus-within:border-primary-500/50 focus-within:ring-1 focus-within:ring-primary-500/20 transition-all">
-          <Search size={15} className="text-zinc-500 flex-shrink-0" />
+        <div className="flex items-center gap-2.5 flex-1 sm:max-w-sm bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl px-3.5 py-2.5 focus-within:border-primary-500/50 focus-within:ring-1 focus-within:ring-primary-500/20 transition-all">
+          <Search size={15} className="text-muted-foreground flex-shrink-0" />
           <input
             type="text"
             placeholder="Buscar campanhas..."
-            className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-zinc-600"
+            className="bg-transparent border-none outline-none text-sm w-full text-foreground placeholder:text-muted-foreground"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -121,7 +91,7 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
           <select
             value={filter}
             onChange={(e) => onFilterChange(e.target.value)}
-            className="px-3 py-2.5 text-xs font-medium bg-zinc-900 text-zinc-300 rounded-xl border border-zinc-800 outline-none cursor-pointer transition-colors hover:border-zinc-600"
+            className="px-3 py-2.5 text-xs font-medium bg-muted dark:bg-zinc-900 text-foreground rounded-xl border border-border dark:border-zinc-800 outline-none cursor-pointer transition-colors hover:border-primary-500/50"
           >
             <option value="All">Todos os Status</option>
             <option value={CampaignStatus.DRAFT}>Rascunho</option>
@@ -133,7 +103,7 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
           </select>
           <button
             onClick={onRefresh}
-            className="p-2.5 text-zinc-500 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl border border-zinc-800 hover:border-zinc-600 transition-all"
+            className="p-2.5 text-muted-foreground hover:text-foreground bg-muted dark:bg-zinc-900 hover:bg-accent rounded-xl border border-border dark:border-zinc-800 transition-all"
             title="Atualizar"
           >
             <RefreshCw size={15} />
@@ -147,12 +117,12 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
           <table className="w-full text-left text-sm">
             <thead className="border-b border-white/5">
               <tr>
-                <th className="px-5 py-3.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Nome</th>
-                <th className="px-5 py-3.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Status</th>
-                <th className="px-5 py-3.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Destinatários</th>
-                <th className="px-5 py-3.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Entrega</th>
-                <th className="px-5 py-3.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Criado em</th>
-                <th className="px-5 py-3.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-widest text-right">Ações</th>
+                <th className="px-5 py-3.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Nome</th>
+                <th className="px-5 py-3.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Status</th>
+                <th className="px-5 py-3.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Destinatários</th>
+                <th className="px-5 py-3.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Entrega</th>
+                <th className="px-5 py-3.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Criado em</th>
+                <th className="px-5 py-3.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -160,11 +130,11 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center mb-1">
-                        <Search size={18} className="text-zinc-600" />
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-1">
+                        <Search size={18} className="text-muted-foreground" />
                       </div>
-                      <p className="text-sm text-zinc-400 font-medium">Nenhuma campanha encontrada</p>
-                      <p className="text-xs text-zinc-600">Tente ajustar os filtros ou crie uma nova campanha</p>
+                      <p className="text-sm text-foreground font-medium">Nenhuma campanha encontrada</p>
+                      <p className="text-xs text-muted-foreground">Tente ajustar os filtros ou crie uma nova campanha</p>
                     </div>
                   </td>
                 </tr>
@@ -176,8 +146,8 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
                     className="hover:bg-zinc-800/30 transition-all duration-150 group cursor-pointer"
                   >
                     <td className="px-5 py-3.5">
-                      <p className="text-sm font-medium text-zinc-100 group-hover:text-primary-400 transition-colors leading-none mb-1">{campaign.name}</p>
-                      <p className="text-[11px] text-zinc-600 font-mono">{campaign.templateName}</p>
+                      <p className="text-sm font-medium text-foreground group-hover:text-primary-400 transition-colors leading-none mb-1">{campaign.name}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono">{campaign.templateName}</p>
                       {campaign.scheduledAt && campaign.status === CampaignStatus.SCHEDULED && (
                         <p className="text-[11px] text-purple-400 mt-1 flex items-center gap-1">
                           <Calendar size={10} />
@@ -189,9 +159,9 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
                       )}
                     </td>
                     <td className="px-5 py-3.5">
-                      <StatusBadge status={campaign.status} />
+                      <CampaignStatusBadge status={campaign.status} />
                     </td>
-                    <td className="px-5 py-3.5 text-zinc-400 font-mono text-xs">
+                    <td className="px-5 py-3.5 text-muted-foreground font-mono text-xs">
                       {(campaign.recipients ?? 0).toLocaleString('pt-BR')}
                     </td>
                     <td className="px-5 py-3.5">
@@ -207,7 +177,7 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-zinc-600 font-mono text-xs tabular-nums">
+                    <td className="px-5 py-3.5 text-muted-foreground font-mono text-xs tabular-nums">
                       {new Date(campaign.createdAt).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="px-5 py-3.5 text-right">

@@ -286,8 +286,8 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight leading-none mb-1">Contatos</h1>
-          <p className="text-sm text-zinc-500">Gerencie sua audiência e listas</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-1">Contatos</h1>
+          <p className="text-sm text-muted-foreground">Gerencie sua audiência e listas</p>
         </div>
         <div className="flex items-center gap-2">
           {isSomeSelected && (
@@ -301,7 +301,7 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
           )}
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-zinc-300 font-medium hover:bg-zinc-800 hover:border-zinc-600 transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl text-sm text-foreground font-medium hover:bg-accent transition-all"
           >
             <UploadCloud size={15} />
             Importar CSV
@@ -320,8 +320,8 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="glass-panel p-5 rounded-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-zinc-600 opacity-40" />
-          <p className="text-[11px] text-zinc-500 font-semibold uppercase tracking-widest mb-1.5">Total</p>
-          <p className="text-2xl font-bold text-white tabular-nums">{(stats?.total ?? 0).toLocaleString()}</p>
+          <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-widest mb-1.5">Total</p>
+          <p className="text-2xl font-bold text-foreground tabular-nums">{(stats?.total ?? 0).toLocaleString()}</p>
         </div>
         <div className="glass-panel p-5 rounded-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-emerald-500 opacity-50" />
@@ -330,8 +330,8 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
         </div>
         <div className="glass-panel p-5 rounded-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-zinc-600 opacity-30" />
-          <p className="text-[11px] text-zinc-500 font-semibold uppercase tracking-widest mb-1.5">Opt-out / Inativos</p>
-          <p className="text-2xl font-bold text-zinc-400 tabular-nums">{(stats?.optOut ?? 0).toLocaleString()}</p>
+          <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-widest mb-1.5">Opt-out / Inativos</p>
+          <p className="text-2xl font-bold text-muted-foreground tabular-nums">{(stats?.optOut ?? 0).toLocaleString()}</p>
         </div>
       </div>
 
@@ -339,12 +339,12 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
       <div className="glass-panel rounded-2xl">
         <div className="p-4 border-b border-white/5 flex flex-col lg:flex-row gap-3">
           {/* Search */}
-          <div className="flex items-center gap-2.5 flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 max-w-sm focus-within:border-primary-500/40 focus-within:ring-1 focus-within:ring-primary-500/20 transition-all">
-            <Search size={15} className="text-zinc-500 flex-shrink-0" />
+          <div className="flex items-center gap-2.5 flex-1 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl px-3.5 py-2.5 max-w-sm focus-within:border-primary-500/40 focus-within:ring-1 focus-within:ring-primary-500/20 transition-all">
+            <Search size={15} className="text-muted-foreground flex-shrink-0" />
             <input
               type="text"
               placeholder="Buscar por nome ou telefone..."
-              className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-zinc-600"
+              className="bg-transparent border-none outline-none text-sm w-full text-foreground placeholder:text-muted-foreground"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -356,7 +356,7 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2.5 rounded-xl border transition-all ${showFilters || statusFilter !== 'ALL' || tagFilter !== 'ALL'
                 ? 'text-primary-400 bg-primary-500/10 border-primary-500/30'
-                : 'text-zinc-500 hover:text-zinc-200 bg-zinc-900 border-zinc-800 hover:border-zinc-600'
+                : 'text-muted-foreground hover:text-foreground bg-muted dark:bg-zinc-900 border-border dark:border-zinc-800'
                 }`}
             >
               <Filter size={15} />
@@ -365,7 +365,7 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
             <select
               value={statusFilter}
               onChange={(e) => onStatusFilterChange(e.target.value as ContactStatus | 'ALL')}
-              className="px-3 py-2.5 text-xs font-medium bg-zinc-900 text-zinc-300 rounded-xl border border-zinc-800 outline-none cursor-pointer transition-colors hover:border-zinc-600"
+              className="px-3 py-2.5 text-xs font-medium bg-muted dark:bg-zinc-900 text-foreground rounded-xl border border-border dark:border-zinc-800 outline-none cursor-pointer transition-colors hover:border-primary-500/50"
             >
               {statusOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -375,7 +375,7 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
             <select
               value={tagFilter}
               onChange={(e) => onTagFilterChange(e.target.value)}
-              className="px-3 py-2.5 text-xs font-medium bg-zinc-900 text-zinc-300 rounded-xl border border-zinc-800 outline-none cursor-pointer transition-colors hover:border-zinc-600"
+              className="px-3 py-2.5 text-xs font-medium bg-muted dark:bg-zinc-900 text-foreground rounded-xl border border-border dark:border-zinc-800 outline-none cursor-pointer transition-colors hover:border-primary-500/50"
             >
               <option value="ALL">Todas Tags</option>
               {tags.map(tag => (
@@ -462,7 +462,7 @@ export const ContactListView: React.FC<ContactListViewProps> = ({
                           {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-white group-hover:text-primary-400 transition-colors">{contact.name || contact.phone}</p>
+                          <p className="font-medium text-foreground group-hover:text-primary-400 transition-colors">{contact.name || contact.phone}</p>
                           <p className="text-xs text-gray-500 font-mono">{contact.phone}</p>
                         </div>
                       </div>

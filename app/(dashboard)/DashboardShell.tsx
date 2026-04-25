@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useClerk } from '@clerk/nextjs'
+import { useTheme } from 'next-themes'
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications'
 import {
     LayoutDashboard,
     MessageSquare,
@@ -28,6 +30,8 @@ import {
     ChevronDown,
     Building2,
     Workflow,
+    Sun,
+    Moon,
 } from 'lucide-react'
 import React from 'react'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -467,9 +471,8 @@ export function DashboardShell({
     const queryClient = useQueryClient()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
-    // Enable real-time toast notifications for global events
-    // This shows toasts when campaigns complete, new contacts are added, etc.
-    const { useRealtimeNotifications } = require('@/hooks/useRealtimeNotifications')
+    const { theme, setTheme } = useTheme()
+
     useRealtimeNotifications({ enabled: true })
 
     // Hydrate auth status in React Query if needed, or just use it directly
@@ -582,7 +585,7 @@ export function DashboardShell({
     }
 
     return (
-        <div className="min-h-screen text-gray-100 flex font-sans selection:bg-primary-500/30">
+        <div className="min-h-screen text-foreground flex font-sans selection:bg-primary-500/30">
             {/* Mobile Overlay */}
             {isMobileMenuOpen && (
                 <div
@@ -702,9 +705,9 @@ export function DashboardShell({
             </aside>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background">
                 {/* Header */}
-                <header className="h-14 flex items-center justify-between px-5 lg:px-8 flex-shrink-0 border-b border-white/5">
+                <header className="h-14 flex items-center justify-between px-5 lg:px-8 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur-md">
                     <div className="flex items-center">
                         <button
                             className="lg:hidden p-1.5 text-zinc-500 mr-3 hover:text-white transition-colors"
@@ -764,9 +767,19 @@ export function DashboardShell({
                             </span>
                           </div>
                         ) : null}
-                        <button className="relative p-1.5 rounded-lg hover:bg-zinc-800 transition-colors group">
-                            <Bell size={17} className="text-zinc-500 group-hover:text-zinc-200 transition-colors" />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full border border-zinc-950"></span>
+                        <button
+                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                            className="p-1.5 rounded-lg hover:bg-muted transition-colors group"
+                            title="Alternar tema"
+                        >
+                            {theme === 'dark'
+                                ? <Sun size={17} className="text-zinc-500 group-hover:text-foreground transition-colors" />
+                                : <Moon size={17} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+                            }
+                        </button>
+                        <button className="relative p-1.5 rounded-lg hover:bg-muted transition-colors group">
+                            <Bell size={17} className="text-zinc-500 dark:text-zinc-500 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full border border-background"></span>
                         </button>
                     </div>
                 </header>

@@ -132,16 +132,9 @@
   --brand-primary-hover: #2563eb;
 }
 
-/* Base styles */
+/* Base styles — cores via CSS vars (light/dark automático) */
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #09090b;
-  color: #f4f4f5;
-}
-
-.light body {
-  background-color: #ffffff;
-  color: #09090b;
 }
 
 /* ================================
@@ -266,10 +259,21 @@ textarea:focus-visible {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+html:not(.dark) .glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
 .glass-panel-subtle {
   background: rgba(18, 18, 20, 0.85);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+html:not(.dark) .glass-panel-subtle {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Gradient border card */

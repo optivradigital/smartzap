@@ -79,6 +79,29 @@ interface SettingsViewProps {
   isSavingTestContact?: boolean;
 }
 
+const NavItem = ({
+  section,
+  label,
+  activeSection,
+  onSelect,
+}: {
+  section: string;
+  label: string;
+  activeSection: string;
+  onSelect: (s: string) => void;
+}) => (
+  <button
+    onClick={() => onSelect(section)}
+    className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left ${
+      activeSection === section
+        ? 'bg-zinc-800 text-white font-medium'
+        : 'text-zinc-500 hover:bg-zinc-800/50 hover:text-zinc-300'
+    }`}
+  >
+    {label}
+  </button>
+);
+
 export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   setSettings,
@@ -331,26 +354,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     ];
   };
 
-  const NavItem = ({ section, label }: { section: string; label: string }) => (
-    <button
-      onClick={() => setActiveSection(section)}
-      className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left ${
-        activeSection === section
-          ? 'bg-zinc-800 text-white font-medium'
-          : 'text-zinc-500 hover:bg-zinc-800/50 hover:text-zinc-300'
-      }`}
-    >
-      {label}
-    </button>
-  );
-
-  if (isLoading) return <div className="text-white">Carregando configurações...</div>;
+  if (isLoading) return <div className="text-foreground">Carregando configurações...</div>;
 
   return (
     <div>
       {!hideHeader && (
         <>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Configurações</h1>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Configurações</h1>
           <p className="text-gray-400 mb-6">Gerencie integrações, equipe e preferências da conta.</p>
         </>
       )}
@@ -361,28 +371,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {isManager && (
             <>
               <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pb-1">Integrações</p>
-              <NavItem section="conexao" label="Conexão WhatsApp" />
-              {isSuperAdmin && <NavItem section="agente" label="Agente IA" />}
-              <NavItem section="webhooks" label="Webhooks" />
+              <NavItem section="conexao" label="Conexão WhatsApp" activeSection={activeSection} onSelect={setActiveSection} />
+              {isSuperAdmin && <NavItem section="agente" label="Agente IA" activeSection={activeSection} onSelect={setActiveSection} />}
+              <NavItem section="webhooks" label="Webhooks" activeSection={activeSection} onSelect={setActiveSection} />
               <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pt-3 pb-1">Conta</p>
-              <NavItem section="equipe" label="Equipe" />
-              <NavItem section="faturamento" label="Faturamento" />
-              {isSuperAdmin && <NavItem section="aparencia" label="Aparência" />}
+              <NavItem section="equipe" label="Equipe" activeSection={activeSection} onSelect={setActiveSection} />
+              <NavItem section="faturamento" label="Faturamento" activeSection={activeSection} onSelect={setActiveSection} />
+              {isSuperAdmin && <NavItem section="aparencia" label="Aparência" activeSection={activeSection} onSelect={setActiveSection} />}
             </>
           )}
           {isSuperAdmin && !isManager && (
             <>
               <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pb-1">Integrações</p>
-              <NavItem section="agente" label="Agente IA" />
-              <NavItem section="webhooks" label="Webhooks" />
+              <NavItem section="agente" label="Agente IA" activeSection={activeSection} onSelect={setActiveSection} />
+              <NavItem section="webhooks" label="Webhooks" activeSection={activeSection} onSelect={setActiveSection} />
               <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pt-3 pb-1">Conta</p>
-              <NavItem section="aparencia" label="Aparência" />
+              <NavItem section="aparencia" label="Aparência" activeSection={activeSection} onSelect={setActiveSection} />
             </>
           )}
           {isSuperAdmin && (
             <>
               <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest pt-3 pb-1">Sistema</p>
-              <NavItem section="organizacoes" label="Organizações" />
+              <NavItem section="organizacoes" label="Organizações" activeSection={activeSection} onSelect={setActiveSection} />
             </>
           )}
         </nav>
@@ -391,7 +401,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* ── Conexão WhatsApp ──────────────────────── */}
         {activeSection === 'conexao' && isManager && (
         <div id="whatsapp" className="glass-panel rounded-2xl p-8">
-          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-green-500 rounded-full"></span>
             Conexão WhatsApp
           </h3>
@@ -1193,7 +1203,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* ── Equipe ────────────────────────────────── */}
         {activeSection === 'equipe' && isManager && (
         <div id="usuarios" className="glass-panel rounded-2xl p-8">
-          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
             Gerenciar Usuarios
           </h3>
@@ -1214,7 +1224,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* ── Aparência ─────────────────────────────── */}
         {activeSection === 'aparencia' && isSuperAdmin && (
         <div id="branding" className="glass-panel rounded-2xl p-8">
-          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-pink-500 rounded-full"></span>
             Identidade Visual (Branding)
           </h3>
@@ -1228,7 +1238,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* ── Organizações ─────────────────────────── */}
         {activeSection === 'organizacoes' && isSuperAdmin && (
         <div id="organizacoes" className="glass-panel rounded-2xl p-8">
-          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
             <span className="w-1 h-6 bg-orange-500 rounded-full"></span>
             Organizacoes (Clientes)
           </h3>
