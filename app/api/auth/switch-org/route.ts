@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/multi-user-auth'
+import { getCurrentUser } from '@/lib/clerk-auth'
 import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
 

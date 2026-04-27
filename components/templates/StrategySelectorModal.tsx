@@ -47,7 +47,7 @@ export function StrategySelectorModal({ isOpen, onSelect, onClose }: StrategySel
             id: 'bypass' as const,
             title: 'Marketing Camuflado',
             icon: VenetianMask,
-            color: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300',
+            color: 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-300',
             description: 'Tenta passar copy de vendas como Utilidade usando substituição de variáveis.',
             features: ['Categoria: UTILITY (Tentativa)', 'Custo Baixo', 'Anti-Spam AI'],
             warning: 'Pode ser rejeitado se abusar.'

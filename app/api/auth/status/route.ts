@@ -1,19 +1,20 @@
 /**
  * Auth Status API
- * GET: Returns authenticated user info from session + org data from Supabase
+ * GET: Returns authenticated user info via Clerk + org data from Supabase
  */
 
 import { NextResponse } from 'next/server'
-import { getCurrentUser, getActiveOrgId } from '@/lib/multi-user-auth'
+import { auth, currentUser } from '@clerk/nextjs/server'
+import { getActiveOrgId } from '@/lib/clerk-auth'
 import { supabase } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const user = await getCurrentUser()
+    const { userId } = await auth()
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json({
         isAuthenticated: false,
         isConfigured: true,
@@ -24,6 +25,36 @@ export async function GET() {
         company: null,
       })
     }
+
+    const clerkUser = await currentUser()
+    const email = clerkUser?.emailAddresses?.[0]?.emailAddress ?? ''
+
+    // Look up user in smartzap_users by email
+    const { data: dbUser } = await supabase
+      .from('smartzap_users')
+      .select('id, email, name, role, organization_id')
+      .eq('email', email.toLowerCase())
+      .single()
+
+    const user = dbUser
+      ? {
+          id: dbUser.id,
+          email: dbUser.email,
+          name: dbUser.name || email,
+          role: dbUser.role as 'super_admin' | 'manager' | 'user',
+          isSuperAdmin: dbUser.role === 'super_admin',
+          organizationId: dbUser.organization_id,
+        }
+      : {
+          id: userId,
+          email,
+          name: clerkUser?.firstName
+            ? `${clerkUser.firstName} ${clerkUser.lastName ?? ''}`.trim()
+            : email,
+          role: 'user' as const,
+          isSuperAdmin: false,
+          organizationId: null,
+        }
 
     let organizations: { id: string; name: string; slug: string }[] = []
     let activeOrgId: string | null = null
@@ -45,14 +76,7 @@ export async function GET() {
       isConfigured: true,
       isSetup: true,
       isAuthenticated: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name || user.email,
-        role: user.role,
-        isSuperAdmin: user.isSuperAdmin || false,
-        organizationId: user.organizationId,
-      },
+      user,
       organizations,
       activeOrgId,
       company: { name: user.name, email: user.email },

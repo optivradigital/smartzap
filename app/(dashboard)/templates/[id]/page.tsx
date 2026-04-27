@@ -159,7 +159,7 @@ export default function TemplateProjectDetailsPage() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
         );
     }
@@ -233,7 +233,7 @@ export default function TemplateProjectDetailsPage() {
                             <button
                                 onClick={() => bulkSubmitMutation.mutate(selectedItems)}
                                 disabled={bulkSubmitMutation.isPending}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
                             >
                                 {bulkSubmitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                 Enviar ({selectedItems.length}) para Meta
@@ -291,7 +291,7 @@ export default function TemplateProjectDetailsPage() {
                                 >
                                     <div className="flex items-center gap-3">
                                         <section.icon className={cn("w-5 h-5", {
-                                            'text-emerald-500': section.color === 'emerald',
+                                            'text-blue-500': section.color === 'emerald',
                                             'text-red-500': section.color === 'red',
                                             'text-yellow-500': section.color === 'yellow',
                                             'text-zinc-500': section.color === 'zinc',
@@ -319,7 +319,7 @@ export default function TemplateProjectDetailsPage() {
                                                     className={cn(
                                                         "p-3 rounded-lg border transition-all cursor-pointer flex gap-3 relative group",
                                                         isActive
-                                                            ? "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-500 ring-1 ring-emerald-500"
+                                                            ? "bg-blue-50 dark:bg-blue-900/10 border-blue-500 ring-1 ring-blue-500"
                                                             : "bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
                                                     )}
                                                 >
@@ -329,7 +329,7 @@ export default function TemplateProjectDetailsPage() {
                                                             className={cn(
                                                                 "mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors shrink-0 z-10",
                                                                 isSelected
-                                                                    ? "bg-emerald-500 border-emerald-500 text-white"
+                                                                    ? "bg-blue-500 border-blue-500 text-white"
                                                                     : "border-zinc-300 dark:border-zinc-600 text-transparent hover:border-zinc-400"
                                                             )}
                                                         >
@@ -403,7 +403,7 @@ export default function TemplateProjectDetailsPage() {
                                     <span>Status Meta:</span>
                                     <span className={cn(
                                         "font-medium",
-                                        previewItem.meta_status === 'APPROVED' && "text-emerald-500",
+                                        previewItem.meta_status === 'APPROVED' && "text-blue-500",
                                         previewItem.meta_status === 'REJECTED' && "text-red-500",
                                         previewItem.meta_status === 'PENDING' && "text-yellow-500",
                                     )}>{previewItem.meta_status || 'Rascunho'}</span>
@@ -430,7 +430,7 @@ function StatCard({ label, count, total, color, icon: Icon }: any) {
     const percent = total > 0 ? Math.round((count / total) * 100) : 0;
 
     const colors: Record<string, string> = {
-        emerald: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20',
+        emerald: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20',
         yellow: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-500/10 border-yellow-100 dark:border-yellow-500/20',
         red: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border-red-100 dark:border-red-500/20',
         zinc: 'text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-500/10 border-zinc-100 dark:border-zinc-500/20',

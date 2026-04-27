@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import { loadProviderConfig } from "@/lib/whatsapp-provider/factory";
 import { supabase } from "@/lib/supabase";
-import { getCurrentUser } from "@/lib/multi-user-auth";
+import { getCurrentUser } from "@/lib/clerk-auth";
 
 interface DispatchContact {
   phone: string;

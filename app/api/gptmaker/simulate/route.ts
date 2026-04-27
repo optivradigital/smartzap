@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireManager } from '@/lib/role-guard'
-import { getCurrentUser } from '@/lib/multi-user-auth'
+import { getCurrentUser } from '@/lib/clerk-auth'
 import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
 
 export async function POST(request: NextRequest) {

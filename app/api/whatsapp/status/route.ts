@@ -6,7 +6,7 @@
 import { NextResponse } from 'next/server'
 import { createWhatsAppProvider } from '@/lib/whatsapp-provider/factory'
 import { requireManager } from '@/lib/role-guard'
-import { getCurrentUser } from '@/lib/multi-user-auth'
+import { getCurrentUser } from '@/lib/clerk-auth'
 
 export async function GET() {
   const { error: authError } = await requireManager()

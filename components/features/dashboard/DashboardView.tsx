@@ -4,6 +4,7 @@ import { Send, TrendingUp, AlertCircle, CheckCircle2, MoreHorizontal, ArrowUpRig
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Campaign, CampaignStatus } from '../../../types';
 import { DashboardStats } from '../../../services/dashboardService';
+import { CampaignStatusBadge } from '../../ui/CampaignStatusBadge';
 
 interface DashboardViewProps {
   stats: DashboardStats;
@@ -21,62 +22,38 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardProps) => {
-  // Map color prop to actual Tailwind classes
-  const colorStyles: Record<string, { bg: string; text: string }> = {
-    'bg-blue-500': { bg: 'bg-blue-500/20', text: 'text-blue-400' },
-    'bg-emerald-500': { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
-    'bg-purple-500': { bg: 'bg-purple-500/20', text: 'text-purple-400' },
-    'bg-red-500': { bg: 'bg-red-500/20', text: 'text-red-400' },
+  const colorStyles: Record<string, { bg: string; text: string; glow: string; bar: string }> = {
+    'bg-blue-500':    { bg: 'bg-blue-500/10',    text: 'text-blue-400',    glow: 'shadow-blue-500/10',    bar: 'bg-blue-500' },
+    'bg-cyan-500':    { bg: 'bg-cyan-500/10',    text: 'text-cyan-400',    glow: 'shadow-cyan-500/10',    bar: 'bg-cyan-500' },
+    'bg-purple-500':  { bg: 'bg-purple-500/10',   text: 'text-purple-400',  glow: 'shadow-purple-500/10',  bar: 'bg-purple-500' },
+    'bg-red-500':     { bg: 'bg-red-500/10',      text: 'text-red-400',     glow: 'shadow-red-500/10',     bar: 'bg-red-500' },
   };
-  
-  const styles = colorStyles[color] || { bg: 'bg-zinc-500/20', text: 'text-zinc-400' };
-  
+
+  const styles = colorStyles[color] || { bg: 'bg-zinc-500/10', text: 'text-zinc-400', glow: '', bar: 'bg-zinc-500' };
+
   return (
-    <div className="glass-panel p-6 rounded-2xl hover:bg-white/5 transition-colors group">
-      <div className="flex items-start justify-between mb-6">
-        <div className={`p-3 rounded-xl ${styles.bg} border border-white/5 group-hover:scale-105 transition-transform duration-300`}>
-          <Icon size={20} className={styles.text} />
+    <div className={`relative glass-panel p-5 rounded-2xl hover:bg-white/5 transition-all duration-300 group overflow-hidden shadow-lg ${styles.glow}`}>
+      {/* Top accent bar */}
+      <div className={`absolute top-0 left-0 right-0 h-px ${styles.bar} opacity-30`} />
+
+      <div className="flex items-start justify-between mb-5">
+        <div className={`p-2.5 rounded-xl ${styles.bg} border border-white/5 group-hover:scale-110 transition-transform duration-300`}>
+          <Icon size={18} className={styles.text} />
         </div>
         {trend ? (
-          <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${trendUp ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
-            {trendUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+          <div className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full border ${trendUp ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+            {trendUp ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
             {trend}
           </div>
         ) : (
-          <div className="text-xs text-gray-600 px-2 py-1">—</div>
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-700 mt-1.5" />
         )}
       </div>
       <div>
-        <h3 className="text-3xl font-bold text-white mb-1 tracking-tight">{value}</h3>
-        <p className="text-sm text-gray-500 font-medium">{title}</p>
+        <h3 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-1.5">{value}</h3>
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{title}</p>
       </div>
     </div>
-  );
-};
-
-const StatusBadge = ({ status }: { status: CampaignStatus }) => {
-  const styles = {
-    [CampaignStatus.COMPLETED]: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    [CampaignStatus.SENDING]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    [CampaignStatus.FAILED]: 'bg-red-500/10 text-red-400 border-red-500/20',
-    [CampaignStatus.DRAFT]: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-    [CampaignStatus.PAUSED]: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    [CampaignStatus.SCHEDULED]: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  };
-
-  const labels = {
-    [CampaignStatus.COMPLETED]: 'Concluído',
-    [CampaignStatus.SENDING]: 'Enviando',
-    [CampaignStatus.FAILED]: 'Falhou',
-    [CampaignStatus.DRAFT]: 'Rascunho',
-    [CampaignStatus.PAUSED]: 'Pausado',
-    [CampaignStatus.SCHEDULED]: 'Agendado',
-  };
-
-  return (
-    <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${styles[status]}`}>
-      {labels[status]}
-    </span>
   );
 };
 
@@ -108,15 +85,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Dashboard</h1>
-          <p className="text-gray-400">Visão geral da performance de mensagens</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-1">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Visão geral da performance de mensagens</p>
         </div>
-        <PrefetchLink 
+        <PrefetchLink
           href="/campaigns/new"
-          className="bg-white text-black hover:bg-gray-200 px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-white/5"
+          className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl font-medium text-sm transition-all shadow-lg shadow-primary-900/30 blue-glow"
         >
+          <Send size={14} />
           Campanha Rápida
         </PrefetchLink>
       </div>
@@ -132,17 +110,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
           </>
         ) : (
           <>
-            <StatCard 
-              title="Total Enviado" 
-              value={stats.sent24h} 
-              icon={Send} 
+            <StatCard
+              title="Total Enviado"
+              value={stats.sent24h}
+              icon={Send}
               color="bg-blue-500"
             />
-            <StatCard 
-              title="Taxa de Entrega" 
-              value={stats.deliveryRate} 
-              icon={CheckCircle2} 
-              color="bg-emerald-500"
+            <StatCard
+              title="Taxa de Entrega"
+              value={stats.deliveryRate}
+              icon={CheckCircle2}
+              color="bg-cyan-500"
             />
             <StatCard 
               title="Campanhas Ativas" 
@@ -162,21 +140,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Chart Section */}
-        <div className="lg:col-span-2 glass-panel p-8 rounded-2xl">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-semibold text-white" id="chart-title">Volume de Mensagens</h3>
-            <div className="flex gap-2" role="group" aria-label="Período do gráfico">
+        <div className="lg:col-span-2 glass-panel p-6 rounded-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-semibold text-foreground" id="chart-title">Volume de Mensagens</h3>
+            <div className="flex gap-1 p-0.5 bg-zinc-800/80 rounded-lg border border-zinc-700/50" role="group" aria-label="Período do gráfico">
               {[
                 { key: '1H', label: 'Última hora' },
                 { key: '24H', label: 'Últimas 24 horas' },
                 { key: '7D', label: 'Últimos 7 dias' },
                 { key: '30D', label: 'Últimos 30 dias' }
               ].map((t) => (
-                <button 
-                  key={t.key} 
+                <button
+                  key={t.key}
                   aria-label={t.label}
                   aria-pressed={t.key === '7D'}
-                  className={`text-xs px-3 py-1 rounded-lg transition-colors ${t.key === '7D' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                  className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${t.key === '7D' ? 'bg-zinc-700 text-white font-medium shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
                   {t.key}
                 </button>
@@ -193,10 +171,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                 <AreaChart data={stats.chartData} aria-hidden="true">
                   <defs>
                     <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
                 <XAxis 
                   dataKey="name" 
@@ -210,19 +188,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                   tickLine={false} 
                   tick={{fill: '#71717a', fontSize: 12}} 
                 />
-                <Tooltip 
-                  contentStyle={{backgroundColor: '#18181b', borderRadius: '12px', border: '1px solid #27272a', color: '#fff'}}
-                  itemStyle={{color: '#10b981'}}
-                  labelStyle={{color: '#gray'}}
+                <Tooltip
+                  contentStyle={{backgroundColor: '#0d1b2e', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)', color: '#fff'}}
+                  itemStyle={{color: '#60a5fa'}}
+                  labelStyle={{color: '#71717a'}}
                   formatter={(value: number) => [value, 'Enviadas']}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="sent" 
-                  stroke="#10b981" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorSent)" 
+                <Area
+                  type="monotone"
+                  dataKey="sent"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorSent)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -236,13 +214,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
 
         {/* Recent Activity */}
         <div className="glass-panel rounded-2xl flex flex-col">
-          <div className="p-6 border-b border-white/5 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-white">Campanhas Recentes</h3>
-            <button 
+          <div className="p-5 border-b border-white/5 flex justify-between items-center">
+            <h3 className="text-sm font-semibold text-foreground">Campanhas Recentes</h3>
+            <button
               aria-label="Mais opções"
-              className="text-gray-500 hover:text-white"
+              className="text-zinc-600 hover:text-zinc-300 p-1 rounded-lg hover:bg-zinc-800 transition-all"
             >
-              <MoreHorizontal size={20} aria-hidden="true" />
+              <MoreHorizontal size={16} aria-hidden="true" />
             </button>
           </div>
           <div className="flex-1 overflow-auto">
@@ -262,11 +240,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                   {recentCampaigns.map((campaign) => (
                     <tr key={campaign.id} className="hover:bg-white/5 transition-colors group cursor-pointer">
                       <td className="px-6 py-5">
-                        <p className="font-medium text-white group-hover:text-primary-400 transition-colors">{campaign.name}</p>
-                        <p className="text-gray-500 text-xs mt-1 font-mono">{new Date(campaign.createdAt).toLocaleDateString('pt-BR')}</p>
+                        <p className="font-medium text-foreground group-hover:text-primary-400 transition-colors">{campaign.name}</p>
+                        <p className="text-muted-foreground text-xs mt-1 font-mono">{new Date(campaign.createdAt).toLocaleDateString('pt-BR')}</p>
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <StatusBadge status={campaign.status} />
+                        <CampaignStatusBadge status={campaign.status} />
                       </td>
                     </tr>
                   ))}

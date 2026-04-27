@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/multi-user-auth'
+import { getCurrentUser } from '@/lib/clerk-auth'
 import { z } from 'zod'
 import { CreateTemplateSchema } from '@/lib/whatsapp/validators/template.schema'
 import { templateService } from '@/lib/whatsapp/template.service'

@@ -4,6 +4,9 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useClerk } from '@clerk/nextjs'
+import { useTheme } from 'next-themes'
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications'
 import {
     LayoutDashboard,
     MessageSquare,
@@ -26,7 +29,9 @@ import {
     ChevronRight,
     ChevronDown,
     Building2,
-    Workflow
+    Workflow,
+    Sun,
+    Moon,
 } from 'lucide-react'
 import React from 'react'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -153,11 +158,11 @@ const OnboardingOverlay = ({
         .every(s => s.status === 'configured')
 
     return (
-        <div className="min-h-screen bg-grid-dots flex items-center justify-center p-6">
+        <div className="min-h-screen flex items-center justify-center p-6">
             <div className="max-w-2xl w-full">
                 {/* Header */}
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-emerald-600 mb-6 shadow-lg shadow-primary-500/20">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 mb-6 shadow-lg shadow-primary-900/20">
                         <Sparkles size={40} className="text-white" />
                     </div>
                     <h1 className="text-4xl font-bold text-white tracking-tight mb-3">
@@ -192,7 +197,7 @@ const OnboardingOverlay = ({
                     </div>
                     <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-gradient-to-r from-primary-500 to-emerald-500 transition-all duration-500"
+                            className="h-full bg-gradient-to-r from-primary-400 to-primary-600 transition-all duration-500"
                             style={{ width: `${progressPercent}%` }}
                         />
                     </div>
@@ -430,7 +435,7 @@ import { AccountAlertBanner } from '@/components/ui/AccountAlertBanner'
 
 interface SidebarItemProps {
     href: string
-    icon: React.ComponentType<{ size?: number }>
+    icon: React.ComponentType<{ size?: number; className?: string }>
     label: string
     isActive: boolean
     onClick?: () => void
@@ -442,13 +447,13 @@ const SidebarItem = ({ href, icon: Icon, label, isActive, onClick, onMouseEnter 
         href={href}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 mb-1 ${isActive
-            ? 'bg-primary-500/10 text-primary-400 font-medium border border-primary-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+        className={`nav-active-bar flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 ${isActive
+            ? 'bg-gradient-to-r from-primary-500/15 to-primary-500/5 text-primary-400 font-medium border border-primary-500/20'
+            : 'text-zinc-400 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-800 dark:hover:text-zinc-100 border border-transparent'
             }`}
     >
-        <Icon size={20} />
-        <span>{label}</span>
+        <Icon size={18} className={isActive ? 'text-primary-400' : 'text-zinc-400 dark:text-zinc-500'} />
+        <span className="text-sm">{label}</span>
     </PrefetchLink>
 )
 
@@ -466,19 +471,18 @@ export function DashboardShell({
     const queryClient = useQueryClient()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const { theme, setTheme } = useTheme()
 
-    // Enable real-time toast notifications for global events
-    // This shows toasts when campaigns complete, new contacts are added, etc.
-    const { useRealtimeNotifications } = require('@/hooks/useRealtimeNotifications')
     useRealtimeNotifications({ enabled: true })
 
     // Hydrate auth status in React Query if needed, or just use it directly
     // For now we use the prop directly for immediate rendering
 
+    const { signOut } = useClerk()
     const companyName = initialAuthStatus?.company?.name
     const { user: currentAuthUser, isSuperAdmin: isAuthSuperAdmin, organizations: authOrgs, activeOrgId: authActiveOrgId, switchOrg: authSwitchOrg } = useCurrentUser()
     const [orgDropdownOpen, setOrgDropdownOpen] = React.useState(false)
-    const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#16a34a' })
+    const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#3b82f6' })
     React.useEffect(() => {
       fetch('/api/settings/branding').then(r => r.ok ? r.json() : null).then(d => { if (d) setBranding(d) }).catch(() => {})
     }, [])
@@ -487,14 +491,10 @@ export function DashboardShell({
     const handleLogout = async () => {
         setIsLoggingOut(true)
         try {
-            await fetch('/api/auth/logout', { method: 'POST' })
-            // Invalidate role cache so next login gets fresh user data
             queryClient.removeQueries({ queryKey: ['currentUser'] })
-            router.push('/login')
-            router.refresh()
+            await signOut({ redirectUrl: '/login' })
         } catch (error) {
             console.error('Logout error:', error)
-        } finally {
             setIsLoggingOut(false)
         }
     }
@@ -547,15 +547,17 @@ export function DashboardShell({
         healthStatus.services.redis.status !== 'ok' ||
         healthStatus.services.qstash.status !== 'ok'
 
-    const navItems = [
+    const mainNavItems = [
         { path: '/', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/campaigns', label: 'Campanhas', icon: MessageSquare },
-        { path: '/workflows', label: 'Workflows', icon: Workflow, hidden: true }, // TODO: In development
-        { path: '/conversations', label: 'Conversas', icon: MessageCircle, hidden: true },
         { path: '/templates', label: 'Templates', icon: FileText },
         { path: '/contacts', label: 'Contatos', icon: Users },
-        { path: '/settings', label: 'Configurações', icon: Settings },
-    ].filter(item => !item.hidden)
+    ]
+
+    const systemNavItems = [
+        { path: '/workflows', label: 'Workflows', icon: Workflow },
+        { path: '/conversations', label: 'Conversas', icon: MessageCircle },
+    ]
 
     const getPageTitle = (path: string) => {
         if (path === '/') return 'Dashboard'
@@ -583,7 +585,7 @@ export function DashboardShell({
     }
 
     return (
-        <div className="min-h-screen bg-grid-dots text-gray-100 flex font-sans selection:bg-primary-500/30">
+        <div className="min-h-screen text-foreground flex font-sans selection:bg-primary-500/30">
             {/* Mobile Overlay */}
             {isMobileMenuOpen && (
                 <div
@@ -594,48 +596,48 @@ export function DashboardShell({
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-zinc-950 lg:bg-transparent border-r border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#0d1b2e] border-r border-zinc-200 dark:border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     }`}
             >
-                <div className="h-full flex flex-col p-4">
+                <div className="h-full flex flex-col p-3">
                     {/* Logo */}
-                    <div className="h-16 flex items-center px-2 mb-6">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-primary-900/20 border border-white/10">
-                            <Zap className="text-white" size={20} fill="currentColor" />
+                    <div className="h-14 flex items-center px-2 mb-4">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center mr-2.5 shadow-lg shadow-blue-900/30">
+                            <Zap className="text-white" size={16} fill="currentColor" />
                         </div>
                         <div>
                             {branding.brand_logo_url ? (
-                              <img src={branding.brand_logo_url} alt={branding.brand_name} className="h-9 object-contain" />
+                              <img src={branding.brand_logo_url} alt={branding.brand_name} className="h-8 object-contain" />
                             ) : (
-                              <span className="text-xl font-bold text-white tracking-tight block">{branding.brand_name}</span>
+                              <span className="text-base font-bold text-zinc-900 dark:text-white tracking-tight block leading-none">{branding.brand_name}</span>
                             )}
-                            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">by Optivra</span>
+                            <span className="text-[9px] text-zinc-400 dark:text-zinc-600 uppercase tracking-widest font-medium">by Optivra</span>
                         </div>
                         <button
                             className="ml-auto lg:hidden"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
-                            <X size={20} className="text-gray-400" />
+                            <X size={18} className="text-zinc-400 dark:text-zinc-500" />
                         </button>
                     </div>
 
                     {/* Nav */}
-                    <nav className="flex-1 space-y-6 overflow-y-auto no-scrollbar">
+                    <nav className="flex-1 space-y-4 overflow-y-auto no-scrollbar">
                         <div>
                             <PrefetchLink
                                 href="/campaigns/new"
-                                className="w-full group relative flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all shadow-lg shadow-primary-900/20 overflow-hidden"
+                                className="w-full group relative flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all overflow-hidden text-sm emerald-glow"
                             >
-                                <div className="absolute inset-0 bg-primary-600 group-hover:bg-primary-500 transition-colors"></div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-500 group-hover:from-primary-500 group-hover:to-primary-400 transition-all"></div>
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                <Plus size={18} className="relative z-10 text-white" />
+                                <Plus size={16} className="relative z-10 text-white" />
                                 <span className="relative z-10 text-white">Nova Campanha</span>
                             </PrefetchLink>
                         </div>
 
-                        <div className="space-y-1">
-                            <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Menu</p>
-                            {navItems.map((item) => (
+                        <div className="space-y-0.5">
+                            <p className="px-4 text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2">Menu</p>
+                            {mainNavItems.map((item) => (
                                 <SidebarItem
                                     key={item.path}
                                     href={item.path}
@@ -647,89 +649,110 @@ export function DashboardShell({
                                 />
                             ))}
                         </div>
+
+                        <div className="space-y-0.5">
+                            <p className="px-4 text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2">Sistema</p>
+                            {systemNavItems.map((item) => (
+                                <PrefetchLink
+                                    key={item.path}
+                                    href={item.path}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 text-zinc-400 dark:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-700 dark:hover:text-zinc-400 border border-transparent"
+                                >
+                                    <item.icon size={18} className="text-zinc-400 dark:text-zinc-700" />
+                                    <span className="text-sm">{item.label}</span>
+                                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700">beta</span>
+                                </PrefetchLink>
+                            ))}
+                        </div>
                     </nav>
 
-                    {/* User Profile */}
-                    <div className="pt-4 mt-4 border-t border-white/5">
+                    {/* Footer: Configurações + User card */}
+                    <div className="pt-3 mt-3 border-t border-zinc-200 dark:border-white/5 space-y-1">
+                        <SidebarItem
+                            href="/settings"
+                            icon={Settings}
+                            label="Configurações"
+                            isActive={pathname?.startsWith('/settings') ?? false}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            onMouseEnter={() => prefetchRoute('/settings')}
+                        />
                         <button
                             onClick={handleLogout}
                             disabled={isLoggingOut}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors border border-transparent hover:border-white/5"
+                            className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-all duration-200 group border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700/50"
                         >
-                            <div className="w-9 h-9 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center overflow-hidden">
-                                <span className="text-lg font-bold text-primary-400">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-600/30 to-primary-800/30 border border-primary-500/20 flex items-center justify-center flex-shrink-0">
+                                <span className="text-sm font-bold text-primary-400">
                                     {companyName?.charAt(0)?.toUpperCase() || 'S'}
                                 </span>
                             </div>
                             <div className="flex-1 min-w-0 text-left">
-                                <p className="text-sm font-medium text-white truncate">{companyName || 'SmartZap'}</p>
-                                <p className="text-xs text-gray-500 truncate">
+                                <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate leading-none mb-0.5">{companyName || 'SmartZap'}</p>
+                                <p className="text-[10px] text-zinc-400 dark:text-zinc-600 truncate">
                                   {currentAuthUser?.role === 'super_admin' ? 'Super Admin' : currentAuthUser?.role === 'manager' ? 'Manager' : 'Usuário'}
                                 </p>
                             </div>
                             {isLoggingOut ? (
-                                <div className="w-4 h-4 border-2 border-gray-500 border-t-white rounded-full animate-spin" />
+                                <div className="w-3.5 h-3.5 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
                             ) : (
-                                <LogOut size={16} className="text-gray-500 hover:text-white transition-colors" />
+                                <LogOut size={14} className="text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors flex-shrink-0" />
                             )}
                         </button>
-                    </div>
-                    {/* Version */}
-                    <div className="pt-2 pb-1 text-center">
-                      <span className="text-[10px] text-zinc-600 font-mono">v2.0.0</span>
+                        <p className="text-center text-[10px] text-zinc-400 dark:text-zinc-700 font-mono mt-1">v2.0.0</p>
                     </div>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background">
                 {/* Header */}
-                <header className="h-20 flex items-center justify-between px-6 lg:px-10 flex-shrink-0">
+                <header className="h-14 flex items-center justify-between px-5 lg:px-8 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur-md">
                     <div className="flex items-center">
                         <button
-                            className="lg:hidden p-2 text-gray-400 mr-4"
+                            className="lg:hidden p-1.5 text-zinc-500 mr-3 hover:text-white transition-colors"
                             onClick={() => setIsMobileMenuOpen(true)}
                         >
-                            <Menu size={24} />
+                            <Menu size={20} />
                         </button>
 
-                        <div className="hidden md:flex items-center text-sm text-gray-500">
-                            <span className="hover:text-white cursor-pointer transition-colors">App</span>
-                            <span className="mx-2 text-gray-700">/</span>
-                            <span className="text-gray-300">{getPageTitle(pathname || '/')}</span>
+                        <div className="hidden md:flex items-center text-xs text-zinc-500">
+                            <span className="hover:text-zinc-300 cursor-pointer transition-colors">App</span>
+                            <ChevronRight size={12} className="mx-1.5 text-zinc-700" />
+                            <span className="text-zinc-300 font-medium">{getPageTitle(pathname || '/')}</span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         {/* Org switcher for super_admin / org badge for others */}
                         {isAuthSuperAdmin && authOrgs.length > 0 ? (
                           <div className="relative hidden sm:block">
                             <button
                               onClick={() => setOrgDropdownOpen(o => !o)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:border-zinc-500 transition-colors"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700 hover:border-primary-500/50 transition-colors"
                             >
-                              <Building2 size={13} className="text-purple-400" />
-                              <span className="text-xs text-gray-300 font-medium max-w-[120px] truncate">
+                              <Building2 size={13} className="text-purple-500 dark:text-purple-400" />
+                              <span className="text-xs text-foreground font-medium max-w-[120px] truncate">
                                 {authOrgs.find(o => o.id === authActiveOrgId)?.name || 'Selecionar org'}
                               </span>
-                              <ChevronDown size={12} className="text-gray-500" />
-                              <span className="text-xs px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 font-semibold">Admin</span>
+                              <ChevronDown size={12} className="text-muted-foreground" />
+                              <span className="text-xs px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold">Admin</span>
                             </button>
                             {orgDropdownOpen && (
-                              <div className="absolute right-0 top-full mt-1 w-56 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                                <div className="px-3 py-2 border-b border-zinc-800">
-                                  <p className="text-xs text-gray-500 uppercase tracking-wide">Organização ativa</p>
+                              <div className="absolute right-0 top-full mt-1 w-56 bg-background border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                                <div className="px-3 py-2 border-b border-border">
+                                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Organização ativa</p>
                                 </div>
                                 <div className="max-h-60 overflow-y-auto">
                                   {authOrgs.map(org => (
                                     <button
                                       key={org.id}
                                       onClick={() => { authSwitchOrg(org.id); setOrgDropdownOpen(false) }}
-                                      className={`w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-zinc-800 transition-colors ${org.id === authActiveOrgId ? 'bg-zinc-800/60' : ''}`}
+                                      className={`w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-muted dark:hover:bg-zinc-800 transition-colors ${org.id === authActiveOrgId ? 'bg-muted dark:bg-zinc-800/60' : ''}`}
                                     >
-                                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${org.id === authActiveOrgId ? 'bg-green-500' : 'bg-zinc-600'}`}></span>
-                                      <span className="text-sm text-gray-300 truncate">{org.name}</span>
-                                      {org.id === authActiveOrgId && <span className="ml-auto text-xs text-green-400">✓</span>}
+                                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${org.id === authActiveOrgId ? 'bg-green-500' : 'bg-zinc-400 dark:bg-zinc-600'}`}></span>
+                                      <span className="text-sm text-foreground truncate">{org.name}</span>
+                                      {org.id === authActiveOrgId && <span className="ml-auto text-xs text-green-500 dark:text-green-400">✓</span>}
                                     </button>
                                   ))}
                                 </div>
@@ -737,17 +760,27 @@ export function DashboardShell({
                             )}
                           </div>
                         ) : currentAuthUser?.organizationId ? (
-                          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700">
+                          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700">
                             <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span className="text-xs text-gray-300 font-medium">
+                            <span className="text-xs text-foreground font-medium">
                               {branding.brand_name !== 'SmartZap' ? branding.brand_name : (currentAuthUser?.name || 'Organização')}
                             </span>
                           </div>
                         ) : null}
-                        <div className="relative group">
-                            <Bell size={20} className="text-gray-500 group-hover:text-white transition-colors cursor-pointer" />
-                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary-500 rounded-full border-2 border-zinc-950"></span>
-                        </div>
+                        <button
+                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                            className="p-1.5 rounded-lg hover:bg-muted transition-colors group"
+                            title="Alternar tema"
+                        >
+                            {theme === 'dark'
+                                ? <Sun size={17} className="text-zinc-500 group-hover:text-foreground transition-colors" />
+                                : <Moon size={17} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+                            }
+                        </button>
+                        <button className="relative p-1.5 rounded-lg hover:bg-muted transition-colors group">
+                            <Bell size={17} className="text-zinc-500 dark:text-zinc-500 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full border border-background"></span>
+                        </button>
                     </div>
                 </header>
 

@@ -187,9 +187,9 @@ export const AISettings: React.FC<AISettingsProps> = ({
                     </div>
 
                     {isConfigured && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                            <CheckCircle size={14} className="text-emerald-400" />
-                            <span className="text-xs font-medium text-emerald-400">Ativo</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <CheckCircle size={14} className="text-blue-400" />
+                            <span className="text-xs font-medium text-blue-400">Ativo</span>
                         </div>
                     )}
                 </div>

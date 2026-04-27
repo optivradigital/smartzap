@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { saveProviderConfig, loadProviderConfig } from '@/lib/whatsapp-provider/factory'
 import { requireManager } from '@/lib/role-guard'
-import { getCurrentUser } from '@/lib/multi-user-auth'
+import { getCurrentUser } from '@/lib/clerk-auth'
 import type { ProviderConfig } from '@/lib/whatsapp-provider/types'
 
 export async function GET() {

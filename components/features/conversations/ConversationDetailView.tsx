@@ -58,18 +58,18 @@ function ConversationHeader({
   const isEnded = conversation.status === 'ended'
   
   return (
-    <div className="p-4 border-b border-zinc-800 bg-zinc-900">
+    <div className="p-4 border-b border-border bg-muted/30 dark:bg-zinc-900">
       {/* Contact Info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center">
-            <User className="w-5 h-5 text-zinc-400" />
+          <div className="w-10 h-10 rounded-full bg-muted dark:bg-zinc-700 flex items-center justify-center">
+            <User className="w-5 h-5 text-muted-foreground" />
           </div>
           <div>
-            <h2 className="text-sm font-medium text-zinc-200">
+            <h2 className="text-sm font-medium text-foreground">
               {conversation.contactName || conversation.contactPhone}
             </h2>
-            <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Phone className="w-3 h-3" />
               <span>{conversation.contactPhone}</span>
             </div>
@@ -132,10 +132,10 @@ function ConversationHeader({
       </div>
       
       {/* Bot Info */}
-      <div className="flex items-center gap-2 mt-3 text-xs text-zinc-500">
+      <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
         <Bot className="w-3.5 h-3.5" />
         <span>{conversation.botName}</span>
-        <span className="text-zinc-700">•</span>
+        <span className="opacity-30">•</span>
         <Clock className="w-3.5 h-3.5" />
         <span>
           Iniciada em {new Date(conversation.createdAt).toLocaleDateString('pt-BR', {
@@ -200,7 +200,7 @@ function MessageInput({
   }
   
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t border-zinc-800 bg-zinc-900">
+    <form onSubmit={handleSubmit} className="p-4 border-t border-border bg-background">
       <div className="flex items-center gap-2">
         <input
           type="text"
@@ -208,8 +208,8 @@ function MessageInput({
           onChange={(e) => setText(e.target.value)}
           placeholder={disabled ? 'Assuma a conversa para enviar mensagens' : 'Digite sua mensagem...'}
           disabled={disabled}
-          className="flex-1 px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg
-                   text-sm text-zinc-200 placeholder:text-zinc-500
+          className="flex-1 px-4 py-2.5 bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700 rounded-lg
+                   text-sm text-foreground placeholder:text-muted-foreground
                    focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500
                    disabled:opacity-50 disabled:cursor-not-allowed"
         />
@@ -238,22 +238,22 @@ function VariablesPanel({ variables }: { variables: Record<string, string> }) {
   if (entries.length === 0) return null
   
   return (
-    <div className="border-t border-zinc-800">
+    <div className="border-t border-border">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2 flex items-center justify-between text-xs text-zinc-400 hover:bg-zinc-800/50"
+        className="w-full px-4 py-2 flex items-center justify-between text-xs text-muted-foreground hover:bg-muted dark:hover:bg-zinc-800/50"
       >
         <span>Variáveis coletadas ({entries.length})</span>
         <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
-      
+
       {isOpen && (
-        <div className="px-4 py-2 bg-zinc-800/30 space-y-1">
+        <div className="px-4 py-2 bg-muted/50 dark:bg-zinc-800/30 space-y-1">
           {entries.map(([key, value]) => (
             <div key={key} className="flex items-center gap-2 text-xs">
               <span className="text-primary-400">{`{{${key}}}`}</span>
-              <span className="text-zinc-600">=</span>
-              <span className="text-zinc-300">{value}</span>
+              <span className="text-muted-foreground/40">=</span>
+              <span className="text-foreground">{value}</span>
             </div>
           ))}
         </div>
@@ -265,11 +265,11 @@ function VariablesPanel({ variables }: { variables: Record<string, string> }) {
 function EmptyState() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-      <User className="w-16 h-16 text-zinc-700 mb-4" />
-      <h3 className="text-lg font-medium text-zinc-400 mb-2">
+      <User className="w-16 h-16 text-muted-foreground/30 mb-4" />
+      <h3 className="text-lg font-medium text-foreground mb-2">
         Selecione uma conversa
       </h3>
-      <p className="text-sm text-zinc-500 max-w-xs">
+      <p className="text-sm text-muted-foreground max-w-xs">
         Escolha uma conversa da lista para ver as mensagens e gerenciar o atendimento
       </p>
     </div>
@@ -279,19 +279,19 @@ function EmptyState() {
 function LoadingSkeleton() {
   return (
     <div className="flex-1 flex flex-col">
-      <div className="p-4 border-b border-zinc-800 animate-pulse">
+      <div className="p-4 border-b border-border animate-pulse">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-zinc-800" />
+          <div className="w-10 h-10 rounded-full bg-muted" />
           <div className="space-y-2">
-            <div className="h-4 bg-zinc-800 rounded w-32" />
-            <div className="h-3 bg-zinc-800 rounded w-24" />
+            <div className="h-4 bg-muted rounded w-32" />
+            <div className="h-3 bg-muted rounded w-24" />
           </div>
         </div>
       </div>
       <div className="flex-1 p-4 space-y-3">
         {[...Array(5)].map((_, i) => (
           <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
-            <div className={`h-16 bg-zinc-800 rounded-2xl ${i % 2 === 0 ? 'w-48' : 'w-56'}`} />
+            <div className={`h-16 bg-muted rounded-2xl ${i % 2 === 0 ? 'w-48' : 'w-56'}`} />
           </div>
         ))}
       </div>

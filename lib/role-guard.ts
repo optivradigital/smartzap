@@ -11,7 +11,8 @@
  */
 
 import { NextResponse } from 'next/server'
-import { getCurrentUser, SmartZapUser } from './multi-user-auth'
+import { getCurrentUser } from './clerk-auth'
+import type { SmartZapUser } from './multi-user-auth'
 
 export type AppRole = 'super_admin' | 'manager' | 'user'
 

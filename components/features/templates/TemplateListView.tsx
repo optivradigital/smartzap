@@ -8,7 +8,7 @@ import { BulkGenerationModal } from './BulkGenerationModal';
 
 const StatusBadge = ({ status }: { status: TemplateStatus }) => {
   const styles = {
-    APPROVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    APPROVED: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     REJECTED: 'bg-red-500/10 text-red-400 border-red-500/20',
   };
@@ -188,31 +188,45 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
 
   const hasSelection = selectedMetaTemplates.size > 0;
 
-  if (isLoading) return <div className="text-white">Carregando templates...</div>;
+  if (isLoading) return (
+    <div className="space-y-6">
+      <div className="h-8 w-36 bg-zinc-800/80 rounded-lg animate-pulse" />
+      <div className="glass-panel rounded-2xl overflow-hidden">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex gap-4 px-5 py-4 border-b border-white/5">
+            <div className="w-8 h-8 rounded-xl bg-zinc-800 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-48 bg-zinc-800/80 rounded animate-pulse" />
+              <div className="h-3 w-32 bg-zinc-800/50 rounded animate-pulse" />
+            </div>
+            <div className="h-6 w-20 bg-zinc-800/80 rounded-full animate-pulse" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-8 pb-20 relative">
+    <div className="space-y-6 pb-20 relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Templates</h1>
-          <p className="text-gray-400">Gerencie seus modelos de mensagens aprovados pelo WhatsApp</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight leading-none mb-1">Templates</h1>
+          <p className="text-sm text-muted-foreground">Gerencie seus modelos de mensagens aprovados pelo WhatsApp</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
 
-          {/* USAGE LIMIT INDICATOR */}
-          <div className="flex flex-col items-end justify-center mr-4 px-3 py-1 bg-zinc-900 border border-white/5 rounded-lg">
-            <div className="flex items-center gap-2 text-xs font-medium text-gray-400">
-              <span>Uso da Conta</span>
-              <span className={`${templates.length >= 250 ? 'text-red-400' : 'text-emerald-400'}`}>
-                {templates.length} / 250
+          {/* Usage limit */}
+          <div className="flex flex-col items-end px-3 py-1.5 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl">
+            <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+              <span>Uso</span>
+              <span className={`font-bold ${templates.length >= 250 ? 'text-red-400' : 'text-blue-400'}`}>
+                {templates.length}/250
               </span>
             </div>
-            <div className="w-32 h-1.5 bg-zinc-800 rounded-full mt-1 overflow-hidden">
+            <div className="w-24 h-1 bg-zinc-800 rounded-full mt-1 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-500 ${templates.length >= 250 ? 'bg-red-500' :
-                  templates.length >= 200 ? 'bg-yellow-500' : 'bg-emerald-500'
-                  }`}
+                className={`h-full rounded-full transition-all duration-500 ${templates.length >= 250 ? 'bg-red-500' : templates.length >= 200 ? 'bg-yellow-500' : 'bg-blue-500'}`}
                 style={{ width: `${Math.min((templates.length / 250) * 100, 100)}%` }}
               />
             </div>
@@ -220,32 +234,32 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
 
           <button
             onClick={() => setIsBulkModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:opacity-90 transition-opacity shadow-lg shadow-emerald-900/20 animate-in zoom-in duration-300"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-blue-900/20"
           >
-            <Zap size={18} className="text-yellow-300" />
-            Gerar UTILITY em Massa
+            <Zap size={15} className="text-yellow-300" />
+            UTILITY em Massa
           </button>
           <button
             onClick={() => setIsAiModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold hover:opacity-90 transition-opacity shadow-lg shadow-purple-900/20 animate-in zoom-in duration-300"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-purple-900/20"
           >
-            <Sparkles size={18} className="text-yellow-300" />
+            <Sparkles size={15} className="text-yellow-300" />
             Criar com IA
           </button>
           <button
             onClick={onSync}
             disabled={isSyncing}
-            className={`flex items-center gap-2 px-4 py-2.5 bg-zinc-900 border border-white/10 text-gray-300 rounded-xl font-medium hover:bg-white/5 transition-colors ${isSyncing ? 'opacity-75 cursor-wait' : ''}`}
+            className={`flex items-center gap-1.5 px-3.5 py-2 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 text-foreground rounded-xl text-sm font-medium hover:bg-accent transition-all ${isSyncing ? 'opacity-75 cursor-wait' : ''}`}
           >
-            <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
+            <RefreshCw size={15} className={isSyncing ? 'animate-spin' : ''} />
             {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
           </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="glass-panel p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex gap-1 p-0.5 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl overflow-x-auto no-scrollbar">
           {[
             { value: 'ALL', label: 'Todos' },
             { value: 'MARKETING', label: 'Marketing' },
@@ -255,9 +269,9 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
             <button
               key={cat.value}
               onClick={() => setCategoryFilter(cat.value)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap ${categoryFilter === cat.value
-                ? 'bg-white text-black'
-                : 'bg-zinc-900 text-gray-500 hover:text-gray-300 hover:bg-zinc-800'
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap ${categoryFilter === cat.value
+                ? 'bg-background dark:bg-zinc-700 text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               {cat.label}
@@ -265,12 +279,12 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center gap-3 bg-zinc-900 border border-white/5 rounded-lg px-4 py-2 w-full md:w-72 focus-within:border-primary-500/50 focus-within:ring-1 focus-within:ring-primary-500/50 transition-all">
-          <Search size={18} className="text-gray-500" />
+        <div className="flex items-center gap-2.5 bg-muted dark:bg-zinc-900 border border-border dark:border-zinc-800 rounded-xl px-3.5 py-2.5 w-full md:w-64 focus-within:border-primary-500/40 focus-within:ring-1 focus-within:ring-primary-500/20 transition-all">
+          <Search size={15} className="text-muted-foreground flex-shrink-0" />
           <input
             type="text"
             placeholder="Buscar templates..."
-            className="bg-transparent border-none outline-none text-sm w-full text-white placeholder-gray-600"
+            className="bg-transparent border-none outline-none text-sm w-full text-foreground placeholder:text-muted-foreground"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -663,7 +677,7 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
                 {aiResult && (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center gap-2 mb-2">
-                      <Check size={16} className="text-emerald-400" />
+                      <Check size={16} className="text-blue-400" />
                       <span className="text-sm font-bold text-white">Resultado Gerado</span>
                     </div>
                     <div className="bg-zinc-900/80 border border-purple-500/30 rounded-xl p-4 relative group">
@@ -686,7 +700,7 @@ export const TemplateListView: React.FC<TemplateListViewProps> = ({
                         <button
                           onClick={onSaveAiTemplate}
                           disabled={isSaving}
-                          className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                          className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50"
                         >
                           {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Salvar Template
                         </button>

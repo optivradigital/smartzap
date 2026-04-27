@@ -108,7 +108,7 @@ export default function BootstrapPage() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 mb-4">
             <span className="text-3xl font-bold text-white">S</span>
           </div>
           <h1 className="text-2xl font-bold text-white">SmartZap</h1>
@@ -117,7 +117,7 @@ export default function BootstrapPage() {
 
         {/* Progress */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-3 h-3 rounded-full bg-emerald-500" />
+          <div className="w-3 h-3 rounded-full bg-blue-500" />
           <div className="w-8 h-0.5 bg-zinc-700" />
           <div className="w-3 h-3 rounded-full bg-zinc-700" />
           <div className="w-8 h-0.5 bg-zinc-700" />
@@ -130,8 +130,8 @@ export default function BootstrapPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
           {step === 'success' ? (
             <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4">
-                <Check className="w-8 h-8 text-emerald-500" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/20 mb-4">
+                <Check className="w-8 h-8 text-blue-500" />
               </div>
               <h2 className="text-lg font-semibold text-white mb-2">
                 Projeto confirmado!
@@ -143,8 +143,8 @@ export default function BootstrapPage() {
           ) : step === 'confirm' && project ? (
             <div>
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4">
-                  <Globe className="w-8 h-8 text-emerald-500" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/20 mb-4">
+                  <Globe className="w-8 h-8 text-blue-500" />
                 </div>
                 <h2 className="text-lg font-semibold text-white mb-2">
                   Projeto encontrado!
@@ -167,7 +167,7 @@ export default function BootstrapPage() {
                       href={`https://${project.url || `${project.name}.vercel.app`}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-emerald-500 hover:underline text-sm flex items-center gap-1"
+                      className="text-blue-500 hover:underline text-sm flex items-center gap-1"
                     >
                       {project.url || `${project.name}.vercel.app`}
                       <ExternalLink className="w-3 h-3" />
@@ -189,7 +189,7 @@ export default function BootstrapPage() {
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   Confirmar
                   <ArrowRight className="w-4 h-4" />
@@ -211,7 +211,7 @@ export default function BootstrapPage() {
                 <ol className="space-y-2 text-sm text-zinc-400">
                   <li className="flex gap-2">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-zinc-700 text-zinc-300 text-xs flex items-center justify-center">1</span>
-                    <span>Acesse <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:underline inline-flex items-center gap-1">
+                    <span>Acesse <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline inline-flex items-center gap-1">
                       vercel.com/account/tokens <ExternalLink className="w-3 h-3" />
                     </a></span>
                   </li>
@@ -221,7 +221,7 @@ export default function BootstrapPage() {
                   </li>
                   <li className="flex gap-2">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-zinc-700 text-zinc-300 text-xs flex items-center justify-center">3</span>
-                    <span>Nome: <code className="bg-zinc-700 px-1.5 py-0.5 rounded text-emerald-400">SmartZap Setup</code></span>
+                    <span>Nome: <code className="bg-zinc-700 px-1.5 py-0.5 rounded text-blue-400">SmartZap Setup</code></span>
                   </li>
                   <li className="flex gap-2">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-zinc-700 text-zinc-300 text-xs flex items-center justify-center">4</span>
@@ -242,7 +242,7 @@ export default function BootstrapPage() {
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="Cole seu token aqui"
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   autoFocus
                   disabled={isLoading}
                 />
@@ -258,7 +258,7 @@ export default function BootstrapPage() {
               <button
                 type="submit"
                 disabled={isLoading || !token.trim()}
-                className="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full mt-6 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
