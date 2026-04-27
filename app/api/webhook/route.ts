@@ -287,7 +287,9 @@ export async function POST(request: NextRequest) {
 
   // ── Evolution: delivery/read status updates ──────────────────────────────
   if (body.event === 'messages.update') {
-    const updates: Array<{ key: { id: string; fromMe: boolean }; update: { status: string } }> = body.data || []
+    const rawData = body.data
+    const updates: Array<{ key: { id: string; fromMe: boolean }; update: { status: string } }> =
+      Array.isArray(rawData) ? rawData : (rawData ? [rawData] : [])
     for (const u of updates) {
       if (!u.key?.fromMe || !u.key?.id) continue
       const ack = u.update?.status
@@ -378,6 +380,17 @@ export async function POST(request: NextRequest) {
     const evolutionUrl = orgConfig?.evolutionUrl || process.env.EVOLUTION_API_URL || ''
     const evolutionApiKey = orgConfig?.evolutionApiKey || process.env.EVOLUTION_API_KEY || ''
 
+    // Mark message as read → sends blue ticks to sender
+    if (evolutionUrl && evolutionApiKey && msg.key?.id && remoteJid) {
+      fetch(`${evolutionUrl}/chat/markMessageAsRead/${encodeURIComponent(instanceName)}`, {
+        method: 'POST',
+        headers: { apikey: evolutionApiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          readMessages: [{ remoteJid, fromMe: false, id: msg.key.id }],
+        }),
+      }).catch(() => { /* non-fatal */ })
+    }
+
     handleIncomingMessage(phone, text, msg.key?.id, {
       type: 'evolution', evolutionUrl, evolutionApiKey, instanceName,
     }, orgId).catch(e => console.error('[Agent/Evolution]', e))
@@ -393,14 +406,14 @@ export async function POST(request: NextRequest) {
   console.log('📨 Meta webhook received')
 
   try {
-    const entries = body.entry || []
+    const entries = Array.isArray(body.entry) ? body.entry : []
 
     for (const entry of entries) {
-      const changes = entry.changes || []
+      const changes = Array.isArray(entry.changes) ? entry.changes : []
 
       for (const change of changes) {
         // ── Campaign status updates ─────────────────────────────────────────
-        const statuses = change.value?.statuses || []
+        const statuses = Array.isArray(change.value?.statuses) ? change.value.statuses : []
 
         for (const statusUpdate of statuses) {
           const { id: messageId, status: msgStatus, errors } = statusUpdate
@@ -517,7 +530,7 @@ export async function POST(request: NextRequest) {
         }
 
         // ── Incoming messages → AI Agent (Meta Cloud API) ───────────────────
-        const messages = change.value?.messages || []
+        const messages = Array.isArray(change.value?.messages) ? change.value.messages : []
         for (const message of messages) {
           if (message.type !== 'text' || !message.text?.body) continue
 
