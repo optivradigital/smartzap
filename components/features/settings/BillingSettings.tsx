@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { CreditCard, Zap, CheckCircle, AlertCircle, Plus, Minus } from 'lucide-react'
 
-const BASE_PRICE = 197
-const EXTRA_PRICE = 97
+const BASE_PRICE = 129
+const EXTRA_PRICE = 87
 
 interface Subscription {
   status: string
