@@ -409,7 +409,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
         )}
 
-        {activeSection === 'conexao' && <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-blue-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
+        {activeSection === 'conexao' && !isManager && <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-blue-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
           <div className={`p-4 rounded-2xl ${settings.isConnected ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
             {settings.isConnected ? <Wifi size={32} /> : <AlertTriangle size={32} />}
           </div>
