@@ -17,11 +17,14 @@ export async function POST() {
 
   const config = await loadProviderConfig(orgId)
 
-  if (!config || config.type !== 'evolution') {
+  const isEvolution = config?.type === 'evolution' || (!config && !!process.env.EVOLUTION_API_URL)
+  if (!isEvolution) {
     return NextResponse.json({ error: 'Apenas Evolution API suporta disconnect via QR' }, { status: 400 })
   }
 
-  const { evolutionUrl, evolutionApiKey, evolutionInstance } = config
+  const evolutionUrl = config?.evolutionUrl || process.env.EVOLUTION_API_URL || ''
+  const evolutionApiKey = config?.evolutionApiKey || process.env.EVOLUTION_API_KEY || ''
+  const evolutionInstance = config?.evolutionInstance || process.env.EVOLUTION_INSTANCE || 'SmartZap'
 
   if (!evolutionUrl || !evolutionApiKey || !evolutionInstance) {
     return NextResponse.json({ error: 'Configuração Evolution incompleta' }, { status: 400 })
