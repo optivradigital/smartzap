@@ -141,7 +141,7 @@ async function registerInGptMaker(
 
   try {
     const res = await fetch(
-      `https://api.gptmaker.ai/v2/agent/${agentId}/conversation`,
+      `https://api.gptmaker.ai/v2/agent/${agentId}/add-message`,
       {
         method: "POST",
         headers: {
