@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { templateService, UtilityCategory, GeneratedTemplate, GenerateUtilityParams } from '../services/templateService';
 import { Template } from '../types';
+import { useCurrentUser } from './useCurrentUser';
 
 // Informações das categorias de utility para o UI
 export const UTILITY_CATEGORIES: Record<UtilityCategory, { name: string; icon: string }> = {
@@ -25,6 +26,7 @@ export const UTILITY_CATEGORIES: Record<UtilityCategory, { name: string; icon: s
 
 export const useTemplatesController = () => {
   const queryClient = useQueryClient();
+  const { activeOrgId } = useCurrentUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
 
@@ -69,7 +71,7 @@ export const useTemplatesController = () => {
   // --- Queries ---
   // Templates raramente mudam - cache infinito, sincroniza só no botão
   const templatesQuery = useQuery({
-    queryKey: ['templates'],
+    queryKey: ['templates', activeOrgId],
     queryFn: templateService.getAll,
     staleTime: Infinity,  // Nunca considera "velho" automaticamente
     gcTime: Infinity,     // Nunca remove do cache
@@ -78,12 +80,25 @@ export const useTemplatesController = () => {
     refetchOnReconnect: false,
   });
 
+  // Mostra erro de carregamento inicial como toast (React Query v5 removeu onError do useQuery)
+  useEffect(() => {
+    if (templatesQuery.error) {
+      const msg = templatesQuery.error instanceof Error
+        ? templatesQuery.error.message
+        : 'Erro ao carregar templates. Verifique as configurações do WhatsApp.';
+      toast.error(msg);
+    }
+  }, [templatesQuery.error]);
+
   // --- Mutations ---
   const syncMutation = useMutation({
     mutationFn: templateService.sync,
     onSuccess: (count) => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['templates', activeOrgId] });
       toast.success(`${count} novo(s) template(s) sincronizado(s) do Meta Business Manager!`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao sincronizar templates com a Meta');
     }
   });
 
@@ -97,7 +112,7 @@ export const useTemplatesController = () => {
   const addTemplateMutation = useMutation({
     mutationFn: templateService.add,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['templates', activeOrgId] });
       setIsAiModalOpen(false);
       setAiPrompt('');
       setAiResult('');
@@ -123,7 +138,7 @@ export const useTemplatesController = () => {
   const deleteMutation = useMutation({
     mutationFn: (name: string) => templateService.delete(name),
     onSuccess: (_, name) => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['templates', activeOrgId] });
       toast.success(`Template "${name}" deletado com sucesso!`);
       setIsDeleteModalOpen(false);
       setTemplateToDelete(null);
@@ -137,7 +152,7 @@ export const useTemplatesController = () => {
   const bulkDeleteMutation = useMutation({
     mutationFn: (names: string[]) => templateService.deleteBulk(names),
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['templates', activeOrgId] });
       if (result.deleted > 0) {
         toast.success(`${result.deleted} template(s) deletado(s) com sucesso!`);
       }
@@ -262,7 +277,7 @@ export const useTemplatesController = () => {
       if (result.created > 0) {
         toast.success(`${result.created} template(s) criado(s) na Meta!`);
         // Invalida cache para recarregar lista
-        queryClient.invalidateQueries({ queryKey: ['templates'] });
+        queryClient.invalidateQueries({ queryKey: ['templates', activeOrgId] });
       }
 
       if (result.failed > 0) {
