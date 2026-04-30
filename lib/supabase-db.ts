@@ -2035,12 +2035,15 @@ export const nodeExecutionDb = {
 // ============================================================================
 
 export const templateProjectDb = {
-    getAll: async (): Promise<TemplateProject[]> => {
-        const { data, error } = await supabase
+    getAll: async (organizationId?: string): Promise<TemplateProject[]> => {
+        let query = supabase
             .from('template_projects')
             .select('*')
             .order('created_at', { ascending: false });
 
+        if (organizationId) query = query.eq('organization_id', organizationId);
+
+        const { data, error } = await query;
         if (error) throw error;
         return data as TemplateProject[];
     },
@@ -2067,7 +2070,7 @@ export const templateProjectDb = {
         return { ...(project as TemplateProject), items: (items as TemplateProjectItem[]) || [] };
     },
 
-    create: async (dto: CreateTemplateProjectDTO): Promise<TemplateProject> => {
+    create: async (dto: CreateTemplateProjectDTO, organizationId?: string): Promise<TemplateProject> => {
         // 1. Create Project
         const { data: project, error: projectError } = await supabase
             .from('template_projects')
@@ -2076,9 +2079,8 @@ export const templateProjectDb = {
                 prompt: dto.prompt,
                 status: dto.status || 'draft',
                 template_count: dto.items.length,
-                approved_count: 0
-                // user_id is explicitly NOT set here, relying on schema default (null) or logic in API route if needed
-                // In this single-tenant app, user_id null is acceptable or could be 'admin'
+                approved_count: 0,
+                organization_id: organizationId || null,
             })
             .select()
             .single();
