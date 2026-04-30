@@ -14,9 +14,9 @@ export const useDashboardController = (initialData?: { stats: any, recentCampaig
 
   // Stats with Realtime updates - subscribes to campaigns table for live metrics
   const statsQuery = useRealtimeQuery({
-    queryKey: ['dashboardStats'],
+    queryKey: ['dashboardStats', activeOrgId],
     queryFn: dashboardService.getStats,
-    initialData: initialData?.stats,
+    placeholderData: initialData?.stats,
     refetchInterval: POLLING_INTERVAL,
     staleTime: 15000,
     gcTime: 60000,
@@ -31,9 +31,9 @@ export const useDashboardController = (initialData?: { stats: any, recentCampaig
 
   // Recent campaigns with Realtime updates
   const recentCampaignsQuery = useRealtimeQuery({
-    queryKey: ['recentCampaigns'],
+    queryKey: ['recentCampaigns', activeOrgId],
     queryFn: dashboardService.getRecentCampaigns,
-    initialData: initialData?.recentCampaigns,
+    placeholderData: initialData?.recentCampaigns,
     refetchInterval: POLLING_INTERVAL,
     staleTime: 20000,
     gcTime: 120000,
