@@ -28,7 +28,7 @@ export default async function DashboardLayout({
 
   let trialExpired = false
   let trialDaysLeft: number | null = null
-  if (smartzapUser?.organizationId) {
+  if (smartzapUser?.organizationId && !smartzapUser.isSuperAdmin) {
     const { data: org } = await supabase
       .from('organizations')
       .select('trial_ends_at, subscription_status')
