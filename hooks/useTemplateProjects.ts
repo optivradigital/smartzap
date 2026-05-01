@@ -3,14 +3,17 @@ import { useState } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { templateProjectService, CreateTemplateProjectDTO } from '@/services/templateProjectService';
 import { useRealtimeQuery } from './useRealtimeQuery';
+import { useCurrentUser } from './useCurrentUser';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 // --- Queries ---
 
 export const useTemplateProjectsQuery = () => {
+    const { user } = useCurrentUser();
+    const orgId = user?.organizationId ?? null;
     return useRealtimeQuery({
-        queryKey: ['template_projects'],
+        queryKey: ['template_projects', orgId],
         queryFn: templateProjectService.getAll,
         table: 'template_projects',
         events: ['INSERT', 'UPDATE', 'DELETE'],

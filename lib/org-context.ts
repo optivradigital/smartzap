@@ -5,7 +5,7 @@
  * Used by API routes to scope all database queries to the correct org.
  */
 
-import { getCurrentUser } from './multi-user-auth'
+import { getCurrentUser } from './clerk-auth'
 
 export const SUPER_ADMIN_ORG = '*'  // Sentinel for super admin (sees all)
 

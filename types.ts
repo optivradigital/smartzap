@@ -858,6 +858,7 @@ export interface TemplateProject {
   template_count: number;
   approved_count: number;
   user_id?: string | null;
+  organization_id?: string | null;
   created_at: string;
   updated_at: string;
 }
