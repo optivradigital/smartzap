@@ -94,8 +94,8 @@ const NavItem = ({
     onClick={() => onSelect(section)}
     className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-colors text-left ${
       activeSection === section
-        ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium'
-        : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-700 dark:hover:text-zinc-300'
+        ? 'bg-muted text-foreground font-medium'
+        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
     }`}
   >
     {label}
@@ -361,7 +361,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {!hideHeader && (
         <>
           <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Configurações</h1>
-          <p className="text-gray-400 mb-6">Gerencie integrações, equipe e preferências da conta.</p>
+          <p className="text-muted-foreground mb-6">Gerencie integrações, equipe e preferências da conta.</p>
         </>
       )}
 
@@ -414,7 +414,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {settings.isConnected ? <Wifi size={32} /> : <AlertTriangle size={32} />}
           </div>
           <div className="flex-1">
-            <h3 className={`text-xl font-bold ${settings.isConnected ? 'text-white' : 'text-white'}`}>
+            <h3 className="text-xl font-bold text-foreground">
               {settings.isConnected ? 'Sistema Online' : 'Desconectado'}
             </h3>
 
@@ -441,7 +441,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="mt-5 flex flex-wrap gap-3">
                 {/* Limits Status */}
                 {limitsLoading ? (
-                  <span className="px-3 py-1.5 bg-zinc-900 rounded-lg text-xs font-medium text-gray-400 border border-white/10 flex items-center gap-1.5 animate-pulse">
+                  <span className="px-3 py-1.5 bg-muted rounded-lg text-xs font-medium text-muted-foreground border border-border flex items-center gap-1.5 animate-pulse">
                     <RefreshCw size={12} className="animate-spin" />
                     Verificando limites...
                   </span>
@@ -455,7 +455,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <RefreshCw size={10} className="ml-1" />
                   </button>
                 ) : (
-                  <span className="px-3 py-1.5 bg-zinc-900 rounded-lg text-xs font-medium text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
+                  <span className="px-3 py-1.5 bg-muted rounded-lg text-xs font-medium text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
                     <Wifi size={12} />
                     Limite: {accountLimits?.maxUniqueUsersPerDay?.toLocaleString('pt-BR')} msgs/dia
                   </span>
@@ -463,13 +463,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                 {/* Quality Status */}
                 {!limitsError && !limitsLoading && (
-                  <span className={`px-3 py-1.5 bg-zinc-900 rounded-lg text-xs font-medium border flex items-center gap-1.5 ${accountLimits?.qualityScore === 'GREEN'
+                  <span className={`px-3 py-1.5 bg-muted rounded-lg text-xs font-medium border flex items-center gap-1.5 ${accountLimits?.qualityScore === 'GREEN'
                     ? 'text-blue-400 border-blue-500/20'
                     : accountLimits?.qualityScore === 'YELLOW'
                       ? 'text-yellow-400 border-yellow-500/20'
                       : accountLimits?.qualityScore === 'RED'
                         ? 'text-red-400 border-red-500/20'
-                        : 'text-gray-400 border-white/10'
+                        : 'text-muted-foreground border-border'
                     }`}>
                     <Shield size={12} />
                     Qualidade: {accountLimits?.qualityScore === 'GREEN' ? 'Alta' : accountLimits?.qualityScore === 'YELLOW' ? 'Média' : accountLimits?.qualityScore === 'RED' ? 'Baixa' : '---'}
@@ -489,7 +489,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     setIsEditing(!isEditing)
                   }
                 }}
-                className="group relative overflow-hidden rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 bg-white/5 text-white hover:bg-white/10 border border-white/10 hover:border-white/20"
+                className="group relative overflow-hidden rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 bg-muted/50 text-foreground hover:bg-muted border border-border hover:border-border/60"
               >
                 <Edit2 size={14} className="transition-transform duration-500 group-hover:scale-110" />
                 Editar
@@ -521,14 +521,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Form - Only visible if disconnected OR editing */}
         {activeSection === 'conexao' && (!settings.isConnected || isEditing) && !isManager && (
           <div className="glass-panel rounded-2xl p-8 animate-in slide-in-from-top-4 duration-300">
-            <h3 className="text-lg font-semibold text-white mb-8 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground mb-8 flex items-center gap-2">
               <span className="w-1 h-6 bg-primary-500 rounded-full"></span>
               Configuração da API
             </h3>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   ID do Número de Telefone <span className="text-primary-500">*</span>
                 </label>
                 <div className="relative group">
@@ -537,16 +537,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={settings.phoneNumberId}
                     onChange={(e) => setSettings({ ...settings, phoneNumberId: e.target.value })}
                     placeholder="ex: 298347293847"
-                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-white transition-all group-hover:border-white/20"
+                    className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-foreground transition-all group-hover:border-border/60"
                   />
-                  <div className="absolute right-4 top-3.5 text-gray-600 cursor-help hover:text-white transition-colors" title="Encontrado no Meta Business Manager">
+                  <div className="absolute right-4 top-3.5 text-muted-foreground/50 cursor-help hover:text-foreground transition-colors" title="Encontrado no Meta Business Manager">
                     <HelpCircle size={16} />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   ID da Conta Comercial (Business ID) <span className="text-primary-500">*</span>
                 </label>
                 <div className="relative group">
@@ -555,16 +555,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={settings.businessAccountId}
                     onChange={(e) => setSettings({ ...settings, businessAccountId: e.target.value })}
                     placeholder="ex: 987234987234"
-                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-white transition-all group-hover:border-white/20"
+                    className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-foreground transition-all group-hover:border-border/60"
                   />
-                  <div className="absolute right-4 top-3.5 text-gray-600 cursor-help hover:text-white transition-colors" title="Encontrado no Meta Business Manager">
+                  <div className="absolute right-4 top-3.5 text-muted-foreground/50 cursor-help hover:text-foreground transition-colors" title="Encontrado no Meta Business Manager">
                     <HelpCircle size={16} />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Token de Acesso do Usuário do Sistema <span className="text-primary-500">*</span>
                 </label>
                 <div className="relative group">
@@ -573,22 +573,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={settings.accessToken}
                     onChange={(e) => setSettings({ ...settings, accessToken: e.target.value })}
                     placeholder="EAAG........"
-                    className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-white transition-all group-hover:border-white/20 tracking-widest"
+                    className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-foreground transition-all group-hover:border-border/60 tracking-widest"
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-2 font-mono">Armazenamento criptografado SHA-256.</p>
+                <p className="text-xs text-muted-foreground mt-2 font-mono">Armazenamento criptografado SHA-256.</p>
               </div>
             </div>
 
-            <div className="mt-10 pt-8 border-t border-white/5 flex justify-end gap-4">
+            <div className="mt-10 pt-8 border-t border-border/40 flex justify-end gap-4">
               <button
-                className="px-6 py-3 rounded-xl border border-white/10 text-gray-300 font-medium hover:bg-white/5 transition-colors flex items-center gap-2"
+                className="px-6 py-3 rounded-xl border border-border text-muted-foreground font-medium hover:bg-muted/50 transition-colors flex items-center gap-2"
                 onClick={() => toast.success('Teste de conexão bem-sucedido!')}
               >
                 <RefreshCw size={18} /> Testar Conexão
               </button>
               <button
-                className="px-8 py-3 rounded-xl bg-white text-black font-bold hover:bg-gray-200 transition-colors flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                className="px-8 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition-colors flex items-center gap-2"
                 onClick={() => {
                   onSave();
                   setIsEditing(false);
@@ -604,11 +604,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Test Contact Section */}
         {activeSection === 'conexao' && settings.isConnected && (
           <div className="glass-panel rounded-2xl p-8">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
               <span className="w-1 h-6 bg-amber-500 rounded-full"></span>
               Contato de Teste
             </h3>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-muted-foreground mb-6">
               Configure um número para testar suas campanhas antes de enviar para todos os contatos.
             </p>
 
@@ -620,7 +620,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <UserCheck size={24} className="text-amber-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-white">{testContact.name || 'Contato de Teste'}</p>
+                    <p className="font-medium text-foreground">{testContact.name || 'Contato de Teste'}</p>
                     <p className="text-sm text-amber-400 font-mono">+{testContact.phone}</p>
                   </div>
                 </div>
@@ -631,13 +631,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       setTestContactPhone(testContact?.phone || '');
                       setIsEditingTestContact(true);
                     }}
-                    className="px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                    className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
                   >
                     Editar
                   </button>
                   <button
                     onClick={handleRemoveTestContact}
-                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                    className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                   >
                     <X size={16} />
                   </button>
@@ -648,7 +648,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Nome
                     </label>
                     <input
@@ -656,11 +656,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       value={testContactName}
                       onChange={(e) => setTestContactName(e.target.value)}
                       placeholder="Ex: Meu Teste"
-                      className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 outline-none text-sm text-white transition-all"
+                      className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 outline-none text-sm text-foreground transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Telefone (com código do país)
                     </label>
                     <input
@@ -668,7 +668,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       value={testContactPhone}
                       onChange={(e) => setTestContactPhone(e.target.value)}
                       placeholder="Ex: 5511999999999"
-                      className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 outline-none text-sm text-white font-mono transition-all"
+                      className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 outline-none text-sm text-foreground font-mono transition-all"
                     />
                   </div>
                 </div>
@@ -680,7 +680,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         setTestContactName(testContact?.name || '');
                         setTestContactPhone(testContact?.phone || '');
                       }}
-                      className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                      className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Cancelar
                     </button>
@@ -702,7 +702,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {activeSection === 'webhooks' && settings.isConnected && webhookUrl && (
           <div className="glass-panel rounded-2xl p-8">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
                 <Webhook size={20} className="text-blue-400" />
                 Webhooks
@@ -711,14 +711,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   onClick={onRefreshPhoneNumbers}
                   disabled={phoneNumbersLoading}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
                   title="Atualizar lista"
                 >
                   <RefreshCw size={16} className={phoneNumbersLoading ? 'animate-spin' : ''} />
                 </button>
               )}
             </div>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-muted-foreground mb-6">
               Webhooks são notificações que a Meta envia quando algo acontece (mensagem entregue, lida, etc).
             </p>
 
@@ -731,14 +731,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               {/* Domain Selector - only show if multiple domains available */}
               {availableDomains && availableDomains.length > 1 && (
-                <div className="mb-4 p-3 bg-zinc-900/50 rounded-lg border border-white/5">
-                  <label className="block text-xs font-medium text-gray-400 mb-2">
+                <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border/40">
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">
                     Selecione o domínio para o webhook:
                   </label>
                   <select
                     value={selectedDomainUrl}
                     onChange={(e) => setSelectedDomainUrl(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none"
                   >
                     <option value="">Automático (recomendado)</option>
                     {availableDomains.map((domain) => (
@@ -747,7 +747,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       </option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-gray-500 mt-1.5">
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
                     Escolha qual domínio usar na URL do webhook. O ★ indica o recomendado.
                   </p>
                 </div>
@@ -755,35 +755,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="space-y-3">
                 <div className="flex gap-2">
-                  <code className="flex-1 px-3 py-2 bg-zinc-900/50 border border-white/10 rounded-lg font-mono text-sm text-gray-300 break-all">
+                  <code className="flex-1 px-3 py-2 bg-muted/30 border border-border rounded-lg font-mono text-sm text-muted-foreground break-all">
                     {computedWebhookUrl}
                   </code>
                   <button
                     onClick={() => handleCopy(computedWebhookUrl || '', 'url')}
-                    className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-white/10 rounded-lg transition-colors shrink-0"
+                    className="px-3 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg transition-colors shrink-0"
                     title="Copiar URL"
                   >
                     {copiedField === 'url' ? (
                       <Check size={16} className="text-blue-400" />
                     ) : (
-                      <Copy size={16} className="text-gray-400" />
+                      <Copy size={16} className="text-muted-foreground" />
                     )}
                   </button>
                 </div>
                 <div className="flex gap-2 items-center">
-                  <span className="text-xs text-gray-500">Token:</span>
-                  <code className="px-2 py-1 bg-zinc-900/50 rounded text-xs font-mono text-gray-400">
+                  <span className="text-xs text-muted-foreground">Token:</span>
+                  <code className="px-2 py-1 bg-muted/30 rounded text-xs font-mono text-muted-foreground">
                     {webhookToken}
                   </code>
                   <button
                     onClick={() => handleCopy(webhookToken || '', 'token')}
-                    className="p-1 hover:bg-white/5 rounded transition-colors"
+                    className="p-1 hover:bg-muted/50 rounded transition-colors"
                     title="Copiar Token"
                   >
                     {copiedField === 'token' ? (
                       <Check size={12} className="text-blue-400" />
                     ) : (
-                      <Copy size={12} className="text-gray-400" />
+                      <Copy size={12} className="text-muted-foreground" />
                     )}
                   </button>
                 </div>
@@ -794,9 +794,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="mt-3 pt-3 border-t border-blue-500/20 flex items-center gap-2 text-xs text-blue-300/70">
                   <Check size={12} className="text-blue-400" />
                   Último evento: {new Date(webhookStats.lastEventAt).toLocaleString('pt-BR')}
-                  <span className="text-gray-500">·</span>
+                  <span className="text-muted-foreground">·</span>
                   <span>{webhookStats.todayDelivered || 0} delivered</span>
-                  <span className="text-gray-500">·</span>
+                  <span className="text-muted-foreground">·</span>
                   <span>{webhookStats.todayRead || 0} read</span>
                 </div>
               )}
@@ -805,13 +805,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {/* Phone Numbers List */}
             {phoneNumbers && phoneNumbers.length > 0 && (
               <>
-                <h4 className="font-medium text-white mb-3 flex items-center gap-2">
-                  <Phone size={16} className="text-gray-400" />
+                <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                  <Phone size={16} className="text-muted-foreground" />
                   Seus Números
                 </h4>
 
                 {phoneNumbersLoading ? (
-                  <div className="flex items-center justify-center py-8 text-gray-400">
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
                     <Loader2 size={24} className="animate-spin mr-2" />
                     Carregando números...
                   </div>
@@ -841,7 +841,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                               ? 'bg-amber-500/5 border-amber-500/20'
                               : cardColor === 'blue'
                                 ? 'bg-blue-500/5 border-blue-500/20'
-                                : 'bg-zinc-800/50 border-white/10'
+                                : 'bg-muted/30 border-border'
                             }`}
                         >
                           {/* Header Row - Always visible */}
@@ -854,15 +854,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                     ? 'bg-amber-500/20 text-amber-400'
                                     : cardColor === 'blue'
                                       ? 'bg-blue-500/20 text-blue-400'
-                                      : 'bg-zinc-700 text-gray-400'
+                                      : 'bg-muted text-muted-foreground'
                                   }`}>
                                   <Phone size={18} />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <div className="font-medium text-white">
+                                  <div className="font-medium text-foreground">
                                     {phone.display_phone_number}
                                   </div>
-                                  <div className="text-sm text-gray-400 truncate">
+                                  <div className="text-sm text-muted-foreground truncate">
                                     {phone.verified_name || 'Sem nome verificado'}
                                   </div>
                                   {/* Status line - sempre visível */}
@@ -872,7 +872,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                       ? 'text-amber-400/80'
                                       : cardColor === 'blue'
                                         ? 'text-blue-400/80'
-                                        : 'text-gray-500'
+                                        : 'text-muted-foreground'
                                     }`}>
                                     {webhookStatus.status === 'smartzap' ? (
                                       <>
@@ -914,7 +914,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                       ? 'bg-amber-500/20 text-amber-400'
                                       : cardColor === 'blue'
                                         ? 'bg-blue-500/20 text-blue-400'
-                                        : 'bg-zinc-700 text-gray-300'
+                                        : 'bg-muted text-muted-foreground'
                                     }`}
                                   title="Clique para ver o funil completo"
                                 >
@@ -946,7 +946,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                       <button
                                         onClick={() => handleRemoveOverride(phone.id)}
                                         disabled={isSavingOverride}
-                                        className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                        className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                         title="Remover override (voltar para padrão)"
                                       >
                                         <Trash2 size={14} />
@@ -961,8 +961,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           {/* Funnel Visualization - Expandable */}
                           {isFunnelExpanded && !isEditingThis && (
                             <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-200">
-                              <div className="bg-zinc-900/50 rounded-xl p-4 border border-white/5">
-                                <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
+                              <div className="bg-muted/20 rounded-xl p-4 border border-border/40">
+                                <div className="text-xs text-muted-foreground mb-3 flex items-center gap-2">
                                   <ArrowDown size={12} />
                                   Fluxo de eventos (primeiro que existir, captura)
                                 </div>
@@ -983,9 +983,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                         arrow: 'text-blue-500/30'
                                       },
                                       zinc: {
-                                        active: 'bg-zinc-700 border-zinc-600 text-gray-300',
-                                        inactive: 'bg-zinc-800/50 border-white/5 text-gray-500',
-                                        arrow: 'text-zinc-600'
+                                        active: 'bg-muted border-border text-foreground',
+                                        inactive: 'bg-muted/30 border-border/40 text-muted-foreground',
+                                        arrow: 'text-muted-foreground/50'
                                       }
                                     };
                                     const colors = colorClasses[level.color as keyof typeof colorClasses];
@@ -995,7 +995,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                         {/* Level Box */}
                                         <div
                                           className={`relative rounded-lg border p-3 transition-all ${level.isActive ? colors.active : colors.inactive
-                                            } ${level.isActive ? `ring-2 ring-offset-2 ring-offset-zinc-900 ${level.color === 'emerald' ? 'ring-blue-500/30' : level.color === 'blue' ? 'ring-blue-500/30' : 'ring-zinc-500/30'}` : ''}`}
+                                            } ${level.isActive ? `ring-2 ring-offset-2 ring-offset-background ${level.color === 'emerald' ? 'ring-blue-500/30' : level.color === 'blue' ? 'ring-blue-500/30' : 'ring-zinc-500/30'}` : ''}`}
                                         >
                                           <div className="flex items-center justify-between gap-3">
                                             <div className="flex items-center gap-2">
@@ -1025,7 +1025,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                                   )}
                                                   {/* Lock icon for fixed levels (APP) */}
                                                   {'isLocked' in level && level.isLocked && (
-                                                    <span className="flex items-center gap-1 px-1.5 py-0.5 bg-zinc-700/50 text-gray-400 text-[10px] font-medium rounded" title="Configurado no Meta Dashboard">
+                                                    <span className="flex items-center gap-1 px-1.5 py-0.5 bg-muted text-muted-foreground text-[10px] font-medium rounded" title="Configurado no Meta Dashboard">
                                                       <Lock size={10} />
                                                       FIXO
                                                     </span>
@@ -1045,7 +1045,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                                             {/* Active indicator */}
                                             {level.isActive && (
-                                              <div className="flex items-center gap-1 text-[10px] font-medium bg-white/10 px-2 py-1 rounded-full">
+                                              <div className="flex items-center gap-1 text-[10px] font-medium bg-muted/50 px-2 py-1 rounded-full">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                                                 ATIVO
                                               </div>
@@ -1065,7 +1065,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                 </div>
 
                                 {/* Legend */}
-                                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-gray-500">
+                                <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground">
                                   <span>A Meta verifica de cima para baixo</span>
                                   <span className="flex items-center gap-1">
                                     <CheckCircle2 size={10} />
@@ -1079,9 +1079,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           {/* Edit form */}
                           {isEditingThis && (
                             <div className="px-4 pb-4">
-                              <div className="pt-4 border-t border-white/5 space-y-3">
+                              <div className="pt-4 border-t border-border/40 space-y-3">
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                                     URL do Webhook (deve ser HTTPS)
                                   </label>
                                   <input
@@ -1089,7 +1089,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                     value={overrideUrl}
                                     onChange={(e) => setOverrideUrl(e.target.value)}
                                     placeholder="https://seu-sistema.com/webhook"
-                                    className="w-full px-3 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-sm font-mono text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none"
+                                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-mono text-foreground focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none"
                                   />
                                 </div>
                                 <div className="flex justify-end gap-2">
@@ -1098,7 +1098,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                       setEditingPhoneId(null);
                                       setOverrideUrl('');
                                     }}
-                                    className="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+                                    className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                                   >
                                     Cancelar
                                   </button>
@@ -1130,22 +1130,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="mt-6">
               <button
                 onClick={() => setShowWebhookExplanation(!showWebhookExplanation)}
-                className="w-full flex items-center justify-between p-4 bg-zinc-800/50 hover:bg-zinc-800 border border-white/10 rounded-xl transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 border border-border rounded-xl transition-colors"
               >
-                <span className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                  <HelpCircle size={16} className="text-gray-400" />
+                <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <HelpCircle size={16} className="text-muted-foreground" />
                   Entenda os 3 níveis de webhook
                 </span>
                 {showWebhookExplanation ? (
-                  <ChevronUp size={16} className="text-gray-400" />
+                  <ChevronUp size={16} className="text-muted-foreground" />
                 ) : (
-                  <ChevronDown size={16} className="text-gray-400" />
+                  <ChevronDown size={16} className="text-muted-foreground" />
                 )}
               </button>
 
               {showWebhookExplanation && (
-                <div className="mt-3 p-4 bg-zinc-900/50 border border-white/5 rounded-xl space-y-4 animate-in slide-in-from-top-2 duration-200">
-                  <p className="text-sm text-gray-400">
+                <div className="mt-3 p-4 bg-muted/20 border border-border/40 rounded-xl space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <p className="text-sm text-muted-foreground">
                     A Meta verifica os webhooks nesta ordem. O primeiro que existir, ganha:
                   </p>
 
@@ -1159,7 +1159,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <p className="text-xs text-blue-200/60 mt-0.5">
                           Webhook específico deste número. Ignora os níveis abaixo.
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           → Use quando: sistemas diferentes por número (IA, CRM, etc)
                         </p>
                       </div>
@@ -1174,22 +1174,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <p className="text-xs text-blue-200/60 mt-0.5">
                           Webhook para TODOS os números da sua conta comercial.
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           → Use quando: 1 sistema para toda a empresa
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex gap-3 p-3 bg-zinc-700/30 border border-white/10 rounded-lg">
-                      <div className="w-8 h-8 bg-zinc-700 rounded-lg flex items-center justify-center text-gray-300 font-bold text-sm flex-shrink-0">
+                    <div className="flex gap-3 p-3 bg-muted/30 border border-border rounded-lg">
+                      <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center text-foreground font-bold text-sm flex-shrink-0">
                         #3
                       </div>
                       <div>
-                        <div className="font-medium text-gray-300">APP (Padrão)</div>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <div className="font-medium text-foreground">APP (Padrão)</div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           Webhook configurado no Meta Developer Dashboard.
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           → Fallback: usado se não tiver #1 nem #2
                         </p>
                       </div>
@@ -1207,7 +1207,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
             Gerenciar Usuarios
           </h3>
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm text-muted-foreground mb-6">
             Adicione e gerencie os usuarios da sua organizacao. Managers podem criar e remover usuarios.
           </p>
           <UserManagement />
@@ -1228,7 +1228,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="w-1 h-6 bg-pink-500 rounded-full"></span>
             Identidade Visual (Branding)
           </h3>
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm text-muted-foreground mb-6">
             Personalize o nome, logo e cor principal da aplicacao para cada organizacao.
           </p>
           <BrandingSettings />
@@ -1242,7 +1242,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="w-1 h-6 bg-orange-500 rounded-full"></span>
             Organizacoes (Clientes)
           </h3>
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm text-muted-foreground mb-6">
             Crie e gerencie organizacoes isoladas. Cada cliente tera seus proprios dados.
           </p>
           <OrganizationManagement />
