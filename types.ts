@@ -108,6 +108,7 @@ export interface Message {
   deliveredAt?: string;    // Quando foi entregue
   readAt?: string;         // Quando foi lido
   error?: string;
+  failureReason?: string;   // Motivo da falha do webhook (ex: número sem WhatsApp)
 }
 
 export interface AppSettings {

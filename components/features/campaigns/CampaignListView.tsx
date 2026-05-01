@@ -165,17 +165,27 @@ export const CampaignListView: React.FC<CampaignListViewProps> = ({
                       {(campaign.recipients ?? 0).toLocaleString('pt-BR')}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex-1 max-w-[80px] bg-zinc-800 rounded-full h-1">
-                          <div
-                            className="bg-primary-500 h-1 rounded-full"
-                            style={{ width: `${(campaign.recipients ?? 0) > 0 ? ((campaign.delivered ?? 0) / (campaign.recipients ?? 1)) * 100 : 0}%` }}
-                          />
-                        </div>
-                        <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
-                          {(campaign.recipients ?? 0) > 0 ? Math.round(((campaign.delivered ?? 0) / (campaign.recipients ?? 1)) * 100) : 0}%
-                        </span>
-                      </div>
+                      {(() => {
+                        const recipients = campaign.recipients ?? 0;
+                        const delivered = campaign.delivered ?? 0;
+                        const sent = campaign.sent ?? 0;
+                        // Usa sent como fallback quando delivered ainda não foi atualizado por webhook
+                        const progressValue = delivered > 0 ? delivered : sent;
+                        const pct = recipients > 0 ? Math.round((progressValue / recipients) * 100) : 0;
+                        return (
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex-1 max-w-[80px] bg-zinc-800 rounded-full h-1">
+                              <div
+                                className="bg-primary-500 h-1 rounded-full"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
+                              {pct}%
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-5 py-3.5 text-muted-foreground font-mono text-xs tabular-nums">
                       {new Date(campaign.createdAt).toLocaleDateString('pt-BR')}
