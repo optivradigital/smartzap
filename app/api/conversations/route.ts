@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { botConversationDb, botDb } from '@/lib/supabase-db'
+import { getRequestOrgId } from '@/lib/org-context'
 
 /**
  * GET /api/conversations
@@ -26,8 +27,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    // Buscar conversas
-    const conversations = await botConversationDb.getAll()
+    const orgId = await getRequestOrgId()
+
+    // Buscar conversas filtradas pela org ativa
+    const conversations = await botConversationDb.getAll({
+      organizationId: orgId || undefined,
+    })
 
     // Aplicar filtros
     let filtered = conversations

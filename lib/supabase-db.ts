@@ -1088,6 +1088,7 @@ export const botConversationDb = {
         status?: ConversationStatus
         operatorId?: string
         limit?: number
+        organizationId?: string
     }): Promise<BotConversation[]> => {
         let query = supabase
             .from('bot_conversations')
@@ -1101,6 +1102,7 @@ export const botConversationDb = {
         if (options?.botId) query = query.eq('bot_id', options.botId)
         if (options?.status) query = query.eq('status', options.status)
         if (options?.operatorId) query = query.eq('assigned_operator_id', options.operatorId)
+        if (options?.organizationId && options.organizationId !== '*') query = query.eq('organization_id', options.organizationId)
 
         const { data, error } = await query
 
@@ -1186,6 +1188,7 @@ export const botConversationDb = {
         botId: string
         contactPhone: string
         contactName?: string
+        organizationId?: string
     }): Promise<BotConversation> => {
         const id = generateId()
         const now = new Date().toISOString()
@@ -1197,6 +1200,7 @@ export const botConversationDb = {
                 bot_id: data.botId,
                 contact_phone: data.contactPhone,
                 contact_name: data.contactName,
+                organization_id: data.organizationId || null,
                 status: 'active',
                 csw_started_at: now,
                 last_message_at: now,

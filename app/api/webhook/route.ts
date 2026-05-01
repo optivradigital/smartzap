@@ -145,6 +145,7 @@ async function handleIncomingMessage(
         botId: AI_BOT_ID,
         contactPhone: phone,
         contactName: undefined,
+        organizationId: orgId || undefined,
       })
       console.log('[Agent] New conversation:', conversation.id, 'for', phone)
     }
