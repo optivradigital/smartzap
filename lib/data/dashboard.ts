@@ -6,8 +6,16 @@ import { getRequestOrgId, SUPER_ADMIN_ORG } from '@/lib/org-context'
 export async function getDashboardStatsServer(): Promise<{ stats: DashboardStats, recentCampaigns: any[] }> {
     const orgId = await getRequestOrgId()
 
+    // Guard: if not authenticated, return empty stats instead of showing all orgs data
+    if (!orgId) {
+        return {
+            stats: { sent24h: '0', deliveryRate: '0%', activeCampaigns: '0', failedMessages: '0', chartData: [] },
+            recentCampaigns: []
+        }
+    }
+
     let statsQuery = supabase.from('campaigns').select('sent, delivered, read, failed, status')
-    if (orgId && orgId !== SUPER_ADMIN_ORG) {
+    if (orgId !== SUPER_ADMIN_ORG) {
         statsQuery = statsQuery.eq('organization_id', orgId)
     }
 
