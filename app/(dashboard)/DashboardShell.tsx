@@ -707,7 +707,7 @@ export function DashboardShell({
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background">
                 {/* Header */}
-                <header className="h-14 flex items-center justify-between px-5 lg:px-8 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur-md">
+                <header className="relative z-10 h-14 flex items-center justify-between px-5 lg:px-8 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur-md">
                     <div className="flex items-center">
                         <button
                             className="lg:hidden p-1.5 text-zinc-500 mr-3 hover:text-white transition-colors"
