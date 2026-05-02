@@ -149,7 +149,7 @@ async function registerInGptMaker(
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          contextId: phone,
+          context_id: phone,
           phone,
           prompt: templateText,
           role: "assistant",
