@@ -224,6 +224,29 @@ export class EvolutionProvider implements IWhatsAppProvider {
     }
   }
 
+  /** Configure Evolution webhook to send events to the app */
+  async configureWebhook(appUrl: string): Promise<void> {
+    const webhookUrl = `${appUrl.replace(/\/$/, '')}/api/webhook`
+    try {
+      await fetch(
+        `${this.baseUrl}/webhook/set/${this.instance}`,
+        {
+          method: 'POST',
+          headers: this.headers,
+          body: JSON.stringify({
+            url: webhookUrl,
+            webhook_by_events: true,
+            webhook_base64: false,
+            events: ['MESSAGES_UPDATE', 'MESSAGES_UPSERT', 'CONNECTION_UPDATE'],
+          }),
+        }
+      )
+      console.log(`[Evolution] Webhook configured → ${webhookUrl}`)
+    } catch (e) {
+      console.warn('[Evolution] configureWebhook failed (non-fatal):', e)
+    }
+  }
+
   async disconnect(): Promise<void> {
     await fetch(
       `${this.baseUrl}/instance/logout/${this.instance}`,
