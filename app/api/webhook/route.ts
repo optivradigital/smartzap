@@ -291,6 +291,7 @@ export async function POST(request: NextRequest) {
     const rawData = body.data
     const updates: Array<{ key: { id: string; fromMe: boolean }; update: { status: string } }> =
       Array.isArray(rawData) ? rawData : (rawData ? [rawData] : [])
+    console.log(`[webhook/ack] messages.update: ${updates.length} update(s)`)
     for (const u of updates) {
       if (!u.key?.fromMe || !u.key?.id) continue
       const ack = u.update?.status
@@ -300,6 +301,8 @@ export async function POST(request: NextRequest) {
       else if (ack === 'DELIVERY_ACK') msgStatus = 'delivered'
       else if (ack === 'READ') msgStatus = 'read'
       if (!msgStatus) continue
+
+      console.log(`[webhook/ack] ${ack} → ${msgStatus} msgId=${u.key.id}`)
 
       // Update bot_messages (AI agent conversations)
       botMessageDb.updateStatus(u.key.id, msgStatus as 'sent' | 'delivered' | 'read')
@@ -313,6 +316,8 @@ export async function POST(request: NextRequest) {
             .select('id, campaign_id, status')
             .eq('message_id', u.key.id)
             .single()
+
+          console.log(`[webhook/ack] campaign_contacts lookup msgId=${u.key.id}: ${contact ? `found id=${contact.id} status=${contact.status}` : 'NOT FOUND'}`)
 
           if (contact) {
             const statusOrder: Record<string, number> = { pending: 0, sent: 1, delivered: 2, read: 3, failed: 4 }
@@ -332,6 +337,7 @@ export async function POST(request: NextRequest) {
                 .select('id')
 
               if (updated?.length) {
+                console.log(`[webhook/ack] updated campaign_contact ${contact.id} → ${msgStatus}`)
                 const col = msgStatus === 'delivered' ? 'delivered' : 'read'
                 const { data: campaign } = await supabase
                   .from('campaigns')
@@ -346,7 +352,9 @@ export async function POST(request: NextRequest) {
               }
             }
           }
-        } catch { /* non-fatal */ }
+        } catch (e) {
+          console.error('[webhook/ack] error updating campaign_contacts:', e)
+        }
       }
     }
     return NextResponse.json({ status: 'ok' })
