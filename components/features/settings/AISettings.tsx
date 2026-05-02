@@ -158,7 +158,7 @@ export const AISettings: React.FC<AISettingsProps> = ({
                 <div className="animate-spin text-primary-500 mr-2">
                     <RefreshCw size={24} />
                 </div>
-                <span className="text-gray-400">Carregando configurações de IA...</span>
+                <span className="text-muted-foreground">Carregando configurações de IA...</span>
             </div>
         );
     }
@@ -170,19 +170,19 @@ export const AISettings: React.FC<AISettingsProps> = ({
     const tokenPreview = currentProviderStatus?.tokenPreview ?? null;
 
     return (
-        <div className="glass-panel rounded-2xl p-8 border border-white/5 relative overflow-hidden">
+        <div className="glass-panel rounded-2xl p-8 border border-border relative overflow-hidden">
             {/* Background decoration */}
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                        <div className={`p-3 rounded-xl ${isConfigured ? 'bg-purple-500/20 text-purple-400' : 'bg-zinc-800 text-gray-400'}`}>
+                        <div className={`p-3 rounded-xl ${isConfigured ? 'bg-purple-500/20 text-purple-400' : 'bg-muted text-muted-foreground'}`}>
                             <Bot size={24} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-white">Inteligência Artificial</h3>
-                            <p className="text-sm text-gray-400">Geração de templates e respostas inteligentes</p>
+                            <h3 className="text-lg font-semibold text-foreground">Inteligência Artificial</h3>
+                            <p className="text-sm text-muted-foreground">Geração de templates e respostas inteligentes</p>
                         </div>
                     </div>
 
@@ -198,14 +198,14 @@ export const AISettings: React.FC<AISettingsProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     {/* Provider Selection */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                             Provider de IA
                         </label>
                         <div className="relative">
                             <select
                                 value={selectedProvider}
                                 onChange={(e) => setSelectedProvider(e.target.value as AIProvider)}
-                                className="w-full px-4 py-3 bg-zinc-900/80 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none text-white appearance-none cursor-pointer transition-all"
+                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none text-foreground appearance-none cursor-pointer transition-all"
                             >
                                 {AI_PROVIDERS.map((provider) => (
                                     <option key={provider.id} value={provider.id}>
@@ -213,20 +213,20 @@ export const AISettings: React.FC<AISettingsProps> = ({
                                     </option>
                                 ))}
                             </select>
-                            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                         </div>
                     </div>
 
                     {/* Model Selection */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">
                             Modelo
                         </label>
                         <div className="relative">
                             <select
                                 value={selectedModel}
                                 onChange={(e) => setSelectedModel(e.target.value)}
-                                className="w-full px-4 py-3 bg-zinc-900/80 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none text-white appearance-none cursor-pointer transition-all"
+                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none text-foreground appearance-none cursor-pointer transition-all"
                             >
                                 {availableModels.map((model) => (
                                     <option key={model.id} value={model.id}>
@@ -234,11 +234,11 @@ export const AISettings: React.FC<AISettingsProps> = ({
                                     </option>
                                 ))}
                             </select>
-                            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                         </div>
                         {/* Model Description */}
                         {availableModels.find(m => m.id === selectedModel) && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                                 {availableModels.find(m => m.id === selectedModel)?.description}
                             </p>
                         )}
@@ -247,17 +247,17 @@ export const AISettings: React.FC<AISettingsProps> = ({
 
                 {/* API Key Section */}
                 {!isEditing && isConfigured ? (
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-5 mb-4">
+                    <div className="bg-muted/20 border border-border rounded-xl p-5 mb-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-400 mb-1">Status da Configuração</p>
+                                <p className="text-sm text-muted-foreground mb-1">Status da Configuração</p>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-white font-mono text-sm">
+                                    <span className="text-foreground font-mono text-sm">
                                         {source === 'env' ? 'Configurado via Variável de Ambiente' : 'Configurado via Banco de Dados'}
                                     </span>
                                 </div>
                                 {tokenPreview && (
-                                    <p className="text-xs text-zinc-500 mt-2 font-mono">
+                                    <p className="text-xs text-muted-foreground mt-2 font-mono">
                                         Chave: {tokenPreview}
                                     </p>
                                 )}
@@ -265,7 +265,7 @@ export const AISettings: React.FC<AISettingsProps> = ({
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setIsEditing(true)}
-                                    className="px-4 py-2 text-sm text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/5"
+                                    className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted/60 rounded-lg transition-colors border border-border"
                                 >
                                     Alterar Chave
                                 </button>
@@ -298,11 +298,11 @@ export const AISettings: React.FC<AISettingsProps> = ({
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-muted-foreground mb-2">
                                 {currentProviderConfig?.name || 'API'} Key
                             </label>
                             <div className="relative">
-                                <div className="absolute left-4 top-3 text-gray-500">
+                                <div className="absolute left-4 top-3 text-muted-foreground/50">
                                     <Key size={18} />
                                 </div>
                                 <input
@@ -310,7 +310,7 @@ export const AISettings: React.FC<AISettingsProps> = ({
                                     value={apiKey}
                                     onChange={(e) => setApiKey(e.target.value)}
                                     placeholder={getApiKeyPlaceholder(selectedProvider)}
-                                    className="w-full pl-12 pr-4 py-3 bg-zinc-900/80 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none font-mono text-sm text-white transition-all placeholder:text-zinc-600"
+                                    className="w-full pl-12 pr-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none font-mono text-sm text-foreground transition-all placeholder:text-muted-foreground/50"
                                 />
                             </div>
                         </div>
@@ -338,7 +338,7 @@ export const AISettings: React.FC<AISettingsProps> = ({
                                 setIsEditing(false);
                                 setApiKey('');
                             }}
-                            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
                             Cancelar
                         </button>
@@ -349,7 +349,7 @@ export const AISettings: React.FC<AISettingsProps> = ({
                         <button
                             onClick={handleSave}
                             disabled={isSaving || (isEditing && !apiKey.trim() && !hasChanges)}
-                            className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-white/5"
+                            className="px-6 py-2 bg-foreground text-background font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {isSaving ? (
                                 <>

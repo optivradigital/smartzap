@@ -75,7 +75,7 @@ export async function GET(request: Request, { params }: Params) {
     // 2. Get paginated messages
     let query = supabase
       .from('campaign_contacts')
-      .select('id, phone, name, status, message_id, sent_at, delivered_at, read_at, error')
+      .select('id, phone, name, status, message_id, sent_at, delivered_at, read_at, error, failure_reason')
       .eq('campaign_id', id)
 
     if (statusFilter) {
@@ -110,6 +110,7 @@ export async function GET(request: Request, { params }: Params) {
         deliveredAt: row.delivered_at ? new Date(row.delivered_at as string).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : undefined,
         readAt: row.read_at ? new Date(row.read_at as string).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : undefined,
         error: row.error as string | undefined,
+        failureReason: row.failure_reason as string | undefined,
       }
     })
 

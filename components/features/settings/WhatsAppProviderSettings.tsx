@@ -148,7 +148,7 @@ export function WhatsAppProviderSettings() {
 
       {/* Provider selector */}
       <div>
-        <label className="block text-sm font-semibold text-white mb-3">
+        <label className="block text-sm font-semibold text-foreground mb-3">
           Tipo de Conexão WhatsApp
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -159,15 +159,15 @@ export function WhatsAppProviderSettings() {
             className={`relative flex flex-col gap-2 p-4 rounded-xl border-2 text-left transition-all ${
               config.type === 'meta'
                 ? 'border-blue-500 bg-blue-500/10'
-                : 'border-white/10 bg-white/5 hover:border-white/20'
+                : 'border-border bg-muted/20 hover:border-border/60'
             }`}
           >
             <div className="flex items-center gap-2">
-              <Shield size={18} className={config.type === 'meta' ? 'text-blue-400' : 'text-gray-400'} />
-              <span className="font-semibold text-sm text-white">Meta Cloud API</span>
+              <Shield size={18} className={config.type === 'meta' ? 'text-blue-400' : 'text-muted-foreground'} />
+              <span className="font-semibold text-sm text-foreground">Meta Cloud API</span>
               <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Oficial</span>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               API oficial do WhatsApp Business. Mensagens cobradas. Templates precisam de aprovação do Meta.
             </p>
           </button>
@@ -178,15 +178,15 @@ export function WhatsAppProviderSettings() {
             className={`relative flex flex-col gap-2 p-4 rounded-xl border-2 text-left transition-all ${
               config.type === 'evolution'
                 ? 'border-green-500 bg-green-500/10'
-                : 'border-white/10 bg-white/5 hover:border-white/20'
+                : 'border-border bg-muted/20 hover:border-border/60'
             }`}
           >
             <div className="flex items-center gap-2">
-              <Zap size={18} className={config.type === 'evolution' ? 'text-green-400' : 'text-gray-400'} />
-              <span className="font-semibold text-sm text-white">WhatsApp Business App</span>
+              <Zap size={18} className={config.type === 'evolution' ? 'text-green-400' : 'text-muted-foreground'} />
+              <span className="font-semibold text-sm text-foreground">WhatsApp Business App</span>
               <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Gratuito</span>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               Conecta via QR code. Sem custo por mensagem. Textos livres sem aprovação prévia.
             </p>
           </button>
@@ -196,32 +196,32 @@ export function WhatsAppProviderSettings() {
 
       {/* Meta settings */}
       {config.type === 'meta' && (
-        <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/10">
-          <h4 className="text-sm font-semibold text-white">Credenciais Meta</h4>
+        <div className="space-y-4 p-4 rounded-xl bg-muted/10 border border-border">
+          <h4 className="text-sm font-semibold text-foreground">Credenciais Meta</h4>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Phone Number ID</label>
+              <label className="block text-xs text-muted-foreground mb-1">Phone Number ID</label>
               <input
                 type="text"
                 value={config.phoneNumberId || ''}
                 onChange={e => setConfig(c => ({ ...c, phoneNumberId: e.target.value }))}
                 placeholder="Ex: 123456789012345"
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">WhatsApp Business Account ID (WABA)</label>
+              <label className="block text-xs text-muted-foreground mb-1">WhatsApp Business Account ID (WABA)</label>
               <input
                 type="text"
                 value={config.businessAccountId || ''}
                 onChange={e => setConfig(c => ({ ...c, businessAccountId: e.target.value }))}
                 placeholder="Ex: 100093114169276"
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Encontre em: Meta Business Manager → Contas → WhatsApp</p>
+              <p className="text-xs text-muted-foreground mt-1">Encontre em: Meta Business Manager → Contas → WhatsApp</p>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+              <label className="block text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
                 Access Token
                 {config.tokenSaved && (
                   <span className="flex items-center gap-1 text-green-400 text-xs font-normal">
@@ -234,15 +234,15 @@ export function WhatsAppProviderSettings() {
                 value={config.accessToken || ''}
                 onChange={e => setConfig(c => ({ ...c, accessToken: e.target.value }))}
                 placeholder={config.tokenSaved ? `Token atual: ${config.tokenPreview} (cole um novo para substituir)` : 'EAAxxxxxx...'}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
           {/* Meta Connection Status */}
-          <div className="pt-3 border-t border-white/10">
+          <div className="pt-3 border-t border-border">
             {loading ? (
-              <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 size={13} className="animate-spin" />
                 Verificando conexão...
               </div>
@@ -250,11 +250,11 @@ export function WhatsAppProviderSettings() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <span className="text-xs text-green-400 font-medium">Conectado</span>
-                {status.name && <span className="text-xs text-gray-400">· {status.name}</span>}
-                {status.phone && <span className="text-xs text-gray-400">· {status.phone}</span>}
+                {status.name && <span className="text-xs text-muted-foreground">· {status.name}</span>}
+                {status.phone && <span className="text-xs text-muted-foreground">· {status.phone}</span>}
                 <button
                   onClick={() => fetchStatus()}
-                  className="ml-auto text-gray-500 hover:text-white transition-colors"
+                  className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
                   title="Atualizar status"
                 >
                   <RefreshCw size={11} />
@@ -268,7 +268,7 @@ export function WhatsAppProviderSettings() {
                 </span>
                 <button
                   onClick={() => fetchStatus()}
-                  className="ml-auto text-gray-500 hover:text-white transition-colors"
+                  className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
                   title="Tentar novamente"
                 >
                   <RefreshCw size={11} />
@@ -282,20 +282,20 @@ export function WhatsAppProviderSettings() {
       {/* Evolution settings */}
       {config.type === 'evolution' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-            <h4 className="text-sm font-semibold text-white">Configuração Evolution API</h4>
+          <div className="p-4 rounded-xl bg-muted/10 border border-border space-y-3">
+            <h4 className="text-sm font-semibold text-foreground">Configuração Evolution API</h4>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">URL do Evolution API</label>
+              <label className="block text-xs text-muted-foreground mb-1">URL do Evolution API</label>
               <input
                 type="text"
                 value={config.evolutionUrl || ''}
                 onChange={e => setConfig(c => ({ ...c, evolutionUrl: e.target.value }))}
                 placeholder="https://evolution.seudominio.com"
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-green-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+              <label className="block text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
                 API Key
                 {config.evolutionKeySaved && (
                   <span className="flex items-center gap-1 text-green-400 text-xs font-normal">
@@ -308,30 +308,30 @@ export function WhatsAppProviderSettings() {
                 value={config.evolutionApiKey || ''}
                 onChange={e => setConfig(c => ({ ...c, evolutionApiKey: e.target.value }))}
                 placeholder={config.evolutionKeySaved ? 'Chave atual salva (cole nova para substituir)' : 'Chave de autenticação do Evolution'}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-green-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Nome da Instância</label>
+              <label className="block text-xs text-muted-foreground mb-1">Nome da Instância</label>
               <input
                 type="text"
                 value={config.evolutionInstance || ''}
                 onChange={e => setConfig(c => ({ ...c, evolutionInstance: e.target.value }))}
                 placeholder="SmartZap"
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-green-500"
               />
             </div>
           </div>
 
           {/* Status / QR Code */}
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div className="p-4 rounded-xl bg-muted/10 border border-border">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-white">Status da Conexão</h4>
+              <h4 className="text-sm font-semibold text-foreground">Status da Conexão</h4>
               <button
                 type="button"
                 onClick={handleRefreshQR}
                 disabled={refreshingQR}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 <RefreshCw size={13} className={refreshingQR ? 'animate-spin' : ''} />
                 Atualizar
@@ -339,7 +339,7 @@ export function WhatsAppProviderSettings() {
             </div>
 
             {loading ? (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 size={16} className="animate-spin" />
                 Verificando conexão...
               </div>
@@ -352,7 +352,7 @@ export function WhatsAppProviderSettings() {
                   <div>
                     <p className="text-sm font-semibold text-green-400">Conectado</p>
                     {status.phone && (
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         {status.name ? `${status.name} · ` : ''}{status.phone}
                       </p>
                     )}
@@ -383,7 +383,7 @@ export function WhatsAppProviderSettings() {
                     className="w-48 h-48"
                   />
                 </div>
-                <p className="text-xs text-center text-gray-500">
+                <p className="text-xs text-center text-muted-foreground">
                   O QR code atualiza automaticamente a cada 5 segundos
                 </p>
               </div>
@@ -395,7 +395,7 @@ export function WhatsAppProviderSettings() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-red-400">Desconectado</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       {status?.error || 'Clique em "Gerar QR Code" para conectar'}
                     </p>
                   </div>
@@ -418,27 +418,27 @@ export function WhatsAppProviderSettings() {
       )}
 
       {/* GPT Maker Integration */}
-      <div className="space-y-3 p-4 rounded-xl bg-white/5 border border-white/10">
+      <div className="space-y-3 p-4 rounded-xl bg-muted/10 border border-border">
         <div className="flex items-center gap-2 mb-1">
           <Zap size={15} className="text-amber-400" />
-          <h4 className="text-sm font-semibold text-white">Integração GPT Maker</h4>
-          <span className="text-xs text-gray-500 bg-zinc-800 px-2 py-0.5 rounded-full">opcional</span>
+          <h4 className="text-sm font-semibold text-foreground">Integração GPT Maker</h4>
+          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">opcional</span>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Após cada disparo de campanha, registra a mensagem no agente para que ele reconheça a conversa quando o cliente responder.
         </p>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Agent ID</label>
+          <label className="block text-xs text-muted-foreground mb-1">Agent ID</label>
           <input
             type="text"
             value={config.gptmakerAgentId || ''}
             onChange={e => setConfig(c => ({ ...c, gptmakerAgentId: e.target.value }))}
             placeholder="Ex: abc123def456"
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500"
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-amber-500"
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+          <label className="block text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
             JWT Token
             {config.gptmakerJwtTokenSaved && (
               <span className="flex items-center gap-1 text-green-400 text-xs font-normal">
@@ -451,7 +451,7 @@ export function WhatsAppProviderSettings() {
             value={config.gptmakerJwtToken || ''}
             onChange={e => setConfig(c => ({ ...c, gptmakerJwtToken: e.target.value }))}
             placeholder={config.gptmakerJwtTokenSaved ? `Token atual: ${config.gptmakerJwtTokenPreview} (cole novo para substituir)` : 'eyJhbGci...'}
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-amber-500"
           />
         </div>
         <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -461,45 +461,45 @@ export function WhatsAppProviderSettings() {
             onChange={e => setConfig(c => ({ ...c, gptmakerDirectChannel: e.target.checked }))}
             className="w-4 h-4 rounded accent-amber-400"
           />
-          <span className="text-xs text-gray-300">
+          <span className="text-xs text-muted-foreground">
             GPT Maker tem canal WhatsApp direto — SmartZap só registra contexto de campanhas, não responde às mensagens
           </span>
         </label>
       </div>
 
       {/* Chatwoot Integration */}
-      <div className="space-y-3 p-4 rounded-xl bg-white/5 border border-white/10">
+      <div className="space-y-3 p-4 rounded-xl bg-muted/10 border border-border">
         <div className="flex items-center gap-2 mb-1">
           <MessageSquare size={15} className="text-indigo-400" />
-          <h4 className="text-sm font-semibold text-white">Integração Chatwoot</h4>
-          <span className="text-xs text-gray-500 bg-zinc-800 px-2 py-0.5 rounded-full">opcional</span>
+          <h4 className="text-sm font-semibold text-foreground">Integração Chatwoot</h4>
+          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">opcional</span>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Conecta o SmartZap como Agent Bot do Chatwoot. O GPT Maker responde às mensagens recebidas no Chatwoot.
         </p>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">URL do Chatwoot</label>
+          <label className="block text-xs text-muted-foreground mb-1">URL do Chatwoot</label>
           <input
             type="text"
             value={config.chatwootUrl || ''}
             onChange={e => setConfig(c => ({ ...c, chatwootUrl: e.target.value }))}
             placeholder="https://chatwoot.seudominio.com"
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-indigo-500"
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Account ID</label>
+          <label className="block text-xs text-muted-foreground mb-1">Account ID</label>
           <input
             type="text"
             value={config.chatwootAccountId || ''}
             onChange={e => setConfig(c => ({ ...c, chatwootAccountId: e.target.value }))}
             placeholder="Ex: 1"
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-indigo-500"
           />
-          <p className="text-xs text-gray-500 mt-1">Encontre em: Chatwoot → Settings → General Settings → Account ID</p>
+          <p className="text-xs text-muted-foreground mt-1">Encontre em: Chatwoot → Settings → General Settings → Account ID</p>
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1.5">
+          <label className="block text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
             API Token (User Access Token)
             {config.chatwootApiTokenSaved && (
               <span className="flex items-center gap-1 text-green-400 text-xs font-normal">
@@ -512,27 +512,27 @@ export function WhatsAppProviderSettings() {
             value={config.chatwootApiToken || ''}
             onChange={e => setConfig(c => ({ ...c, chatwootApiToken: e.target.value }))}
             placeholder={config.chatwootApiTokenSaved ? `Token atual: ${config.chatwootApiTokenPreview} (cole novo para substituir)` : 'Token de acesso do usuário administrador'}
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-indigo-500"
           />
-          <p className="text-xs text-gray-500 mt-1">Encontre em: Chatwoot → Profile Settings → Access Token</p>
+          <p className="text-xs text-muted-foreground mt-1">Encontre em: Chatwoot → Profile Settings → Access Token</p>
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Inbox ID (opcional — filtra por caixa)</label>
+          <label className="block text-xs text-muted-foreground mb-1">Inbox ID (opcional — filtra por caixa)</label>
           <input
             type="text"
             value={config.chatwootInboxId || ''}
             onChange={e => setConfig(c => ({ ...c, chatwootInboxId: e.target.value }))}
             placeholder="Ex: 2 (deixe vazio para responder em todas as caixas)"
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-indigo-500"
           />
         </div>
 
         {/* Webhook URL to configure in Chatwoot */}
         {user?.organizationId && (
-          <div className="pt-2 border-t border-white/10">
-            <label className="block text-xs text-gray-400 mb-1">URL do Agent Bot (configure no Chatwoot)</label>
+          <div className="pt-2 border-t border-border">
+            <label className="block text-xs text-muted-foreground mb-1">URL do Agent Bot (configure no Chatwoot)</label>
             <div className="flex items-center gap-2">
-              <code className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-indigo-300 break-all">
+              <code className="flex-1 bg-muted/20 border border-border rounded-lg px-3 py-2 text-xs text-indigo-400 break-all">
                 {typeof window !== 'undefined' ? window.location.origin : ''}/api/chatwoot-bot?orgId={user.organizationId}
               </code>
               <button
@@ -542,13 +542,13 @@ export function WhatsAppProviderSettings() {
                   navigator.clipboard.writeText(url)
                   toast.success('URL copiada!')
                 }}
-                className="shrink-0 p-2 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/20 transition-colors"
+                className="shrink-0 p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-border/60 transition-colors"
                 title="Copiar URL"
               >
                 <Copy size={14} />
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Chatwoot → Settings → Integrations → Agent Bots → Add new Agent Bot → Cole esta URL como Bot URL
             </p>
           </div>

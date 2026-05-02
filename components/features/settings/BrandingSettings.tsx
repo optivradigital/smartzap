@@ -101,31 +101,31 @@ export function BrandingSettings() {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Nome da aplicacao</label>
+        <label className="block text-sm font-medium text-muted-foreground mb-2">Nome da aplicacao</label>
         <input
           type="text"
           value={brandName}
           onChange={e => setBrandName(e.target.value)}
           placeholder="SmartZap"
-          className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-zinc-500"
+          className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-border/60"
         />
-        <p className="text-xs text-gray-500 mt-1">Aparece no topo da sidebar e na aba do navegador</p>
+        <p className="text-xs text-muted-foreground mt-1">Aparece no topo da sidebar e na aba do navegador</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Logo</label>
+        <label className="block text-sm font-medium text-muted-foreground mb-2">Logo</label>
         {currentLogo ? (
-          <div className="flex items-center gap-4 p-4 bg-zinc-800 rounded-xl border border-zinc-700">
+          <div className="flex items-center gap-4 p-4 bg-muted/20 rounded-xl border border-border">
             <img src={currentLogo} alt="Logo" className="h-12 object-contain max-w-[120px]" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-400 truncate">{logoUrl || 'Pre-visualizacao'}</p>
+              <p className="text-xs text-muted-foreground truncate">{logoUrl || 'Pre-visualizacao'}</p>
               {isUploading && <p className="text-xs text-blue-400 mt-1">Enviando...</p>}
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={isUploading}
-                className="p-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-gray-300 transition-colors"
+                className="p-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
                 title="Trocar logo"
               >
                 <Upload size={16} />
@@ -144,7 +144,7 @@ export function BrandingSettings() {
           <button
             onClick={() => fileRef.current?.click()}
             disabled={isUploading}
-            className="w-full flex flex-col items-center gap-3 p-8 bg-zinc-800 border border-dashed border-zinc-600 rounded-xl hover:border-zinc-400 hover:bg-zinc-700/50 transition-colors text-gray-400 hover:text-gray-200"
+            className="w-full flex flex-col items-center gap-3 p-8 bg-muted/20 border border-dashed border-border rounded-xl hover:border-border/60 hover:bg-muted/30 transition-colors text-muted-foreground hover:text-foreground"
           >
             {isUploading ? (
               <>
@@ -155,7 +155,7 @@ export function BrandingSettings() {
               <>
                 <Image size={28} />
                 <span className="text-sm">Clique para carregar logo</span>
-                <span className="text-xs text-gray-600">PNG, JPG, SVG ou WebP - max 2MB</span>
+                <span className="text-xs text-muted-foreground/60">PNG, JPG, SVG ou WebP - max 2MB</span>
               </>
             )}
           </button>
@@ -170,27 +170,27 @@ export function BrandingSettings() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Cor principal</label>
+        <label className="block text-sm font-medium text-muted-foreground mb-2">Cor principal</label>
         <div className="flex items-center gap-3">
           <input
             type="color"
             value={primaryColor}
             onChange={e => setPrimaryColor(e.target.value)}
-            className="w-12 h-12 rounded-xl border border-zinc-700 bg-transparent cursor-pointer"
+            className="w-12 h-12 rounded-xl border border-border bg-transparent cursor-pointer"
           />
           <input
             type="text"
             value={primaryColor}
             onChange={e => setPrimaryColor(e.target.value)}
             placeholder="#16a34a"
-            className="flex-1 bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-zinc-500"
+            className="flex-1 bg-background border border-border text-foreground rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-border/60"
           />
           <div
-            className="w-12 h-12 rounded-xl border border-zinc-700 flex-shrink-0"
+            className="w-12 h-12 rounded-xl border border-border flex-shrink-0"
             style={{ backgroundColor: primaryColor }}
           />
         </div>
-        <p className="text-xs text-gray-500 mt-1">Cor dos botoes e destaques. Padrao: verde (#16a34a)</p>
+        <p className="text-xs text-muted-foreground mt-1">Cor dos botoes e destaques. Padrao: verde (#16a34a)</p>
       </div>
 
       <button

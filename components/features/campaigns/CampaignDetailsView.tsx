@@ -150,7 +150,10 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
 }) => {
   if (isLoading || !campaign) return <div className="p-10 text-center text-gray-500">Carregando...</div>;
 
-  // Falhas: soma failed + invalid (números sem WhatsApp) das stats reais
+  // Usa messageStats (contagem direta em campaign_contacts) quando disponível — mais preciso que campos desnormalizados
+  const sentCount = messageStats ? (messageStats.sent + messageStats.delivered + messageStats.read + messageStats.failed) : (campaign.sent ?? 0);
+  const deliveredCount = messageStats ? messageStats.delivered : (campaign.delivered ?? 0);
+  const readCount = messageStats ? messageStats.read : (campaign.read ?? 0);
   const failedCount = messageStats ? (messageStats.failed + messageStats.invalid) : (campaign.failed ?? 0);
   const failedSubvalue = (() => {
     if (!messageStats) return 'Números inválidos ou bloqueio';
@@ -270,22 +273,22 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <DetailCard
           title="Enviadas"
-          value={(campaign.sent ?? 0).toLocaleString()}
+          value={sentCount.toLocaleString()}
           subvalue={`${campaign.recipients ?? 0} destinatários`}
           icon={Clock}
           color="#a1a1aa"
         />
         <DetailCard
           title="Entregues"
-          value={(campaign.delivered ?? 0).toLocaleString()}
-          subvalue={(campaign.delivered ?? 0) > 0 ? `${(((campaign.delivered ?? 0) / (campaign.recipients ?? 1)) * 100).toFixed(1)}% taxa de entrega` : 'Aguardando webhook'}
+          value={deliveredCount.toLocaleString()}
+          subvalue={deliveredCount > 0 ? `${(((deliveredCount) / (campaign.recipients ?? 1)) * 100).toFixed(1)}% taxa de entrega` : 'Aguardando webhook'}
           icon={CheckCircle2}
           color="#10b981"
         />
         <DetailCard
           title="Lidas"
-          value={(campaign.read ?? 0).toLocaleString()}
-          subvalue={(campaign.read ?? 0) > 0 ? `${(((campaign.read ?? 0) / (campaign.recipients ?? 1)) * 100).toFixed(1)}% taxa de abertura` : 'Aguardando webhook'}
+          value={readCount.toLocaleString()}
+          subvalue={readCount > 0 ? `${(((readCount) / (campaign.recipients ?? 1)) * 100).toFixed(1)}% taxa de abertura` : 'Aguardando webhook'}
           icon={Eye}
           color="#3b82f6"
         />
@@ -349,7 +352,9 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
                     {msg.error ? (
                       <span className="text-red-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> {msg.error}</span>
                     ) : (msg.status === MessageStatus.INVALID || msg.status === MessageStatus.NOT_EXISTS) ? (
-                      <span className="text-orange-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> Sem WhatsApp ativo</span>
+                      <span className="text-orange-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> {msg.failureReason || 'Sem WhatsApp ativo'}</span>
+                    ) : msg.failureReason ? (
+                      <span className="text-red-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> {msg.failureReason}</span>
                     ) : (
                       <span className="text-gray-600 text-xs">-</span>
                     )}
