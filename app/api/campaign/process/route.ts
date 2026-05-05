@@ -442,12 +442,14 @@ export async function POST(request: NextRequest) {
         // Salva no histórico de conversas + registra no GPT Maker
         ;(async () => {
           try {
-            let conv = await botConversationDb.getByContact(DEMI_BOT_ID, contact.phone);
+            const botId = orgConfig?.gptmakerAgentId || DEMI_BOT_ID;
+            let conv = await botConversationDb.getByContact(botId, contact.phone, payload.orgId || undefined);
             if (!conv) {
               conv = await botConversationDb.create({
-                botId: DEMI_BOT_ID,
+                botId,
                 contactPhone: contact.phone,
                 contactName: contact.name || undefined,
+                organizationId: payload.orgId || undefined,
               });
             }
             await botMessageDb.create({

@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server'
 import { createWhatsAppProvider } from '@/lib/whatsapp-provider/factory'
 import { requireManager } from '@/lib/role-guard'
 import { getCurrentUser } from '@/lib/clerk-auth'
+import { EvolutionProvider } from '@/lib/whatsapp-provider/evolution'
 
 export async function GET() {
   const { error: authError } = await requireManager()
@@ -29,6 +30,15 @@ export async function GET() {
 
     const provider = await createWhatsAppProvider(orgId)
     const status = await provider.getConnectionStatus()
+
+    // Auto-configure Evolution webhook when connected so delivery ACKs arrive
+    if (status.connected && provider instanceof EvolutionProvider) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL
+      if (appUrl) {
+        provider.configureWebhook(appUrl).catch(() => {})
+      }
+    }
+
     return NextResponse.json({ provider: provider.type, ...status })
   } catch (err) {
     return NextResponse.json({

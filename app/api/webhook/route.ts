@@ -139,7 +139,7 @@ async function handleIncomingMessage(
 
   try {
     // 1. Get or create conversation
-    let conversation = await botConversationDb.getByContact(AI_BOT_ID, phone)
+    let conversation = await botConversationDb.getByContact(AI_BOT_ID, phone, orgId || undefined)
     if (!conversation) {
       conversation = await botConversationDb.create({
         botId: AI_BOT_ID,
@@ -176,8 +176,9 @@ async function handleIncomingMessage(
       .slice(-6)
       .map(m => {
         if (m.type === 'template') {
+          const tplText = (m.content as Record<string, unknown>).text as string || ''
           const name = (m.content as Record<string, unknown>).templateName as string || ''
-          return { role: 'assistant' as const, content: `[Template "${name}" enviado ao cliente]` }
+          return { role: 'assistant' as const, content: tplText || `[Template "${name}" enviado ao cliente]` }
         }
         const text = (m.content as Record<string, unknown>).text as string || ''
         return {
@@ -186,7 +187,17 @@ async function handleIncomingMessage(
         }
       })
 
-    // 4. Call GPT Maker
+    // 4. Call GPT Maker — include campaign template as context if available
+    const lastTemplate = history
+      .filter(m => m.type === 'template' && m.direction === 'outbound')
+      .at(-1)
+    const templateText = lastTemplate
+      ? ((lastTemplate.content as Record<string, unknown>).text as string) || null
+      : null
+    const promptWithContext = templateText
+      ? `[Contexto da campanha: "${templateText}"]\nMensagem do cliente: ${message}`
+      : message
+
     const gptRes = await fetch(
       `https://api.gptmaker.ai/v2/agent/${agentId}/conversation`,
       {
@@ -198,7 +209,7 @@ async function handleIncomingMessage(
         body: JSON.stringify({
           contextId: phone,
           phone: phone,
-          prompt: message,
+          prompt: promptWithContext,
           role: 'user',
           channel: 'whatsapp',
         }),
@@ -291,6 +302,7 @@ export async function POST(request: NextRequest) {
     const rawData = body.data
     const updates: Array<{ key: { id: string; fromMe: boolean }; update: { status: string } }> =
       Array.isArray(rawData) ? rawData : (rawData ? [rawData] : [])
+    console.log(`[webhook/ack] messages.update: ${updates.length} update(s)`)
     for (const u of updates) {
       if (!u.key?.fromMe || !u.key?.id) continue
       const ack = u.update?.status
@@ -300,6 +312,8 @@ export async function POST(request: NextRequest) {
       else if (ack === 'DELIVERY_ACK') msgStatus = 'delivered'
       else if (ack === 'READ') msgStatus = 'read'
       if (!msgStatus) continue
+
+      console.log(`[webhook/ack] ${ack} → ${msgStatus} msgId=${u.key.id}`)
 
       // Update bot_messages (AI agent conversations)
       botMessageDb.updateStatus(u.key.id, msgStatus as 'sent' | 'delivered' | 'read')
@@ -313,6 +327,8 @@ export async function POST(request: NextRequest) {
             .select('id, campaign_id, status')
             .eq('message_id', u.key.id)
             .single()
+
+          console.log(`[webhook/ack] campaign_contacts lookup msgId=${u.key.id}: ${contact ? `found id=${contact.id} status=${contact.status}` : 'NOT FOUND'}`)
 
           if (contact) {
             const statusOrder: Record<string, number> = { pending: 0, sent: 1, delivered: 2, read: 3, failed: 4 }
@@ -332,6 +348,7 @@ export async function POST(request: NextRequest) {
                 .select('id')
 
               if (updated?.length) {
+                console.log(`[webhook/ack] updated campaign_contact ${contact.id} → ${msgStatus}`)
                 const col = msgStatus === 'delivered' ? 'delivered' : 'read'
                 const { data: campaign } = await supabase
                   .from('campaigns')
@@ -346,7 +363,9 @@ export async function POST(request: NextRequest) {
               }
             }
           }
-        } catch { /* non-fatal */ }
+        } catch (e) {
+          console.error('[webhook/ack] error updating campaign_contacts:', e)
+        }
       }
     }
     return NextResponse.json({ status: 'ok' })
@@ -537,6 +556,10 @@ export async function POST(request: NextRequest) {
 
           const phoneNumberId: string = change.value?.metadata?.phone_number_id || ''
           const orgId = await findOrgByPhoneNumberId(phoneNumberId)
+          if (!orgId) {
+            console.warn('[Agent/Meta] No org found for phoneNumberId:', phoneNumberId)
+            continue
+          }
           const orgConfig = await loadProviderConfig(orgId).catch(() => null)
 
           // Se GPT Maker tem canal WhatsApp direto ativo, ele responde por conta própria.
