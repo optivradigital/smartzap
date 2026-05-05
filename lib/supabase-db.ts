@@ -1152,8 +1152,8 @@ export const botConversationDb = {
         }
     },
 
-    getByContact: async (botId: string, contactPhone: string): Promise<BotConversation | null> => {
-        const { data, error } = await supabase
+    getByContact: async (botId: string, contactPhone: string, organizationId?: string): Promise<BotConversation | null> => {
+        let query = supabase
             .from('bot_conversations')
             .select(`
         *,
@@ -1164,7 +1164,10 @@ export const botConversationDb = {
             .neq('status', 'ended')
             .order('created_at', { ascending: false })
             .limit(1)
-            .single()
+
+        if (organizationId) query = query.eq('organization_id', organizationId)
+
+        const { data, error } = await query.single()
 
         if (error || !data) return null
 

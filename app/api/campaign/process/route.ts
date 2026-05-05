@@ -443,7 +443,7 @@ export async function POST(request: NextRequest) {
         ;(async () => {
           try {
             const botId = orgConfig?.gptmakerAgentId || DEMI_BOT_ID;
-            let conv = await botConversationDb.getByContact(botId, contact.phone);
+            let conv = await botConversationDb.getByContact(botId, contact.phone, payload.orgId || undefined);
             if (!conv) {
               conv = await botConversationDb.create({
                 botId,

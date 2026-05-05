@@ -20,6 +20,13 @@ export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
   const orgId = currentUser?.organizationId || null;
 
+  if (!orgId) {
+    return NextResponse.json(
+      { error: 'Organização não identificada. Faça login novamente.' },
+      { status: 400 }
+    )
+  }
+
   // Get template variables from campaign if not provided
   let resolvedTemplateVariables: string[] = templateVariables || [];
   if (!resolvedTemplateVariables.length) {

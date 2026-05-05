@@ -139,7 +139,7 @@ async function handleIncomingMessage(
 
   try {
     // 1. Get or create conversation
-    let conversation = await botConversationDb.getByContact(AI_BOT_ID, phone)
+    let conversation = await botConversationDb.getByContact(AI_BOT_ID, phone, orgId || undefined)
     if (!conversation) {
       conversation = await botConversationDb.create({
         botId: AI_BOT_ID,
@@ -556,6 +556,10 @@ export async function POST(request: NextRequest) {
 
           const phoneNumberId: string = change.value?.metadata?.phone_number_id || ''
           const orgId = await findOrgByPhoneNumberId(phoneNumberId)
+          if (!orgId) {
+            console.warn('[Agent/Meta] No org found for phoneNumberId:', phoneNumberId)
+            continue
+          }
           const orgConfig = await loadProviderConfig(orgId).catch(() => null)
 
           // Se GPT Maker tem canal WhatsApp direto ativo, ele responde por conta própria.
