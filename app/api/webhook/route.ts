@@ -176,8 +176,9 @@ async function handleIncomingMessage(
       .slice(-6)
       .map(m => {
         if (m.type === 'template') {
+          const tplText = (m.content as Record<string, unknown>).text as string || ''
           const name = (m.content as Record<string, unknown>).templateName as string || ''
-          return { role: 'assistant' as const, content: `[Template "${name}" enviado ao cliente]` }
+          return { role: 'assistant' as const, content: tplText || `[Template "${name}" enviado ao cliente]` }
         }
         const text = (m.content as Record<string, unknown>).text as string || ''
         return {
@@ -186,7 +187,17 @@ async function handleIncomingMessage(
         }
       })
 
-    // 4. Call GPT Maker
+    // 4. Call GPT Maker — include campaign template as context if available
+    const lastTemplate = history
+      .filter(m => m.type === 'template' && m.direction === 'outbound')
+      .at(-1)
+    const templateText = lastTemplate
+      ? ((lastTemplate.content as Record<string, unknown>).text as string) || null
+      : null
+    const promptWithContext = templateText
+      ? `[Contexto da campanha: "${templateText}"]\nMensagem do cliente: ${message}`
+      : message
+
     const gptRes = await fetch(
       `https://api.gptmaker.ai/v2/agent/${agentId}/conversation`,
       {
@@ -198,7 +209,7 @@ async function handleIncomingMessage(
         body: JSON.stringify({
           contextId: phone,
           phone: phone,
-          prompt: message,
+          prompt: promptWithContext,
           role: 'user',
           channel: 'whatsapp',
         }),
