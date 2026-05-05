@@ -33,6 +33,8 @@ interface ProcessPayload {
   // Anti-ban: interval range in seconds (default 7-63)
   minIntervalSeconds?: number;
   maxIntervalSeconds?: number;
+  // URL for IMAGE/VIDEO/DOCUMENT header templates (overrides example from Meta)
+  headerMediaUrl?: string;
 }
 
 /** Retorna um número inteiro aleatório entre min e max (inclusive) */
@@ -276,11 +278,13 @@ export async function POST(request: NextRequest) {
   // Load Meta credentials from Redis if not passed (e.g. called by scheduler)
   let resolvedPhoneId = phoneNumberId;
   let resolvedToken = accessToken;
-  if (!isEvolution && (!resolvedPhoneId || !resolvedToken) && payload.orgId) {
+  let resolvedBusinessAccountId = '';
+  if (!isEvolution && payload.orgId) {
     const redisCreds = await getWhatsAppCredentials(payload.orgId).catch(() => null);
     if (redisCreds) {
       resolvedPhoneId = resolvedPhoneId || redisCreds.phoneNumberId;
       resolvedToken = resolvedToken || redisCreds.accessToken;
+      resolvedBusinessAccountId = redisCreds.businessAccountId || '';
     }
   }
   if (!resolvedPhoneId) resolvedPhoneId = process.env.WHATSAPP_PHONE_ID || "";
@@ -304,6 +308,36 @@ export async function POST(request: NextRequest) {
   console.log(
     `🚀 [Process] Campaign ${campaignId} — ${contacts.length} contacts, templates: [${allTemplates.join(", ")}], delay: ${minIntervalSeconds}-${maxIntervalSeconds}s`
   );
+
+  // Fetch header component info once per campaign (IMAGE/VIDEO/DOCUMENT headers require a media parameter)
+  const templateHeaderInfo = new Map<string, { format: string; exampleUrl?: string }>();
+  if (!isEvolution && resolvedBusinessAccountId && resolvedToken) {
+    const uniqueTemplates = [...new Set(allTemplates)];
+    for (const tname of uniqueTemplates) {
+      try {
+        const res = await fetch(
+          `https://graph.facebook.com/v24.0/${resolvedBusinessAccountId}/message_templates?name=${tname}&fields=name,components`,
+          { headers: { Authorization: `Bearer ${resolvedToken}` } }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const tpl = data.data?.[0];
+          if (tpl) {
+            const headerComp = tpl.components?.find((c: { type: string; format?: string }) => c.type === 'HEADER');
+            if (headerComp?.format && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp.format)) {
+              templateHeaderInfo.set(tname, {
+                format: headerComp.format as string,
+                exampleUrl: headerComp.example?.header_handle?.[0] ?? headerComp.example?.header_url?.[0],
+              });
+              console.log(`[Process] Template "${tname}" has ${headerComp.format} header`);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn(`[Process] Failed to fetch header info for template "${tname}":`, e);
+      }
+    }
+  }
 
   // Validate WhatsApp numbers before sending
   const allPhones = contacts.map(c => c.phone)
@@ -405,14 +439,34 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // ── Meta Cloud API: send approved template ───────────────────────────
+        const templateComponents: unknown[] = [];
+
+        // Header component — required for IMAGE/VIDEO/DOCUMENT header templates
+        const headerInfo = templateHeaderInfo.get(chosenTemplate);
+        if (headerInfo) {
+          const mediaUrl = payload.headerMediaUrl || headerInfo.exampleUrl;
+          if (mediaUrl) {
+            const mediaType = headerInfo.format.toLowerCase();
+            templateComponents.push({
+              type: 'header',
+              parameters: [{ type: mediaType, [mediaType]: { link: mediaUrl } }],
+            });
+          } else {
+            console.warn(`[Process] Template "${chosenTemplate}" has ${headerInfo.format} header but no image URL — skipping header component`);
+          }
+        }
+
+        // Body component — only if there are real (non-empty) variables
+        const effectiveBodyVars = (templateVariables ?? []).filter(v => v !== null && v !== undefined && String(v).trim() !== '');
+        if (effectiveBodyVars.length > 0) {
+          templateComponents.push({ type: 'body', parameters: buildBodyParameters(contact.name, effectiveBodyVars) });
+        }
+
         const templateObj: Record<string, unknown> = {
           name: chosenTemplate,
           language: { code: "pt_BR" },
+          ...(templateComponents.length > 0 && { components: templateComponents }),
         };
-        if (templateVariables.length > 0) {
-          const bodyParameters = buildBodyParameters(contact.name, templateVariables);
-          templateObj.components = [{ type: "body", parameters: bodyParameters }];
-        }
         const apiUrl = `https://graph.facebook.com/v24.0/${resolvedPhoneId}/messages`;
         const res = await fetch(apiUrl, {
           method: "POST",
