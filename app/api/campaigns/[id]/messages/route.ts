@@ -56,7 +56,7 @@ export async function GET(request: Request, { params }: Params) {
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'pending'),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'sent'),
-      supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'delivered'),
+      supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).in('status', ['delivered', 'read']),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'read'),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'failed'),
       supabase.from('campaign_contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id).eq('status', 'invalid'),
