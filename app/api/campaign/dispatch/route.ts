@@ -125,10 +125,10 @@ export async function POST(request: NextRequest) {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
 
-  // Fetch delay settings from campaign
+  // Fetch delay settings and header media from campaign
   const { data: campRow } = await supabase
     .from('campaigns')
-    .select('delay_min_ms, delay_max_ms')
+    .select('delay_min_ms, delay_max_ms, header_media_url')
     .eq('id', campaignId)
     .single()
 
@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
     orgId,
     minIntervalSeconds: campRow?.delay_min_ms ? Math.round(campRow.delay_min_ms / 1000) : 7,
     maxIntervalSeconds: campRow?.delay_max_ms ? Math.round(campRow.delay_max_ms / 1000) : 63,
+    headerMediaUrl: campRow?.header_media_url || undefined,
   };
 
   console.log(`[Dispatch] Firing workflow: ${baseUrl}/api/campaign/process`);

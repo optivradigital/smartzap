@@ -111,6 +111,7 @@ export const campaignDb = {
         scheduledAt?: string
         templateVariables?: string[]
         organizationId?: string
+        headerMediaUrl?: string
         // Anti-ban (Evolution API)
         providerType?: 'meta' | 'evolution'
         delayMinMs?: number
@@ -146,6 +147,7 @@ export const campaignDb = {
                 daily_limit: campaign.dailyLimit ?? null,
                 message_variants: campaign.messageVariants ?? [],
                 organization_id: campaign.organizationId || null,
+                header_media_url: campaign.headerMediaUrl ?? null,
             })
             .select()
             .single()

@@ -30,6 +30,10 @@ export const useCampaignWizardController = () => {
   
   // Template Variables State - for {{2}}, {{3}}, etc. ({{1}} is always the contact name)
   const [templateVariables, setTemplateVariables] = useState<string[]>([]);
+
+  // Header media (IMAGE templates)
+  const [headerImageFile, setHeaderImageFile] = useState<File | null>(null);
+  const [headerImageUrl, setHeaderImageUrl] = useState('');
   
   // Scheduling State
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
@@ -178,14 +182,18 @@ export const useCampaignWizardController = () => {
   
   // Calculate all template variables with detailed info about where each is used
   const templateVariableInfo = useMemo(() => {
-    if (!selectedTemplate) return { body: [], header: [], buttons: [], totalExtra: 0 };
-    
+    if (!selectedTemplate) return { body: [], header: [], buttons: [], totalExtra: 0, hasMediaHeader: false };
+
     const components = selectedTemplate.components || [];
+    const headerComp = components.find(c => c.type === 'HEADER');
+    const hasMediaHeader = ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format || '');
+
     const result = {
       body: [] as { index: number; placeholder: string; context: string }[],
       header: [] as { index: number; placeholder: string; context: string }[],
       buttons: [] as { index: number; buttonIndex: number; buttonText: string; context: string }[],
       totalExtra: 0,
+      hasMediaHeader,
     };
     
     // Parse body variables
@@ -303,7 +311,7 @@ export const useCampaignWizardController = () => {
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 1));
 
   // INTELLIGENT VALIDATION - Prevents users from sending campaigns that exceed limits
-  const handleSend = (scheduleTime?: string) => {
+  const handleSend = async (scheduleTime?: string) => {
     // Validate that all required template variables are filled
     if (templateVariableCount > 0) {
       const emptyVars = templateVariables.filter(v => !v || v.trim() === '');
@@ -312,24 +320,51 @@ export const useCampaignWizardController = () => {
         return;
       }
     }
-    
+
+    // Validate header image for IMAGE templates
+    const hasMediaHeader = templateVariableInfo.hasMediaHeader;
+    if (hasMediaHeader && !headerImageFile && !headerImageUrl) {
+      toast.error('Adicione a imagem do cabeçalho do template');
+      return;
+    }
+
     // Validate campaign against account limits
     const validation = validate(recipientCount);
     setValidationResult(validation);
-    
+
     // If campaign is blocked, show modal with explanation
     if (!validation.canSend) {
       setShowBlockModal(true);
       return;
     }
-    
+
     // Show warnings if any (but allow to proceed)
     if (validation.warnings.length > 0) {
       validation.warnings.forEach(warning => {
         toast.warning(warning);
       });
     }
-    
+
+    // Upload header image to Supabase Storage if a file was selected
+    let resolvedHeaderMediaUrl: string | undefined = headerImageUrl || undefined;
+    if (headerImageFile) {
+      try {
+        const fd = new FormData();
+        fd.append('file', headerImageFile);
+        const res = await fetch('/api/campaign/media', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({})) as { error?: string };
+          toast.error(`Erro ao fazer upload da imagem: ${err.error || 'tente novamente'}`);
+          return;
+        }
+        const { url } = await res.json() as { url: string };
+        resolvedHeaderMediaUrl = url;
+      } catch {
+        toast.error('Erro ao fazer upload da imagem. Verifique sua conexão.');
+        return;
+      }
+    }
+
     // Proceed with campaign creation
     createCampaignMutation.mutate({
       name: recipientSource === 'test' ? `[TESTE] ${name}` : name,
@@ -337,8 +372,8 @@ export const useCampaignWizardController = () => {
       templateNames: allSelectedTemplateNames.length > 1 ? allSelectedTemplateNames : undefined,
       recipients: recipientCount,
       selectedContacts: contactsForSending,
-      selectedContactIds: recipientSource === 'test' ? [] : selectedContactIds, // Save for resume functionality
-      scheduledAt: scheduleTime || scheduledAt || undefined, // Use provided time or state
+      selectedContactIds: recipientSource === 'test' ? [] : selectedContactIds,
+      scheduledAt: scheduleTime || scheduledAt || undefined,
       templateVariables: templateVariables.length > 0 ? templateVariables : undefined,
       providerType: providerType,
       delayMinSec: antiBanConfig.delayMinSec,
@@ -346,6 +381,7 @@ export const useCampaignWizardController = () => {
       simulateTyping: antiBanConfig.simulateTyping,
       dailyLimit: antiBanConfig.dailyLimit,
       messageVariants: antiBanConfig.messageVariants.length > 0 ? antiBanConfig.messageVariants : undefined,
+      headerMediaUrl: resolvedHeaderMediaUrl,
     });
   };
   
@@ -402,6 +438,12 @@ export const useCampaignWizardController = () => {
     setTemplateVariables,
     templateVariableCount,
     templateVariableInfo, // Detailed info about each variable location
+
+    // Header media (IMAGE templates)
+    headerImageFile,
+    setHeaderImageFile,
+    headerImageUrl,
+    setHeaderImageUrl,
     
     // Account Limits & Validation state
     accountLimits: limits,

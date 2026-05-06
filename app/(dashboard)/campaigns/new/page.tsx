@@ -52,6 +52,10 @@ export default function NewCampaignPage() {
       additionalTemplateIds={controller.additionalTemplateIds}
       setAdditionalTemplateIds={controller.setAdditionalTemplateIds}
       additionalTemplates={controller.additionalTemplates}
+      headerImageFile={controller.headerImageFile}
+      setHeaderImageFile={controller.setHeaderImageFile}
+      headerImageUrl={controller.headerImageUrl}
+      setHeaderImageUrl={controller.setHeaderImageUrl}
     />
   )
 }

@@ -16,6 +16,7 @@ interface CreateCampaignInput {
   simulateTyping?: boolean;
   dailyLimit?: number | null;
   messageVariants?: string[];
+  headerMediaUrl?: string;
 }
 
 interface RealMessageStatus {
@@ -144,7 +145,7 @@ export const campaignService = {
   },
 
   create: async (input: CreateCampaignInput): Promise<Campaign> => {
-    const { name, templateName, templateNames, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, providerType, delayMinSec, delayMaxSec, simulateTyping, dailyLimit, messageVariants } = input;
+    const { name, templateName, templateNames, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, providerType, delayMinSec, delayMaxSec, simulateTyping, dailyLimit, messageVariants, headerMediaUrl } = input;
 
     // 1. Create campaign in Database (source of truth) with contacts
     const response = await fetch('/api/campaigns', {
@@ -165,6 +166,7 @@ export const campaignService = {
         simulateTyping,
         dailyLimit,
         messageVariants,
+        headerMediaUrl,
         status: scheduledAt ? CampaignStatus.SCHEDULED : CampaignStatus.SENDING,
       }),
     });

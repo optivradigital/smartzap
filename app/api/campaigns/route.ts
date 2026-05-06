@@ -81,6 +81,7 @@ export async function POST(request: Request) {
       simulateTyping: (data as any).simulateTyping,
       dailyLimit: (data as any).dailyLimit,
       messageVariants: (data as any).messageVariants,
+      headerMediaUrl: (data as any).headerMediaUrl,
     })
 
     if (data.contacts && data.contacts.length > 0) {
