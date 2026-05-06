@@ -192,8 +192,8 @@ async function registerInGptMaker(
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          context_id: phone,
-          phone,
+          context_id: phone.replace(/^\+/, ''),
+          phone: phone.replace(/^\+/, ''),
           prompt: templateText,
           role: "assistant",
         }),
