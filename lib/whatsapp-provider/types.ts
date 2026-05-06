@@ -38,6 +38,8 @@ export interface ProviderConfig {
   // Quando true, GPT Maker tem canal WhatsApp direto e responde às mensagens.
   // SmartZap só registra contexto de campanhas e rastreia status de entrega.
   gptmakerDirectChannel?: boolean
+  // ID do canal WhatsApp no GPTMaker (CLOUD_API). context_id do add-message é "{channelId}-{phone}"
+  gptmakerChannelId?: string
   // Chatwoot integration (Agent Bot)
   chatwootUrl?: string
   chatwootAccountId?: string

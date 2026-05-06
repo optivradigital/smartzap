@@ -103,6 +103,13 @@ export async function POST(req: NextRequest) {
     body.chatwootApiToken = existing?.chatwootApiToken || ''
   }
 
+  // Preserve gptmakerChannelId from existing config if not sent
+  let existingChannelId: string | undefined
+  if (!body.gptmakerChannelId) {
+    const existing = await loadProviderConfig(orgId)
+    existingChannelId = existing?.gptmakerChannelId
+  }
+
   const configToSave: ProviderConfig = {
     type: body.type,
     phoneNumberId: body.phoneNumberId,
@@ -114,6 +121,7 @@ export async function POST(req: NextRequest) {
     gptmakerAgentId: body.gptmakerAgentId || '',
     gptmakerJwtToken: body.gptmakerJwtToken || '',
     gptmakerDirectChannel: body.gptmakerDirectChannel ?? false,
+    gptmakerChannelId: body.gptmakerChannelId || existingChannelId || '',
     chatwootUrl: body.chatwootUrl || '',
     chatwootAccountId: body.chatwootAccountId || '',
     chatwootApiToken: body.chatwootApiToken || '',

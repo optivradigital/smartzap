@@ -151,7 +151,7 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
   if (isLoading || !campaign) return <div className="p-10 text-center text-gray-500">Carregando...</div>;
 
   // Usa messageStats (contagem direta em campaign_contacts) quando disponível — mais preciso que campos desnormalizados
-  const sentCount = messageStats ? (messageStats.sent + messageStats.delivered + messageStats.read + messageStats.failed) : (campaign.sent ?? 0);
+  const sentCount = messageStats ? (messageStats.total - messageStats.pending - messageStats.invalid) : (campaign.sent ?? 0);
   const deliveredCount = messageStats ? messageStats.delivered : (campaign.delivered ?? 0);
   const readCount = messageStats ? messageStats.read : (campaign.read ?? 0);
   const failedCount = messageStats ? (messageStats.failed + messageStats.invalid) : (campaign.failed ?? 0);

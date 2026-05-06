@@ -132,12 +132,14 @@ async function registerInGptMaker(
   // Load per-org credentials first, fall back to global env
   let agentId = process.env.GPTMAKER_AGENT_ID;
   let token = process.env.GPTMAKER_JWT_TOKEN;
+  let channelId: string | undefined;
 
   if (orgId) {
     try {
       const orgConfig = await loadProviderConfig(orgId);
       if (orgConfig?.gptmakerAgentId) agentId = orgConfig.gptmakerAgentId;
       if (orgConfig?.gptmakerJwtToken) token = orgConfig.gptmakerJwtToken;
+      if (orgConfig?.gptmakerChannelId) channelId = orgConfig.gptmakerChannelId;
     } catch {
       // fall through to global env
     }
@@ -192,7 +194,7 @@ async function registerInGptMaker(
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          context_id: phone.replace(/^\+/, ''),
+          context_id: channelId ? `${channelId}-${phone.replace(/^\+/, '')}` : phone.replace(/^\+/, ''),
           phone: phone.replace(/^\+/, ''),
           prompt: templateText,
           role: "assistant",
