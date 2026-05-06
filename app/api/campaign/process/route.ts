@@ -37,6 +37,47 @@ interface ProcessPayload {
   headerMediaUrl?: string;
 }
 
+/**
+ * Faz upload da imagem para a Meta Media API e retorna o media_id.
+ * Mais confiável do que passar URL direta (evita erro 131053).
+ */
+async function uploadImageToMeta(
+  imageUrl: string,
+  phoneNumberId: string,
+  accessToken: string
+): Promise<string | null> {
+  try {
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) {
+      console.warn(`[Process] Não foi possível baixar imagem de ${imageUrl}: HTTP ${imgRes.status}`);
+      return null;
+    }
+    const buffer = await imgRes.arrayBuffer();
+    const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+    const ext = contentType.split('/')[1]?.split(';')[0] || 'jpg';
+
+    const fd = new FormData();
+    fd.append('messaging_product', 'whatsapp');
+    fd.append('type', contentType);
+    fd.append('file', new Blob([buffer], { type: contentType }), `header.${ext}`);
+
+    const metaRes = await fetch(
+      `https://graph.facebook.com/v24.0/${phoneNumberId}/media`,
+      { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, body: fd }
+    );
+    if (!metaRes.ok) {
+      console.warn(`[Process] Meta media upload falhou: ${metaRes.status} ${await metaRes.text().catch(() => '')}`);
+      return null;
+    }
+    const { id } = await metaRes.json() as { id: string };
+    console.log(`[Process] Media enviada para Meta: ${id}`);
+    return id;
+  } catch (e) {
+    console.error('[Process] Erro ao enviar mídia para Meta:', e);
+    return null;
+  }
+}
+
 /** Retorna um número inteiro aleatório entre min e max (inclusive) */
 function randomBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -339,6 +380,15 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Upload header image to Meta Media API (uma vez por campanha) para evitar erro 131053
+  let metaHeaderMediaId: string | undefined;
+  if (!isEvolution && payload.headerMediaUrl && resolvedPhoneId && resolvedToken) {
+    metaHeaderMediaId = await uploadImageToMeta(payload.headerMediaUrl, resolvedPhoneId, resolvedToken) || undefined;
+    if (!metaHeaderMediaId) {
+      console.warn('[Process] Upload para Meta falhou — usando URL direta como fallback');
+    }
+  }
+
   // Validate WhatsApp numbers before sending
   const allPhones = contacts.map(c => c.phone)
   let validPhones: Set<string>
@@ -444,15 +494,23 @@ export async function POST(request: NextRequest) {
         // Header component — required for IMAGE/VIDEO/DOCUMENT header templates
         const headerInfo = templateHeaderInfo.get(chosenTemplate);
         if (headerInfo) {
-          const mediaUrl = payload.headerMediaUrl || headerInfo.exampleUrl;
-          if (mediaUrl) {
-            const mediaType = headerInfo.format.toLowerCase();
+          const mediaType = headerInfo.format.toLowerCase();
+          if (metaHeaderMediaId) {
+            // Usar media_id enviado para a Meta (mais confiável que URL direta)
             templateComponents.push({
               type: 'header',
-              parameters: [{ type: mediaType, [mediaType]: { link: mediaUrl } }],
+              parameters: [{ type: mediaType, [mediaType]: { id: metaHeaderMediaId } }],
             });
           } else {
-            console.warn(`[Process] Template "${chosenTemplate}" has ${headerInfo.format} header but no image URL — skipping header component`);
+            const mediaUrl = payload.headerMediaUrl || headerInfo.exampleUrl;
+            if (mediaUrl) {
+              templateComponents.push({
+                type: 'header',
+                parameters: [{ type: mediaType, [mediaType]: { link: mediaUrl } }],
+              });
+            } else {
+              console.warn(`[Process] Template "${chosenTemplate}" has ${headerInfo.format} header but no image URL — skipping header component`);
+            }
           }
         }
 
