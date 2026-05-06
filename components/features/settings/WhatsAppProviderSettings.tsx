@@ -28,6 +28,7 @@ interface ProviderConfig {
   gptmakerJwtTokenSaved?: boolean
   gptmakerJwtTokenPreview?: string
   gptmakerDirectChannel?: boolean
+  gptmakerChannelId?: string
   chatwootUrl?: string
   chatwootAccountId?: string
   chatwootApiToken?: string
@@ -465,6 +466,19 @@ export function WhatsAppProviderSettings() {
             GPT Maker tem canal WhatsApp direto — SmartZap só registra contexto de campanhas, não responde às mensagens
           </span>
         </label>
+        {config.gptmakerDirectChannel && (
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1">Channel ID (canal WhatsApp no GPTMaker)</label>
+            <input
+              type="text"
+              value={config.gptmakerChannelId || ''}
+              onChange={e => setConfig(c => ({ ...c, gptmakerChannelId: e.target.value }))}
+              placeholder="Ex: 3F09EDF5A769E0F00D1F5E34DF49E11C"
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-amber-500"
+            />
+            <p className="text-xs text-muted-foreground/60 mt-1">Encontrado em Canais → WhatsApp Cloud API no GPTMaker. Necessário para inserir contexto de campanha na conversa correta.</p>
+          </div>
+        )}
       </div>
 
       {/* Chatwoot Integration */}
