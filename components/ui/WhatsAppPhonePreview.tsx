@@ -57,9 +57,10 @@ const MessageButton: React.FC<MessageButtonProps> = ({ button }) => (
 interface MessageHeaderProps {
   header: TemplateComponent;
   variables?: string[];
+  headerImageUrl?: string;
 }
 
-const MessageHeader: React.FC<MessageHeaderProps> = ({ header, variables }) => {
+const MessageHeader: React.FC<MessageHeaderProps> = ({ header, variables, headerImageUrl }) => {
   switch (header.format) {
     case 'TEXT':
       if (!header.text) return null;
@@ -71,9 +72,10 @@ const MessageHeader: React.FC<MessageHeaderProps> = ({ header, variables }) => {
     case 'IMAGE':
       return (
         <div className="bg-[#202c33] rounded-lg rounded-tl-none shadow-sm mb-1 overflow-hidden">
-          <div className="bg-zinc-700/50 h-32 flex items-center justify-center">
-            <Image size={32} className="text-zinc-500" />
-          </div>
+          {headerImageUrl
+            ? <img src={headerImageUrl} alt="header" className="w-full h-32 object-cover" />
+            : <div className="bg-zinc-700/50 h-32 flex items-center justify-center"><Image size={32} className="text-zinc-500" /></div>
+          }
         </div>
       );
     case 'VIDEO':
@@ -107,12 +109,14 @@ interface MessageBubbleProps {
   variables?: string[];
   /** Fallback content when no components available */
   fallbackContent?: string;
+  headerImageUrl?: string;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
   components,
   variables,
-  fallbackContent
+  fallbackContent,
+  headerImageUrl,
 }) => {
   // Parse components
   const header = components?.find(c => c.type === 'HEADER');
@@ -137,7 +141,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <div className="animate-in zoom-in-95 slide-in-from-bottom-2 duration-500 max-w-[95%]">
       {/* Header */}
-      {header && <MessageHeader header={header} variables={variables} />}
+      {header && <MessageHeader header={header} variables={variables} headerImageUrl={headerImageUrl} />}
 
       {/* Message Card (Body + Buttons united) */}
       <div className={`bg-[#202c33] shadow-sm overflow-hidden ${hasButtons ? 'rounded-t-lg rounded-tl-none' : 'rounded-lg rounded-tl-none'}`}>
@@ -196,6 +200,8 @@ interface WhatsAppPhonePreviewProps {
   size?: 'sm' | 'md' | 'lg' | 'adaptive';
   /** Additional class names */
   className?: string;
+  /** Preview URL for IMAGE header (blob URL from local file or uploaded URL) */
+  headerImageUrl?: string;
 }
 
 const SIZE_CONFIGS = {
@@ -214,6 +220,7 @@ export const WhatsAppPhonePreview: React.FC<WhatsAppPhonePreviewProps> = ({
   emptyStateMessage = 'Selecione um template',
   size = 'lg',
   className = '',
+  headerImageUrl,
 }) => {
   const sizeConfig = SIZE_CONFIGS[size];
   const hasContent = components?.length || fallbackContent;
@@ -260,6 +267,7 @@ export const WhatsAppPhonePreview: React.FC<WhatsAppPhonePreviewProps> = ({
             components={components}
             variables={variables}
             fallbackContent={fallbackContent}
+            headerImageUrl={headerImageUrl}
           />
         ) : showEmptyState ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-600 text-xs gap-2 opacity-50">

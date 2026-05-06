@@ -585,6 +585,10 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
     ) ?? false
   , [selectedTemplate]);
 
+  const headerImagePreviewUrl = React.useMemo(() =>
+    headerImageFile ? URL.createObjectURL(headerImageFile) : undefined
+  , [headerImageFile]);
+
   // Anti-ban internal state (fallback when not provided as props)
   const [antiBanConfigInternal, setAntiBanConfigInternal] = React.useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
   const antiBanConfig = antiBanConfigProp ?? antiBanConfigInternal;
@@ -997,50 +1001,47 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                     </div>
                   </div>
                 )}
-              </div>
-            )}
 
-
-            {/* Header Media Upload (IMAGE/VIDEO/DOCUMENT templates) */}
-            {step === 1 && hasMediaHeader && setHeaderImageFile && (
-              <div className="px-6 pb-2">
-                <div className="border border-white/10 rounded-xl p-4 bg-zinc-900/40">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Upload size={14} className="text-primary-400" />
-                    <span className="text-sm font-bold text-white">Imagem do cabeçalho</span>
-                    <span className="text-xs text-red-400">obrigatório</span>
-                  </div>
-                  {headerImageFile ? (
-                    <div className="flex items-center gap-3 bg-zinc-900/60 border border-white/10 rounded-lg px-3 py-2">
-                      <Check size={14} className="text-green-400 flex-shrink-0" />
-                      <span className="text-sm text-gray-300 truncate">{headerImageFile.name}</span>
-                      <button
-                        onClick={() => { setHeaderImageFile(null); setHeaderImageUrl?.(''); }}
-                        className="ml-auto text-gray-500 hover:text-red-400 transition-colors"
-                      >
-                        <X size={14} />
-                      </button>
+                {/* Header Media Upload (IMAGE/VIDEO/DOCUMENT templates) */}
+                {hasMediaHeader && setHeaderImageFile && (
+                  <div className="border border-white/10 rounded-xl p-4 bg-zinc-900/40">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Upload size={14} className="text-primary-400" />
+                      <span className="text-sm font-bold text-white">Imagem do cabeçalho</span>
+                      <span className="text-xs text-red-400">obrigatório</span>
                     </div>
-                  ) : (
-                    <label className="flex flex-col items-center gap-2 border border-dashed border-white/20 rounded-lg p-4 cursor-pointer hover:border-primary-400/50 hover:bg-primary-500/5 transition-all">
-                      <Upload size={20} className="text-gray-500" />
-                      <span className="text-sm text-gray-400">Clique para selecionar a imagem</span>
-                      <span className="text-xs text-gray-600">JPEG, PNG ou WebP · máx 5 MB</span>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        className="hidden"
-                        onChange={e => {
-                          const f = e.target.files?.[0];
-                          if (f) { setHeaderImageFile(f); setHeaderImageUrl?.(''); }
-                        }}
-                      />
-                    </label>
-                  )}
-                  <p className="text-xs text-gray-600 mt-2">
-                    A imagem é hospedada automaticamente e enviada a todos os destinatários.
-                  </p>
-                </div>
+                    {headerImageFile ? (
+                      <div className="flex items-center gap-3 bg-zinc-900/60 border border-white/10 rounded-lg px-3 py-2">
+                        <Check size={14} className="text-green-400 flex-shrink-0" />
+                        <span className="text-sm text-gray-300 truncate">{headerImageFile.name}</span>
+                        <button
+                          onClick={() => { setHeaderImageFile(null); setHeaderImageUrl?.(''); }}
+                          className="ml-auto text-gray-500 hover:text-red-400 transition-colors"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center gap-2 border border-dashed border-white/20 rounded-lg p-4 cursor-pointer hover:border-primary-400/50 hover:bg-primary-500/5 transition-all">
+                        <Upload size={20} className="text-gray-500" />
+                        <span className="text-sm text-gray-400">Clique para selecionar a imagem</span>
+                        <span className="text-xs text-gray-600">JPEG, PNG ou WebP · máx 5 MB</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={e => {
+                            const f = e.target.files?.[0];
+                            if (f) { setHeaderImageFile(f); setHeaderImageUrl?.(''); }
+                          }}
+                        />
+                      </label>
+                    )}
+                    <p className="text-xs text-gray-600 mt-2">
+                      A imagem é hospedada automaticamente e enviada a todos os destinatários.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1683,6 +1684,7 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                 emptyStateMessage="Selecione um template ao lado para visualizar"
                 size="adaptive"
                 className="max-h-full"
+                headerImageUrl={headerImagePreviewUrl}
               />
             </div>
           </div>
