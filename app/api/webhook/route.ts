@@ -499,6 +499,19 @@ export async function POST(request: NextRequest) {
               console.log(`👁️ Read: ${phone} (campaign: ${campaignId})`)
               try {
                 const nowRead = new Date().toISOString()
+                // Se ainda não foi entregue, contar como entregue também (read implica delivered)
+                const { data: markedDelivered } = await supabase
+                  .from('campaign_contacts')
+                  .update({ status: 'delivered', delivered_at: nowRead })
+                  .eq('campaign_id', campaignId)
+                  .eq('phone', phone)
+                  .neq('status', 'delivered')
+                  .neq('status', 'read')
+                  .select('id')
+                if (markedDelivered?.length) {
+                  const { data: c1 } = await supabase.from('campaigns').select('delivered').eq('id', campaignId).single()
+                  if (c1) await supabase.from('campaigns').update({ delivered: (c1.delivered || 0) + 1 }).eq('id', campaignId)
+                }
                 const { data: updatedRowsRead, error: updateErrorRead } = await supabase
                   .from('campaign_contacts')
                   .update({ status: 'read', read_at: nowRead })
