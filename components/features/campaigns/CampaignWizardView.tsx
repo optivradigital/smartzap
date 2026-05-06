@@ -578,6 +578,13 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
   headerImageUrl = '',
   setHeaderImageUrl,
 }) => {
+  // Detect IMAGE/VIDEO/DOCUMENT header directly from template components
+  const hasMediaHeader = React.useMemo(() =>
+    selectedTemplate?.components?.some(
+      c => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format || '')
+    ) ?? false
+  , [selectedTemplate]);
+
   // Anti-ban internal state (fallback when not provided as props)
   const [antiBanConfigInternal, setAntiBanConfigInternal] = React.useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
   const antiBanConfig = antiBanConfigProp ?? antiBanConfigInternal;
@@ -995,7 +1002,7 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
 
 
             {/* Header Media Upload (IMAGE/VIDEO/DOCUMENT templates) */}
-            {step === 1 && templateVariableInfo?.hasMediaHeader && setHeaderImageFile && (
+            {step === 1 && hasMediaHeader && setHeaderImageFile && (
               <div className="px-6 pb-2">
                 <div className="border border-white/10 rounded-xl p-4 bg-zinc-900/40">
                   <div className="flex items-center gap-2 mb-3">
@@ -1627,11 +1634,11 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                       handleSend();
                     }
                   }}
-                  disabled={isCreating || (scheduleMode === 'scheduled' && (!scheduledDate || !scheduledTime)) || !!(templateVariableInfo?.hasMediaHeader && !headerImageFile && !headerImageUrl)}
+                  disabled={isCreating || (scheduleMode === 'scheduled' && (!scheduledDate || !scheduledTime)) || !!(hasMediaHeader && !headerImageFile && !headerImageUrl)}
                   className={`group relative px-10 py-3 rounded-xl ${scheduleMode === 'scheduled'
                     ? 'bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_40px_rgba(147,51,234,0.6)]'
                     : 'bg-primary-600 hover:bg-primary-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.6)]'
-                    } text-white font-bold transition-all flex items-center gap-2 hover:scale-105 ${isCreating || (scheduleMode === 'scheduled' && (!scheduledDate || !scheduledTime)) || !!(templateVariableInfo?.hasMediaHeader && !headerImageFile && !headerImageUrl) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    } text-white font-bold transition-all flex items-center gap-2 hover:scale-105 ${isCreating || (scheduleMode === 'scheduled' && (!scheduledDate || !scheduledTime)) || !!(hasMediaHeader && !headerImageFile && !headerImageUrl) ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   <span className="relative z-10 flex items-center gap-2">
                     {isCreating
