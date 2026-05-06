@@ -48,6 +48,7 @@ interface CampaignWizardViewProps {
     header: { index: number; placeholder: string; context: string }[];
     buttons: { index: number; buttonIndex: number; buttonText: string; context: string }[];
     totalExtra: number;
+    hasMediaHeader?: boolean;
   };
   // Account Limits & Validation
   accountLimits?: AccountLimits | null;
@@ -67,6 +68,11 @@ interface CampaignWizardViewProps {
   additionalTemplateIds?: string[];
   setAdditionalTemplateIds?: (ids: string[]) => void;
   additionalTemplates?: Template[];
+  // Header media (IMAGE templates)
+  headerImageFile?: File | null;
+  setHeaderImageFile?: (f: File | null) => void;
+  headerImageUrl?: string;
+  setHeaderImageUrl?: (url: string) => void;
 }
 
 
@@ -567,7 +573,18 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
   additionalTemplateIds = [],
   setAdditionalTemplateIds,
   additionalTemplates = [],
+  headerImageFile,
+  setHeaderImageFile,
+  headerImageUrl = '',
+  setHeaderImageUrl,
 }) => {
+  // Detect IMAGE/VIDEO/DOCUMENT header directly from template components
+  const hasMediaHeader = React.useMemo(() =>
+    selectedTemplate?.components?.some(
+      c => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format || '')
+    ) ?? false
+  , [selectedTemplate]);
+
   // Anti-ban internal state (fallback when not provided as props)
   const [antiBanConfigInternal, setAntiBanConfigInternal] = React.useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
   const antiBanConfig = antiBanConfigProp ?? antiBanConfigInternal;
@@ -983,6 +1000,49 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
               </div>
             )}
 
+
+            {/* Header Media Upload (IMAGE/VIDEO/DOCUMENT templates) */}
+            {step === 1 && hasMediaHeader && setHeaderImageFile && (
+              <div className="px-6 pb-2">
+                <div className="border border-white/10 rounded-xl p-4 bg-zinc-900/40">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Upload size={14} className="text-primary-400" />
+                    <span className="text-sm font-bold text-white">Imagem do cabeçalho</span>
+                    <span className="text-xs text-red-400">obrigatório</span>
+                  </div>
+                  {headerImageFile ? (
+                    <div className="flex items-center gap-3 bg-zinc-900/60 border border-white/10 rounded-lg px-3 py-2">
+                      <Check size={14} className="text-green-400 flex-shrink-0" />
+                      <span className="text-sm text-gray-300 truncate">{headerImageFile.name}</span>
+                      <button
+                        onClick={() => { setHeaderImageFile(null); setHeaderImageUrl?.(''); }}
+                        className="ml-auto text-gray-500 hover:text-red-400 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center gap-2 border border-dashed border-white/20 rounded-lg p-4 cursor-pointer hover:border-primary-400/50 hover:bg-primary-500/5 transition-all">
+                      <Upload size={20} className="text-gray-500" />
+                      <span className="text-sm text-gray-400">Clique para selecionar a imagem</span>
+                      <span className="text-xs text-gray-600">JPEG, PNG ou WebP · máx 5 MB</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (f) { setHeaderImageFile(f); setHeaderImageUrl?.(''); }
+                        }}
+                      />
+                    </label>
+                  )}
+                  <p className="text-xs text-gray-600 mt-2">
+                    A imagem é hospedada automaticamente e enviada a todos os destinatários.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Multi-Template Section (anti-ban rotation) */}
             {step === 1 && selectedTemplateId && setAdditionalTemplateIds && (
@@ -1574,11 +1634,11 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                       handleSend();
                     }
                   }}
-                  disabled={isCreating || (scheduleMode === 'scheduled' && (!scheduledDate || !scheduledTime))}
+                  disabled={isCreating || (scheduleMode === 'scheduled' && (!scheduledDate || !scheduledTime)) || !!(hasMediaHeader && !headerImageFile && !headerImageUrl)}
                   className={`group relative px-10 py-3 rounded-xl ${scheduleMode === 'scheduled'
                     ? 'bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_40px_rgba(147,51,234,0.6)]'
                     : 'bg-primary-600 hover:bg-primary-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.6)]'
-                    } text-white font-bold transition-all flex items-center gap-2 hover:scale-105 ${isCreating || (scheduleMode === 'scheduled' && (!scheduledDate || !scheduledTime)) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    } text-white font-bold transition-all flex items-center gap-2 hover:scale-105 ${isCreating || (scheduleMode === 'scheduled' && (!scheduledDate || !scheduledTime)) || !!(hasMediaHeader && !headerImageFile && !headerImageUrl) ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   <span className="relative z-10 flex items-center gap-2">
                     {isCreating

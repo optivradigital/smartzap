@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   // Find campaigns ready to run
   const { data: due, error } = await supabase
     .from("campaigns")
-    .select("id, organization_id, template_name, template_variables, message_variants")
+    .select("id, organization_id, template_name, template_variables, message_variants, header_media_url")
     .eq("status", "scheduled")
     .lte("scheduled_at", now);
 
@@ -90,6 +90,7 @@ export async function GET(req: NextRequest) {
         phoneNumberId: "", // process route loads from Redis via orgId
         accessToken: "",   // process route loads from Redis via orgId
         orgId: campaign.organization_id,
+        headerMediaUrl: campaign.header_media_url || undefined,
       };
 
       // Fire-and-forget (don't await — campaigns can run for hours)

@@ -63,6 +63,7 @@ export const CreateCampaignSchema = z.object({
   simulateTyping: z.boolean().optional(),
   dailyLimit: z.number().int().min(0).max(10000).optional().nullable(),
   messageVariants: z.array(z.string()).optional(),
+  headerMediaUrl: z.string().url().optional(),
   contacts: z.array(
     z.object({
       name: z.string().max(100).optional(),
