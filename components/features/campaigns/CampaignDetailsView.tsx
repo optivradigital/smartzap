@@ -2,6 +2,39 @@ import React from 'react';
 import { PrefetchLink } from '@/components/ui/PrefetchLink';
 import { ChevronLeft, Clock, CheckCircle2, Eye, AlertCircle, Download, Search, Filter, RefreshCw, Pause, Play, Calendar, Loader2, PhoneOff } from 'lucide-react';
 import { Campaign, CampaignStatus, Message, MessageStatus } from '../../../types';
+import { mapWhatsAppError } from '@/lib/whatsapp-errors';
+
+const MessageInfoCell = ({ msg }: { msg: Message }) => {
+  const isNoWhatsapp = msg.status === MessageStatus.INVALID || msg.status === MessageStatus.NOT_EXISTS;
+
+  // Resolve a mensagem principal a exibir
+  const reason = msg.error || msg.failureReason || (isNoWhatsapp ? 'Sem WhatsApp ativo' : null);
+
+  if (!reason) return <span className="text-gray-600 text-xs">-</span>;
+
+  const errorInfo = msg.failureCode ? mapWhatsAppError(msg.failureCode) : null;
+  const color = isNoWhatsapp ? 'text-orange-400' : 'text-red-400';
+  const actionColor = isNoWhatsapp ? 'text-orange-300/70' : 'text-red-300/70';
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className={`${color} text-xs flex items-start gap-1`}>
+        <AlertCircle size={10} className="mt-0.5 shrink-0" />
+        <span>{reason}</span>
+      </span>
+      {errorInfo && (
+        <span className={`${actionColor} text-[10px] pl-[14px]`}>
+          {errorInfo.action}
+        </span>
+      )}
+      {msg.failureCode && (
+        <span className="text-gray-600 text-[10px] pl-[14px]">
+          Cód. {msg.failureCode}
+        </span>
+      )}
+    </div>
+  );
+};
 
 interface DetailCardProps {
   title: string;
@@ -348,16 +381,8 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
                     <MessageStatusBadge status={msg.status} />
                   </td>
                   <td className="px-6 py-3 text-gray-500 text-xs">{msg.sentAt}</td>
-                  <td className="px-6 py-3">
-                    {msg.error ? (
-                      <span className="text-red-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> {msg.error}</span>
-                    ) : (msg.status === MessageStatus.INVALID || msg.status === MessageStatus.NOT_EXISTS) ? (
-                      <span className="text-orange-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> {msg.failureReason || 'Sem WhatsApp ativo'}</span>
-                    ) : msg.failureReason ? (
-                      <span className="text-red-400 text-xs flex items-center gap-1"><AlertCircle size={10} /> {msg.failureReason}</span>
-                    ) : (
-                      <span className="text-gray-600 text-xs">-</span>
-                    )}
+                  <td className="px-6 py-3 max-w-xs">
+                    <MessageInfoCell msg={msg} />
                   </td>
                 </tr>
               ))}
