@@ -109,6 +109,7 @@ export interface Message {
   readAt?: string;         // Quando foi lido
   error?: string;
   failureReason?: string;   // Motivo da falha do webhook (ex: número sem WhatsApp)
+  failureCode?: number;     // Código de erro da Meta (ex: 131026)
 }
 
 export interface AppSettings {
