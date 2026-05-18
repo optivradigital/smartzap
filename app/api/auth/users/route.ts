@@ -115,8 +115,15 @@ export async function POST(request: NextRequest) {
       .from('smartzap_users')
       .update({ clerk_user_id: clerkUser.id })
       .eq('id', newUser.id)
-  } catch (clerkError) {
+  } catch (clerkError: unknown) {
     console.error('[users/POST] Erro ao criar usuário no Clerk:', clerkError)
+    // Reverter insert no Supabase para manter consistência
+    await supabase.from('smartzap_users').delete().eq('id', newUser.id)
+    // Extrair mensagem do erro do Clerk
+    const msg =
+      (clerkError as { errors?: { message?: string }[] })?.errors?.[0]?.message ||
+      'Erro ao criar usuário no sistema de autenticação'
+    return NextResponse.json({ error: msg }, { status: 422 })
   }
 
   return NextResponse.json(newUser, { status: 201 })
