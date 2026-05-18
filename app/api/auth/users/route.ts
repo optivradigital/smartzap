@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser, deleteUser, updateUserPassword, hashPassword } from '@/lib/multi-user-auth'
 import { requireManager } from '@/lib/role-guard'
 import { supabase } from '@/lib/supabase'
+import { clerkClient } from '@clerk/nextjs/server'
 
 export async function GET() {
   const { user, error } = await requireManager()
@@ -100,6 +101,22 @@ export async function POST(request: NextRequest) {
   if (insertError || !newUser) {
     console.error('Create user error:', insertError)
     return NextResponse.json({ error: 'Erro ao criar usuário' }, { status: 500 })
+  }
+
+  // Criar no Clerk para que o usuário consiga fazer login
+  try {
+    const client = await clerkClient()
+    const clerkUser = await client.users.createUser({
+      emailAddress: [email.toLowerCase().trim()],
+      password,
+      firstName: (name || '').trim() || undefined,
+    })
+    await supabase
+      .from('smartzap_users')
+      .update({ clerk_user_id: clerkUser.id })
+      .eq('id', newUser.id)
+  } catch (clerkError) {
+    console.error('[users/POST] Erro ao criar usuário no Clerk:', clerkError)
   }
 
   return NextResponse.json(newUser, { status: 201 })
