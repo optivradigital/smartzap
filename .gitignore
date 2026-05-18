@@ -52,6 +52,9 @@ coverage/
 # Backups / Utility
 tmp/
 
+# MCP local config (pode conter chaves de API)
+.mcp.json
+
 # Arquivos de controle de sessão (não fazem parte do produto)
 PROGRESS.md
 RELATORIO.md
