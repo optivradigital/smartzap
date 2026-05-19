@@ -24,35 +24,50 @@ interface StatsAPIResponse {
   deliveryRate: number;
 }
 
+function periodCutoff(period: string): Date | null {
+  const now = new Date();
+  if (period === '1H')  return new Date(now.getTime() - 1 * 60 * 60 * 1000);
+  if (period === '24H') return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  if (period === '7D')  return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  if (period === '30D') return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  return null;
+}
+
 export const dashboardService = {
   /**
    * Buscar stats do dashboard direto da API otimizada.
    * A API faz uma única query SQL agregada no servidor.
    * Cache: 15s no edge, stale-while-revalidate: 30s
    */
-  getStats: async (): Promise<DashboardStats> => {
+  getStats: async (period: string = '7D'): Promise<DashboardStats> => {
     // Fazer ambas chamadas em PARALELO
     const [statsResponse, campaignsResponse] = await Promise.all([
       fetch('/api/dashboard/stats'),
       fetch('/api/campaigns')
     ]);
-    
+
     // Parse das respostas
-    const stats: StatsAPIResponse = statsResponse.ok 
-      ? await statsResponse.json() 
+    const stats: StatsAPIResponse = statsResponse.ok
+      ? await statsResponse.json()
       : { totalSent: 0, totalDelivered: 0, totalRead: 0, totalFailed: 0, activeCampaigns: 0, deliveryRate: 0 };
-    
-    const campaigns: Campaign[] = campaignsResponse.ok 
-      ? await campaignsResponse.json() 
+
+    const allCampaigns: Campaign[] = campaignsResponse.ok
+      ? await campaignsResponse.json()
       : [];
-    
-    // Chart data das campanhas recentes
-    const chartData = campaigns.slice(0, 7).map(c => ({
-      name: c.name?.substring(0, 3) || '?',
+
+    // Filtrar campanhas pelo período selecionado
+    const cutoff = periodCutoff(period);
+    const campaigns = cutoff
+      ? allCampaigns.filter(c => c.createdAt && new Date(c.createdAt) >= cutoff)
+      : allCampaigns;
+
+    // Chart data: usar índice numérico (1, 2, 3...) no eixo X
+    const chartData = campaigns.slice(0, 7).map((c, i) => ({
+      name: String(i + 1),
       sent: c.recipients || 0,
       read: c.read || 0
     })).reverse();
-    
+
     return {
       sent24h: stats.totalSent.toLocaleString(),
       deliveryRate: `${stats.deliveryRate}%`,

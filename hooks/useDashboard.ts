@@ -6,7 +6,7 @@ import { useCurrentUser } from './useCurrentUser';
 // Polling interval: 30 seconds (fallback when Realtime unavailable)
 const POLLING_INTERVAL = 30000;
 
-export const useDashboardController = (initialData?: { stats: any, recentCampaigns: any[] }) => {
+export const useDashboardController = (initialData?: { stats: any, recentCampaigns: any[] }, period: string = '7D') => {
   const { activeOrgId } = useCurrentUser()
   const orgFilter = activeOrgId && activeOrgId !== '*'
     ? `organization_id=eq.${activeOrgId}`
@@ -14,8 +14,8 @@ export const useDashboardController = (initialData?: { stats: any, recentCampaig
 
   // Stats with Realtime updates - subscribes to campaigns table for live metrics
   const statsQuery = useRealtimeQuery({
-    queryKey: ['dashboardStats', activeOrgId],
-    queryFn: dashboardService.getStats,
+    queryKey: ['dashboardStats', activeOrgId, period],
+    queryFn: () => dashboardService.getStats(period),
     placeholderData: initialData?.stats,
     refetchInterval: POLLING_INTERVAL,
     staleTime: 15000,

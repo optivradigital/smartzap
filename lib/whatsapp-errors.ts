@@ -327,11 +327,11 @@ export const WHATSAPP_ERRORS: Record<number, WhatsAppError> = {
   },
   131026: {
     code: 131026,
-    category: 'system',
+    category: 'recipient',
     title: 'Message undeliverable',
-    userMessage: 'Não foi possível entregar a mensagem.',
-    action: 'Tente novamente mais tarde.',
-    retryable: true,
+    userMessage: 'Número não possui WhatsApp ativo ou está desconectado.',
+    action: 'Verifique se o número está cadastrado no WhatsApp.',
+    retryable: false,
   },
   500: {
     code: 500,

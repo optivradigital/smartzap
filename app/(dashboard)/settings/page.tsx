@@ -6,10 +6,12 @@ import { SettingsView } from '@/components/features/settings/SettingsView'
 import { SetupWizardView } from '@/components/features/settings/SetupWizardView'
 import { UsagePanel } from '@/components/UsagePanel'
 import { useUsage } from '@/hooks/useUsage'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 export default function SettingsPage() {
   const controller = useSettingsController()
   const { usage, isLoading: usageLoading, refetch: refetchUsage } = useUsage()
+  const { isManager } = useCurrentUser()
   const [skipWizard, setSkipWizard] = useState(false)
 
   // Show Setup Wizard if infrastructure is not ready (Redis + QStash)
@@ -82,14 +84,16 @@ export default function SettingsPage() {
           />
         </div>
 
-        {/* Usage Panel - sidebar alinhado ao topo */}
-        <div className="w-full xl:w-80 flex-shrink-0">
-          <UsagePanel
-            usage={usage}
-            isLoading={usageLoading}
-            onRefresh={refetchUsage}
-          />
-        </div>
+        {/* Usage Panel - visível apenas para managers e super admins */}
+        {isManager && (
+          <div className="w-full xl:w-80 flex-shrink-0">
+            <UsagePanel
+              usage={usage}
+              isLoading={usageLoading}
+              onRefresh={refetchUsage}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

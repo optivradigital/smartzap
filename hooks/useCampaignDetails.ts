@@ -49,7 +49,7 @@ export const useCampaignDetailsController = () => {
   // Fetch messages with optional polling
   const messagesQuery = useQuery({
     queryKey: ['campaignMessages', id],
-    queryFn: () => campaignService.getMessages(id!),
+    queryFn: () => campaignService.getMessages(id!, { limit: 500 }),
     enabled: !!id,
     staleTime: 5000,
     // Backup polling only while connected and active
