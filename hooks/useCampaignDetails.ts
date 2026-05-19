@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from '@/lib/navigation';
 import { toast } from 'sonner';
@@ -15,6 +15,8 @@ export const useCampaignDetailsController = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // Starts at 500 for fast first load; expands to total if there are more records
+  const [fetchLimit, setFetchLimit] = useState(500);
 
   // Fetch campaign data
   const campaignQuery = useQuery({
@@ -48,13 +50,21 @@ export const useCampaignDetailsController = () => {
 
   // Fetch messages with optional polling
   const messagesQuery = useQuery({
-    queryKey: ['campaignMessages', id],
-    queryFn: () => campaignService.getMessages(id!, { limit: 500 }),
+    queryKey: ['campaignMessages', id, fetchLimit],
+    queryFn: () => campaignService.getMessages(id!, { limit: fetchLimit }),
     enabled: !!id,
     staleTime: 5000,
     // Backup polling only while connected and active
     refetchInterval: shouldPoll ? BACKUP_POLLING_INTERVAL : false,
   });
+
+  // Auto-expand: if the first batch has more records, refetch with the real total
+  useEffect(() => {
+    const total = messagesQuery.data?.pagination?.total;
+    if (total && total > fetchLimit) {
+      setFetchLimit(total);
+    }
+  }, [messagesQuery.data?.pagination?.total, fetchLimit]);
 
   // Add polling to campaign query too
   const campaignWithPolling = useQuery({
