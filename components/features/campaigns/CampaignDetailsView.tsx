@@ -373,7 +373,7 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {messages.slice(0, 50).map((msg) => (
+              {messages.map((msg) => (
                 <tr key={msg.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-3 font-medium text-gray-200">{msg.contactName}</td>
                   <td className="px-6 py-3 font-mono text-xs text-gray-500">{msg.contactPhone}</td>
@@ -393,11 +393,6 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
               )}
             </tbody>
           </table>
-          {messages.length > 50 && (
-            <div className="p-3 text-center border-t border-white/5 text-xs text-gray-500">
-              Mostrando os primeiros 50 resultados de {messages.length}
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -46,6 +46,7 @@ export function useConversations(initialFilters: Omit<ConversationListParams, 'o
       return lastPage.offset + lastPage.limit
     },
     initialPageParam: 0,
+    refetchInterval: 30 * 1000,
   })
 
   // Derived state - flatten all pages

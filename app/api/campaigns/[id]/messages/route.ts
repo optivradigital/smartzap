@@ -39,7 +39,7 @@ export async function GET(request: Request, { params }: Params) {
     const { searchParams } = new URL(request.url)
 
     // Pagination params
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
+    const limit = Math.min(parseInt(searchParams.get('limit') || '500'), 1000)
     const offset = parseInt(searchParams.get('offset') || '0')
     const statusFilter = searchParams.get('status')
 

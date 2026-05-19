@@ -6,10 +6,14 @@ import { Campaign, CampaignStatus } from '../../../types';
 import { DashboardStats } from '../../../services/dashboardService';
 import { CampaignStatusBadge } from '../../ui/CampaignStatusBadge';
 
+export type ChartPeriod = '1H' | '24H' | '7D' | '30D';
+
 interface DashboardViewProps {
   stats: DashboardStats;
   recentCampaigns: Campaign[];
   isLoading: boolean;
+  activePeriod?: ChartPeriod;
+  onPeriodChange?: (period: ChartPeriod) => void;
 }
 
 interface StatCardProps {
@@ -57,7 +61,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendUp, color }: StatCardP
   );
 };
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampaigns, isLoading }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampaigns, isLoading, activePeriod = '7D', onPeriodChange }) => {
   // Skeleton loader for stats cards
   const StatSkeleton = () => (
     <div className="glass-panel p-6 rounded-2xl animate-pulse">
@@ -144,19 +148,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-sm font-semibold text-foreground" id="chart-title">Volume de Mensagens</h3>
             <div className="flex gap-1 p-0.5 bg-zinc-800/80 rounded-lg border border-zinc-700/50" role="group" aria-label="Período do gráfico">
-              {[
-                { key: '1H', label: 'Última hora' },
-                { key: '24H', label: 'Últimas 24 horas' },
-                { key: '7D', label: 'Últimos 7 dias' },
-                { key: '30D', label: 'Últimos 30 dias' }
-              ].map((t) => (
+              {(['1H', '24H', '7D', '30D'] as ChartPeriod[]).map((key) => (
                 <button
-                  key={t.key}
-                  aria-label={t.label}
-                  aria-pressed={t.key === '7D'}
-                  className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${t.key === '7D' ? 'bg-zinc-700 text-white font-medium shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  key={key}
+                  aria-label={key}
+                  aria-pressed={key === activePeriod}
+                  onClick={() => onPeriodChange?.(key)}
+                  className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${key === activePeriod ? 'bg-zinc-700 text-white font-medium shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
-                  {t.key}
+                  {key}
                 </button>
               ))}
             </div>

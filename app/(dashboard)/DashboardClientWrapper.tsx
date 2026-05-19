@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useDashboardController } from '@/hooks/useDashboard'
 import { DashboardView } from '@/components/features/dashboard/DashboardView'
+import type { ChartPeriod } from '@/components/features/dashboard/DashboardView'
 
 const DEFAULT_STATS = {
     sent24h: '0',
@@ -14,7 +15,8 @@ const DEFAULT_STATS = {
 }
 
 export function DashboardClientWrapper({ initialData }: { initialData: any }) {
-    const { stats, recentCampaigns, isLoading } = useDashboardController(initialData)
+    const [activePeriod, setActivePeriod] = useState<ChartPeriod>('7D')
+    const { stats, recentCampaigns, isLoading } = useDashboardController(initialData, activePeriod)
     const queryClient = useQueryClient()
 
     // Prefetch outras páginas em background após o dashboard carregar
@@ -40,6 +42,8 @@ export function DashboardClientWrapper({ initialData }: { initialData: any }) {
             stats={stats ?? DEFAULT_STATS}
             recentCampaigns={recentCampaigns ?? []}
             isLoading={isLoading}
+            activePeriod={activePeriod}
+            onPeriodChange={setActivePeriod}
         />
     )
 }
