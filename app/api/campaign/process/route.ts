@@ -556,7 +556,7 @@ export async function POST(request: NextRequest) {
         // Salva no histórico de conversas + registra no GPT Maker
         ;(async () => {
           try {
-            const botId = orgConfig?.gptmakerAgentId || DEMI_BOT_ID;
+            const botId = DEMI_BOT_ID;
             let conv = await botConversationDb.getByContact(botId, contact.phone, payload.orgId || undefined);
             if (!conv) {
               conv = await botConversationDb.create({
