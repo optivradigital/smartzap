@@ -18,6 +18,7 @@ const DEMI_BOT_ID = "demi-gptmaker-v1";
 interface Contact {
   phone: string;
   name: string;
+  vars?: Record<string, string>;
 }
 
 interface ProcessPayload {
@@ -25,6 +26,7 @@ interface ProcessPayload {
   templateName: string;
   contacts: Contact[];
   templateVariables?: string[];
+  variableColumnMap?: Record<number, string>;
   phoneNumberId: string;
   accessToken: string;
   orgId?: string | null;
@@ -95,6 +97,24 @@ function buildBodyParameters(
 ) {
   const all = [contactName || "Cliente", ...templateVariables];
   return all.map((v) => ({ type: "text", text: v }));
+}
+
+/**
+ * Resolves the body variables for one specific contact: when a slot is mapped to a
+ * spreadsheet column (variableColumnMap) and that contact has a value for it, use that;
+ * otherwise fall back to the fixed value typed in the wizard (same for every contact).
+ */
+function resolveContactVariables(
+  contact: Contact,
+  fallbackVariables: string[],
+  variableColumnMap?: Record<number, string>
+): string[] {
+  if (!variableColumnMap) return fallbackVariables;
+  return fallbackVariables.map((fallback, idx) => {
+    const column = variableColumnMap[idx];
+    const value = column ? contact.vars?.[column] : undefined;
+    return value !== undefined && value !== "" ? value : fallback;
+  });
 }
 
 async function updateContactStatus(
@@ -304,6 +324,7 @@ export async function POST(request: NextRequest) {
     templateName,
     contacts,
     templateVariables = [],
+    variableColumnMap,
     phoneNumberId,
     accessToken,
     templateNames,
@@ -465,13 +486,16 @@ export async function POST(request: NextRequest) {
       // Sorteia template aleatório para este contato (anti-ban por variação)
       const chosenTemplate = pickTemplate(allTemplates);
 
+      // Resolve as variáveis deste contato específico (coluna da planilha, se mapeada)
+      const contactVariables = resolveContactVariables(contact, templateVariables, variableColumnMap);
+
       let messageId: string | undefined;
       let sendError: string | undefined;
       let renderedText: string | undefined;
 
       if (isEvolution) {
         // ── Evolution API: send free-text rendered from template body ────────
-        const text = await renderTemplateText(chosenTemplate, contact.name, templateVariables);
+        const text = await renderTemplateText(chosenTemplate, contact.name, contactVariables);
         renderedText = text;
         const evoProvider = new EvolutionProvider(
           orgConfig!.evolutionUrl || process.env.EVOLUTION_API_URL || "http://evolution_api:8080",
@@ -517,7 +541,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Body component — only if there are real (non-empty) variables
-        const effectiveBodyVars = (templateVariables ?? []).filter(v => v !== null && v !== undefined && String(v).trim() !== '');
+        const effectiveBodyVars = contactVariables.filter(v => v !== null && v !== undefined && String(v).trim() !== '');
         if (effectiveBodyVars.length > 0) {
           templateComponents.push({ type: 'body', parameters: buildBodyParameters(contact.name, effectiveBodyVars) });
         }
@@ -578,7 +602,7 @@ export async function POST(request: NextRequest) {
               },
               status: "sent",
             });
-            await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, templateVariables, renderedText);
+            await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, contactVariables, renderedText);
           } catch (e) {
             console.error("[Campaign] Failed to log template dispatch:", e);
           }

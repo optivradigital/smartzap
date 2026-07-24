@@ -74,7 +74,8 @@ export interface Campaign {
   createdAt: string;
   organizationId?: string;
   templateName: string;
-  templateVariables?: string[];  // Dynamic template variables for {{2}}, {{3}}, etc.
+  templateVariables?: string[];  // Dynamic template variables for {{2}}, {{3}}, etc. (fallback value when not mapped per-contact)
+  variableColumnMap?: Record<number, string>;  // Maps {{2}}, {{3}}... to a column name from the imported spreadsheet
   // Scheduling
   scheduledAt?: string;  // ISO timestamp for scheduled campaigns
   startedAt?: string;    // When campaign actually started sending
@@ -95,6 +96,13 @@ export interface Contact {
   createdAt?: string;
   updatedAt?: string;
   organizationId?: string;
+}
+
+/** A recipient prepared for campaign sending — optionally carries extra spreadsheet columns for per-contact placeholders. */
+export interface CampaignSendingContact {
+  name: string;
+  phone: string;
+  vars?: Record<string, string>;
 }
 
 export interface Message {

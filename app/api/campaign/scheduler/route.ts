@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   // Find campaigns ready to run
   const { data: due, error } = await supabase
     .from("campaigns")
-    .select("id, organization_id, template_name, template_variables, message_variants, header_media_url")
+    .select("id, organization_id, template_name, template_variables, variable_column_map, message_variants, header_media_url")
     .eq("status", "scheduled")
     .lte("scheduled_at", now);
 
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       // Load pending contacts
       const { data: contactRows } = await supabase
         .from("campaign_contacts")
-        .select("phone, name")
+        .select("phone, name, variables")
         .eq("campaign_id", campaign.id)
         .eq("status", "pending");
 
@@ -85,8 +85,13 @@ export async function GET(req: NextRequest) {
         campaignId: campaign.id,
         templateName: templateNames[0],
         templateNames,
-        contacts: contactRows,
+        contacts: contactRows.map((c: { phone: string; name: string; variables: Record<string, string> | null }) => ({
+          phone: c.phone,
+          name: c.name,
+          vars: c.variables ?? undefined,
+        })),
         templateVariables: campaign.template_variables ?? [],
+        variableColumnMap: campaign.variable_column_map ?? undefined,
         phoneNumberId: "", // process route loads from Redis via orgId
         accessToken: "",   // process route loads from Redis via orgId
         orgId: campaign.organization_id,

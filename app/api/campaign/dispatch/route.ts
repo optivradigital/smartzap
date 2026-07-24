@@ -7,14 +7,26 @@ import { getCurrentUser } from "@/lib/clerk-auth";
 interface DispatchContact {
   phone: string;
   name: string;
+  vars?: Record<string, string>;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { campaignId, templateName, templateNames, whatsappCredentials, templateVariables, flowId } = body;
+  const { campaignId, templateName, templateNames, whatsappCredentials, templateVariables, variableColumnMap, flowId } = body;
   let { contacts } = body;
+
+  // Resolve variableColumnMap from the campaign when not provided in the body
+  let resolvedVariableColumnMap: Record<number, string> | undefined = variableColumnMap;
+  if (!resolvedVariableColumnMap) {
+    const { data: campaignRow } = await supabase
+      .from("campaigns")
+      .select("variable_column_map")
+      .eq("id", campaignId)
+      .single();
+    resolvedVariableColumnMap = campaignRow?.variable_column_map ?? undefined;
+  }
 
   // Get current user for org-scoped credentials
   const currentUser = await getCurrentUser();
@@ -53,7 +65,7 @@ export async function POST(request: NextRequest) {
   if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
     const { data: existingContacts, error } = await supabase
       .from("campaign_contacts")
-      .select("phone, name")
+      .select("phone, name, variables")
       .eq("campaign_id", campaignId);
 
     if (error) {
@@ -66,6 +78,7 @@ export async function POST(request: NextRequest) {
     contacts = existingContacts.map((row) => ({
       phone: row.phone as string,
       name: (row.name as string) || "",
+      vars: (row.variables as Record<string, string> | null) || undefined,
     }));
   } else {
     // Save contacts to campaign_contacts
@@ -76,6 +89,7 @@ export async function POST(request: NextRequest) {
         phone: c.phone,
         name: c.name || "",
         status: "pending",
+        variables: c.vars ?? null,
       }));
       const { error } = await supabase
         .from("campaign_contacts")
@@ -138,6 +152,7 @@ export async function POST(request: NextRequest) {
     templateNames: templateNames || (templateName ? [templateName] : undefined),
     contacts: contacts as DispatchContact[],
     templateVariables: resolvedTemplateVariables,
+    variableColumnMap: resolvedVariableColumnMap,
     phoneNumberId,
     accessToken,
     orgId,

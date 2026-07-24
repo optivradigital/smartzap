@@ -37,8 +37,9 @@ interface CreateCampaignBody {
   recipients: number
   scheduledAt?: string
   selectedContactIds?: string[]
-  contacts?: { name: string; phone: string }[]
+  contacts?: { name: string; phone: string; vars?: Record<string, string> }[]
   templateVariables?: string[]
+  variableColumnMap?: Record<number, string>
   providerType?: 'meta' | 'evolution'
   delayMinSec?: number
   delayMaxSec?: number
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
       recipients: data.recipients,
       scheduledAt: data.scheduledAt,
       templateVariables: data.templateVariables,
+      variableColumnMap: data.variableColumnMap as Record<number, string> | undefined,
       organizationId: orgId === '*' ? undefined : orgId,
       providerType: (data as any).providerType,
       delayMinMs: (data as any).delayMinSec != null ? (data as any).delayMinSec * 1000 : undefined,
@@ -98,6 +100,7 @@ export async function POST(request: Request) {
           contactId: `temp_${index}`,
           phone: c.phone,
           name: c.name || '',
+          vars: c.vars,
         }))
       )
     }

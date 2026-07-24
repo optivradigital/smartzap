@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronRight, ChevronLeft, Upload, Users, Smartphone, Check, MessageSquare, Eye, Zap, AlertCircle, Sparkles, RefreshCw, ShieldAlert, ExternalLink, TrendingUp, XCircle, CheckCircle, Circle, Clock, Calendar, FlaskConical, UserCheck, Search, X, FileSpreadsheet, FileUp } from 'lucide-react';
 import { PrefetchLink } from '@/components/ui/PrefetchLink';
-import { Template, Contact, TestContact } from '../../../types';
+import { Template, Contact, TestContact, CampaignSendingContact } from '../../../types';
 import { getPricingBreakdown } from '../../../lib/whatsapp-pricing';
 import { useExchangeRate } from '../../../hooks/useExchangeRate';
 import { WhatsAppPhonePreview } from '@/components/ui/WhatsAppPhonePreview';
@@ -21,8 +21,8 @@ interface CampaignWizardViewProps {
   selectedTemplateId: string;
   setSelectedTemplateId: (id: string) => void;
   recipientSource: 'all' | 'specific' | 'test' | 'excel' | null;
-  excelContacts: { name: string; phone: string }[];
-  setExcelContacts: (contacts: { name: string; phone: string }[]) => void;
+  excelContacts: CampaignSendingContact[];
+  setExcelContacts: (contacts: CampaignSendingContact[]) => void;
   setRecipientSource: (source: 'all' | 'specific' | 'test' | 'excel' | null) => void;
   totalContacts: number;
   recipientCount: number;
@@ -42,6 +42,9 @@ interface CampaignWizardViewProps {
   // Template Variables (for {{2}}, {{3}}, etc.)
   templateVariables?: string[];
   setTemplateVariables?: (vars: string[]) => void;
+  variableColumnMap?: Record<number, string>;
+  setVariableColumnMap?: (map: Record<number, string>) => void;
+  availableExcelColumns?: string[];
   templateVariableCount?: number;
   templateVariableInfo?: {
     body: { index: number; placeholder: string; context: string }[];
@@ -80,8 +83,8 @@ interface CampaignWizardViewProps {
 // ExcelUploader — parses CSV and XLSX files into { name, phone }[] contacts
 // ---------------------------------------------------------------------------
 interface ExcelUploaderProps {
-  excelContacts: { name: string; phone: string }[];
-  setExcelContacts: (contacts: { name: string; phone: string }[]) => void;
+  excelContacts: CampaignSendingContact[];
+  setExcelContacts: (contacts: CampaignSendingContact[]) => void;
 }
 
 const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelContacts }) => {
@@ -100,7 +103,7 @@ const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelCo
 
   const processRows = (rows: Record<string, string>[]) => {
     setParseError(null);
-    const results: { name: string; phone: string }[] = [];
+    const results: CampaignSendingContact[] = [];
     const phoneKeys = ['telefone', 'phone', 'celular', 'mobile', 'numero', 'número', 'tel', 'whatsapp'];
     const nameKeys = ['nome', 'name', 'contato', 'contact', 'cliente', 'client'];
 
@@ -113,7 +116,14 @@ const ExcelUploader: React.FC<ExcelUploaderProps> = ({ excelContacts, setExcelCo
       const name = nameKey ? String(row[nameKey] || '').trim() : '';
       const phone = normalizePhone(rawPhone);
       if (phone.length >= 10) {
-        results.push({ name: (name || phone).slice(0, 99), phone });
+        // Guarda todas as colunas extras (além de nome/telefone) para permitir
+        // mapear placeholders {{2}}, {{3}}... por contato (ex: "valor", "produto")
+        const vars: Record<string, string> = {};
+        for (const key of rawKeys) {
+          if (key === phoneKey || key === nameKey) continue;
+          vars[key] = String(row[key] ?? '').trim();
+        }
+        results.push({ name: (name || phone).slice(0, 99), phone, vars });
       }
     }
 
@@ -556,6 +566,9 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
   // Template Variables
   templateVariables,
   setTemplateVariables,
+  variableColumnMap = {},
+  setVariableColumnMap,
+  availableExcelColumns = [],
   templateVariableCount,
   templateVariableInfo,
   // Account Limits
@@ -864,7 +877,10 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                         <h3 className="text-sm font-bold text-white">Variáveis do Template</h3>
                         <p className="text-xs text-gray-400 mt-1">
                           Preencha os valores que serão usados neste template.
-                          Esses valores serão <span className="text-white">iguais para todos</span> os destinatários.
+                          {availableExcelColumns.length > 0
+                            ? <> Nas variáveis do texto, você pode escolher uma <span className="text-white">coluna da planilha</span> para que cada contato receba um valor diferente.</>
+                            : <> Esses valores serão <span className="text-white">iguais para todos</span> os destinatários.</>
+                          }
                         </p>
                       </div>
                     </div>
@@ -895,26 +911,52 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                                   <span className="text-xs text-gray-500">automático</span>
                                 </>
                               ) : (
-                                <>
-                                  <input
-                                    type="text"
-                                    value={templateVariables?.[varInfo.index - 2] || ''}
-                                    onChange={(e) => {
-                                      if (setTemplateVariables && templateVariables) {
-                                        const newVars = [...templateVariables];
-                                        newVars[varInfo.index - 2] = e.target.value;
-                                        setTemplateVariables(newVars);
-                                      }
-                                    }}
-                                    placeholder={varInfo.context}
-                                    className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none transition-all text-white text-sm placeholder-gray-600"
-                                  />
-                                  {!templateVariables?.[varInfo.index - 2] ? (
-                                    <span className="text-xs text-amber-400">obrigatório</span>
-                                  ) : (
-                                    <Check size={16} className="text-primary-400" />
-                                  )}
-                                </>
+                                (() => {
+                                  const varSlot = varInfo.index - 2;
+                                  const mappedColumn = variableColumnMap[varSlot];
+                                  const isFilled = !!mappedColumn || !!templateVariables?.[varSlot];
+                                  return (
+                                    <>
+                                      {availableExcelColumns.length > 0 && (
+                                        <select
+                                          value={mappedColumn || ''}
+                                          onChange={(e) => {
+                                            if (!setVariableColumnMap) return;
+                                            const newMap = { ...variableColumnMap };
+                                            if (e.target.value) newMap[varSlot] = e.target.value;
+                                            else delete newMap[varSlot];
+                                            setVariableColumnMap(newMap);
+                                          }}
+                                          className="px-2 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-white text-sm outline-none"
+                                        >
+                                          <option value="">Valor fixo</option>
+                                          {availableExcelColumns.map(col => (
+                                            <option key={col} value={col}>Coluna: {col}</option>
+                                          ))}
+                                        </select>
+                                      )}
+                                      <input
+                                        type="text"
+                                        value={mappedColumn ? '' : (templateVariables?.[varSlot] || '')}
+                                        disabled={!!mappedColumn}
+                                        onChange={(e) => {
+                                          if (setTemplateVariables && templateVariables) {
+                                            const newVars = [...templateVariables];
+                                            newVars[varSlot] = e.target.value;
+                                            setTemplateVariables(newVars);
+                                          }
+                                        }}
+                                        placeholder={mappedColumn ? `Valor por contato (coluna "${mappedColumn}")` : varInfo.context}
+                                        className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none transition-all text-white text-sm placeholder-gray-600 disabled:text-gray-500 disabled:cursor-not-allowed"
+                                      />
+                                      {!isFilled ? (
+                                        <span className="text-xs text-amber-400">obrigatório</span>
+                                      ) : (
+                                        <Check size={16} className="text-primary-400" />
+                                      )}
+                                    </>
+                                  );
+                                })()
                               )}
                             </div>
                           ))}

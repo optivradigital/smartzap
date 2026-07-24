@@ -1,14 +1,15 @@
-import { Campaign, CampaignStatus, Message, MessageStatus } from '../types';
+import { Campaign, CampaignStatus, Message, MessageStatus, CampaignSendingContact } from '../types';
 
 interface CreateCampaignInput {
   name: string;
   templateName: string;
   templateNames?: string[]; // Multiple templates for random rotation (anti-ban)
   recipients: number;
-  selectedContacts?: { name: string; phone: string }[];
+  selectedContacts?: CampaignSendingContact[];
   selectedContactIds?: string[];
   scheduledAt?: string;
   templateVariables?: string[];
+  variableColumnMap?: Record<number, string>; // Maps a variable slot to a spreadsheet column, for per-contact values
   // Anti-ban (Evolution API)
   providerType?: 'meta' | 'evolution';
   delayMinSec?: number;
@@ -145,7 +146,7 @@ export const campaignService = {
   },
 
   create: async (input: CreateCampaignInput): Promise<Campaign> => {
-    const { name, templateName, templateNames, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, providerType, delayMinSec, delayMaxSec, simulateTyping, dailyLimit, messageVariants, headerMediaUrl } = input;
+    const { name, templateName, templateNames, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, variableColumnMap, providerType, delayMinSec, delayMaxSec, simulateTyping, dailyLimit, messageVariants, headerMediaUrl } = input;
 
     // 1. Create campaign in Database (source of truth) with contacts
     const response = await fetch('/api/campaigns', {
@@ -159,6 +160,7 @@ export const campaignService = {
         selectedContactIds,
         contacts: selectedContacts, // Pass contacts to be saved in campaign_contacts
         templateVariables,
+        variableColumnMap,
         templateNames,
         providerType,
         delayMinSec,
@@ -189,14 +191,14 @@ export const campaignService = {
 
     // 3. Dispatch to Backend immediately (Execution)
     if (selectedContacts && selectedContacts.length > 0) {
-      await campaignService.dispatchToBackend(newCampaign.id, templateName, selectedContacts, templateVariables, templateNames);
+      await campaignService.dispatchToBackend(newCampaign.id, templateName, selectedContacts, templateVariables, templateNames, variableColumnMap);
     }
 
     return newCampaign;
   },
 
   // Internal: dispatch campaign to backend queue
-  dispatchToBackend: async (campaignId: string, templateName: string, contacts?: { name: string; phone: string }[], templateVariables?: string[], templateNames?: string[]): Promise<boolean> => {
+  dispatchToBackend: async (campaignId: string, templateName: string, contacts?: CampaignSendingContact[], templateVariables?: string[], templateNames?: string[], variableColumnMap?: Record<number, string>): Promise<boolean> => {
     try {
       // Use provided contacts - contacts must be passed explicitly
       if (!contacts || contacts.length === 0) {
@@ -214,6 +216,7 @@ export const campaignService = {
           templateNames,
           contacts,
           templateVariables, // Pass template variables to workflow
+          variableColumnMap,
           // whatsappCredentials fetched from Redis on server
         })
       });
