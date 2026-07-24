@@ -55,7 +55,8 @@ export const CreateCampaignSchema = z.object({
   recipients: z.number().int().min(0).optional().default(0),
   scheduledAt: z.string().datetime().optional(),
   selectedContactIds: z.array(z.string()).optional(),
-  templateVariables: z.array(z.string()).optional(),  // Static values for {{2}}, {{3}}, etc.
+  templateVariables: z.array(z.string()).optional(),  // Fallback static values for {{2}}, {{3}}, etc.
+  variableColumnMap: z.record(z.string(), z.string()).optional(),  // Maps a variable slot to a spreadsheet column, for per-contact values
   // Anti-ban fields (Evolution API)
   providerType: z.enum(['meta', 'evolution']).optional(),
   delayMinSec: z.number().int().min(1).max(3600).optional(),
@@ -68,6 +69,7 @@ export const CreateCampaignSchema = z.object({
     z.object({
       name: z.string().max(100).optional(),
       phone: z.string().min(1),
+      vars: z.record(z.string(), z.string()).optional(),
     })
   ).optional(),
 })

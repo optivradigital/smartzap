@@ -4,7 +4,7 @@ import { useNavigate } from '@/lib/navigation';
 import { toast } from 'sonner';
 import { campaignService, contactService, templateService } from '../services';
 import { settingsService } from '../services/settingsService';
-import { Template, TestContact } from '../types';
+import { Template, TestContact, CampaignSendingContact } from '../types';
 import { useAccountLimits } from './useAccountLimits';
 import { CampaignValidation } from '../lib/meta-limits';
 import { countTemplateVariables } from '../lib/template-validator';
@@ -25,11 +25,14 @@ export const useCampaignWizardController = () => {
   const [antiBanConfig, setAntiBanConfig] = useState<AntiBanConfig>(DEFAULT_ANTI_BAN);
   const [providerType, setProviderType] = useState<'meta' | 'evolution'>('meta');
   const [recipientSource, setRecipientSource] = useState<'all' | 'specific' | 'test' | 'excel' | null>(null);
-  const [excelContacts, setExcelContacts] = useState<{ name: string; phone: string }[]>([]);
+  const [excelContacts, setExcelContacts] = useState<CampaignSendingContact[]>([]);
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
-  
+
   // Template Variables State - for {{2}}, {{3}}, etc. ({{1}} is always the contact name)
   const [templateVariables, setTemplateVariables] = useState<string[]>([]);
+  // Maps a template variable slot (same index as templateVariables) to a spreadsheet
+  // column name, so each contact gets its own value instead of one fixed value for all.
+  const [variableColumnMap, setVariableColumnMap] = useState<Record<number, string>>({});
 
   // Header media (IMAGE templates)
   const [headerImageFile, setHeaderImageFile] = useState<File | null>(null);
@@ -166,12 +169,22 @@ export const useCampaignWizardController = () => {
   const recipientCount = recipientSource === 'test' && testContact ? 1 : recipientSource === 'excel' ? excelContacts.length : selectedContacts.length;
   
   // Get contacts for sending - test contact or selected contacts
-  const contactsForSending = recipientSource === 'test' && testContact 
+  const contactsForSending = recipientSource === 'test' && testContact
     ? [{ name: testContact.name || testContact.phone, phone: testContact.phone }]
     : recipientSource === 'excel'
       ? excelContacts
       : selectedContacts.map(c => ({ name: c.name || c.phone, phone: c.phone }));
-  
+
+  // Column names available from the imported spreadsheet, for mapping into {{2}}, {{3}}, etc.
+  const availableExcelColumns = useMemo(() => {
+    if (recipientSource !== 'excel') return [];
+    const cols = new Set<string>();
+    for (const c of excelContacts) {
+      if (c.vars) Object.keys(c.vars).forEach(k => cols.add(k));
+    }
+    return Array.from(cols);
+  }, [recipientSource, excelContacts]);
+
   const availableTemplates = templatesQuery.data || [];
   const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateId);
   const additionalTemplates = additionalTemplateIds.map(id => availableTemplates.find(t => t.id === id)).filter(Boolean) as typeof availableTemplates;
@@ -265,6 +278,7 @@ export const useCampaignWizardController = () => {
   // Reset template variables when template changes
   useEffect(() => {
     setTemplateVariables(Array(templateVariableCount).fill(''));
+    setVariableColumnMap({});
   }, [templateVariableCount]);
 
   // 🔴 LIVE VALIDATION - Check limits in real-time as user selects contacts
@@ -314,7 +328,7 @@ export const useCampaignWizardController = () => {
   const handleSend = async (scheduleTime?: string) => {
     // Validate that all required template variables are filled
     if (templateVariableCount > 0) {
-      const emptyVars = templateVariables.filter(v => !v || v.trim() === '');
+      const emptyVars = templateVariables.filter((v, idx) => (!v || v.trim() === '') && !variableColumnMap[idx]);
       if (emptyVars.length > 0) {
         toast.error(`Preencha todas as variáveis do template (${emptyVars.length} pendentes)`);
         return;
@@ -375,6 +389,7 @@ export const useCampaignWizardController = () => {
       selectedContactIds: recipientSource === 'test' ? [] : selectedContactIds,
       scheduledAt: scheduleTime || scheduledAt || undefined,
       templateVariables: templateVariables.length > 0 ? templateVariables : undefined,
+      variableColumnMap: Object.keys(variableColumnMap).length > 0 ? variableColumnMap : undefined,
       providerType: providerType,
       delayMinSec: antiBanConfig.delayMinSec,
       delayMaxSec: antiBanConfig.delayMaxSec,
@@ -436,6 +451,9 @@ export const useCampaignWizardController = () => {
     // Template Variables (for {{2}}, {{3}}, etc.)
     templateVariables,
     setTemplateVariables,
+    variableColumnMap,
+    setVariableColumnMap,
+    availableExcelColumns,
     templateVariableCount,
     templateVariableInfo, // Detailed info about each variable location
 

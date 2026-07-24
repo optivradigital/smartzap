@@ -64,6 +64,7 @@ export const campaignDb = {
             status: row.status as CampaignStatus,
             templateName: row.template_name,
             templateVariables: row.template_variables as string[] | undefined,
+            variableColumnMap: row.variable_column_map as Record<number, string> | undefined,
             recipients: row.total_recipients,
             sent: row.sent,
             delivered: row.delivered,
@@ -91,6 +92,7 @@ export const campaignDb = {
             status: data.status as CampaignStatus,
             templateName: data.template_name,
             templateVariables: data.template_variables as string[] | undefined,
+            variableColumnMap: data.variable_column_map as Record<number, string> | undefined,
             recipients: data.total_recipients,
             sent: data.sent,
             delivered: data.delivered,
@@ -110,6 +112,7 @@ export const campaignDb = {
         recipients: number
         scheduledAt?: string
         templateVariables?: string[]
+        variableColumnMap?: Record<number, string>
         organizationId?: string
         headerMediaUrl?: string
         // Anti-ban (Evolution API)
@@ -132,6 +135,7 @@ export const campaignDb = {
                 status,
                 template_name: campaign.templateName,
                 template_variables: campaign.templateVariables,
+                variable_column_map: campaign.variableColumnMap ?? null,
                 total_recipients: campaign.recipients,
                 sent: 0,
                 delivered: 0,
@@ -160,6 +164,7 @@ export const campaignDb = {
             status,
             templateName: campaign.templateName,
             templateVariables: campaign.templateVariables,
+            variableColumnMap: campaign.variableColumnMap,
             recipients: campaign.recipients,
             sent: 0,
             delivered: 0,
@@ -497,7 +502,7 @@ export const contactDb = {
 // ============================================================================
 
 export const campaignContactDb = {
-    addContacts: async (campaignId: string, contacts: { contactId: string, phone: string, name: string }[]): Promise<void> => {
+    addContacts: async (campaignId: string, contacts: { contactId: string, phone: string, name: string, vars?: Record<string, string> }[]): Promise<void> => {
         const rows = contacts.map(contact => ({
             id: generateId(),
             campaign_id: campaignId,
@@ -505,6 +510,7 @@ export const campaignContactDb = {
             phone: contact.phone,
             name: contact.name,
             status: 'pending',
+            variables: contact.vars ?? null,
         }))
 
         const { error } = await supabase

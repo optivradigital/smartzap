@@ -35,6 +35,9 @@ export default function NewCampaignPage() {
       // Template Variables
       templateVariables={controller.templateVariables}
       setTemplateVariables={controller.setTemplateVariables}
+      variableColumnMap={controller.variableColumnMap}
+      setVariableColumnMap={controller.setVariableColumnMap}
+      availableExcelColumns={controller.availableExcelColumns}
       templateVariableCount={controller.templateVariableCount}
       templateVariableInfo={controller.templateVariableInfo}
       // Account Limits
