@@ -145,7 +145,7 @@ export const campaignService = {
     return null;
   },
 
-  create: async (input: CreateCampaignInput): Promise<Campaign> => {
+  create: async (input: CreateCampaignInput): Promise<Campaign & { dispatchWarning?: string }> => {
     const { name, templateName, templateNames, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, variableColumnMap, providerType, delayMinSec, delayMaxSec, simulateTyping, dailyLimit, messageVariants, headerMediaUrl } = input;
 
     // 1. Create campaign in Database (source of truth) with contacts
@@ -191,19 +191,22 @@ export const campaignService = {
 
     // 3. Dispatch to Backend immediately (Execution)
     if (selectedContacts && selectedContacts.length > 0) {
-      await campaignService.dispatchToBackend(newCampaign.id, templateName, selectedContacts, templateVariables, templateNames, variableColumnMap);
+      const dispatchResult = await campaignService.dispatchToBackend(newCampaign.id, templateName, selectedContacts, templateVariables, templateNames, variableColumnMap);
+      if (!dispatchResult.success) {
+        return { ...newCampaign, dispatchWarning: dispatchResult.warning || 'Campanha criada, mas o disparo falhou.' };
+      }
     }
 
     return newCampaign;
   },
 
   // Internal: dispatch campaign to backend queue
-  dispatchToBackend: async (campaignId: string, templateName: string, contacts?: CampaignSendingContact[], templateVariables?: string[], templateNames?: string[], variableColumnMap?: Record<number, string>): Promise<boolean> => {
+  dispatchToBackend: async (campaignId: string, templateName: string, contacts?: CampaignSendingContact[], templateVariables?: string[], templateNames?: string[], variableColumnMap?: Record<number, string>): Promise<{ success: boolean; warning?: string }> => {
     try {
       // Use provided contacts - contacts must be passed explicitly
       if (!contacts || contacts.length === 0) {
         console.error('No contacts provided for dispatch');
-        return false;
+        return { success: false, warning: 'Nenhum destinatário para disparar' };
       }
 
       // Don't send credentials from localStorage - server fetches from Redis
@@ -221,14 +224,21 @@ export const campaignService = {
         })
       });
 
+      // A redirect (e.g. to the login page) means the session wasn't recognized —
+      // the request never reached the dispatch logic, and contacts would be stuck "pending" silently.
+      if (response.redirected || response.headers.get('content-type')?.includes('text/html')) {
+        console.error('Dispatch redirected — session likely expired');
+        return { success: false, warning: 'Sessão expirada durante o disparo. Atualize a página e tente novamente.' };
+      }
+
       if (!response.ok) {
         console.error('Dispatch failed:', await response.text());
-        return false;
+        return { success: false, warning: 'Falha ao iniciar o disparo. Tente novamente em instantes.' };
       }
-      return true;
+      return { success: true };
     } catch (error) {
       console.error('Failed to dispatch campaign to backend:', error);
-      return false;
+      return { success: false, warning: 'Falha de conexão ao iniciar o disparo.' };
     }
   },
 

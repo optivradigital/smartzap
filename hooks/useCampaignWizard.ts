@@ -143,11 +143,15 @@ export const useCampaignWizardController = () => {
       }
       
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
-      
+
       // Navigate to real campaign (replaces temp URL)
       navigate(`/campaigns/${campaign.id}`, { replace: true });
-      
-      toast.success('Campanha criada e disparada com sucesso!');
+
+      if (campaign.dispatchWarning) {
+        toast.error(campaign.dispatchWarning);
+      } else {
+        toast.success('Campanha criada e disparada com sucesso!');
+      }
     },
     onError: (_error, _input, context) => {
       // Clean up temp cache on error
@@ -317,6 +321,13 @@ export const useCampaignWizardController = () => {
       if (recipientSource === 'test' && !testContact) {
         toast.error('Contato de teste não configurado. Configure em Ajustes.');
         return;
+      }
+      if (templateVariableCount > 0) {
+        const emptyVars = templateVariables.filter((v, idx) => (!v || v.trim() === '') && !variableColumnMap[idx]);
+        if (emptyVars.length > 0) {
+          toast.error(`Preencha todas as variáveis do template (${emptyVars.length} pendentes)`);
+          return;
+        }
       }
     }
     setStep((prev) => Math.min(prev + 1, 3));
