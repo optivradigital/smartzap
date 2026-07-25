@@ -283,10 +283,10 @@ export const WHATSAPP_ERRORS: Record<number, WhatsAppError> = {
   },
   131049: {
     code: 131049,
-    category: 'auth',
-    title: 'Phone number not registered',
-    userMessage: 'Número de telefone não registrado.',
-    action: 'Registre o número no Meta Business Suite.',
+    category: 'rate_limit',
+    title: 'Message not delivered to maintain healthy ecosystem engagement',
+    userMessage: 'Mensagem não entregue para manter a integridade do ecossistema (limite de engajamento da Meta).',
+    action: 'Comum ao enviar marketing para o próprio número do WhatsApp Business ou para contatos de baixo engajamento. Tente outro número de teste.',
     retryable: false,
   },
   10: {
@@ -889,7 +889,7 @@ export function getRecommendedAction(code: number): string {
 export const CRITICAL_ERROR_CODES = [
   131042, // Payment issue
   131031, // Account locked
-  131049, // Phone not registered
+  131049, // Not delivered — ecosystem engagement limit
   190,    // Token expired
   368,    // Temporarily blocked for policies violations
   130497, // Business account locked
