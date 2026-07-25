@@ -866,184 +866,6 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                   </div>
                 </div>
 
-                {/* Template Variables Section - Shows when template has extra variables */}
-                {selectedTemplate && templateVariableInfo && templateVariableInfo.totalExtra > 0 && (
-                  <div className="mt-8 p-6 bg-primary-500/5 border border-primary-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="p-2 bg-primary-500/20 rounded-lg">
-                        <Sparkles className="text-primary-400" size={18} />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-white">Variáveis do Template</h3>
-                        <p className="text-xs text-gray-400 mt-1">
-                          Preencha os valores que serão usados neste template.
-                          {availableExcelColumns.length > 0
-                            ? <> Nas variáveis do texto, você pode escolher uma <span className="text-white">coluna da planilha</span> para que cada contato receba um valor diferente.</>
-                            : <> Esses valores serão <span className="text-white">iguais para todos</span> os destinatários.</>
-                          }
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {/* BODY Variables */}
-                      {templateVariableInfo.body.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-2">
-                            <MessageSquare size={12} /> Variáveis do Texto
-                          </p>
-                          {templateVariableInfo.body.map((varInfo) => (
-                            <div key={`body-${varInfo.index}`} className="flex items-center gap-3">
-                              <span className={`w-12 text-center text-xs font-mono px-2 py-1.5 rounded ${varInfo.index === 1
-                                ? 'bg-zinc-800 text-gray-400'
-                                : 'bg-primary-500/20 text-primary-400'
-                                }`}>
-                                {varInfo.placeholder}
-                              </span>
-                              {varInfo.index === 1 ? (
-                                <>
-                                  <input
-                                    type="text"
-                                    value="Nome do Contato"
-                                    disabled
-                                    className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/5 rounded-lg text-gray-500 text-sm cursor-not-allowed"
-                                  />
-                                  <span className="text-xs text-gray-500">automático</span>
-                                </>
-                              ) : (
-                                (() => {
-                                  const varSlot = varInfo.index - 2;
-                                  const mappedColumn = variableColumnMap[varSlot];
-                                  const isFilled = !!mappedColumn || !!templateVariables?.[varSlot];
-                                  return (
-                                    <>
-                                      {availableExcelColumns.length > 0 && (
-                                        <select
-                                          value={mappedColumn || ''}
-                                          onChange={(e) => {
-                                            if (!setVariableColumnMap) return;
-                                            const newMap = { ...variableColumnMap };
-                                            if (e.target.value) newMap[varSlot] = e.target.value;
-                                            else delete newMap[varSlot];
-                                            setVariableColumnMap(newMap);
-                                          }}
-                                          className="px-2 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-white text-sm outline-none"
-                                        >
-                                          <option value="">Valor fixo</option>
-                                          {availableExcelColumns.map(col => (
-                                            <option key={col} value={col}>Coluna: {col}</option>
-                                          ))}
-                                        </select>
-                                      )}
-                                      <input
-                                        type="text"
-                                        value={mappedColumn ? '' : (templateVariables?.[varSlot] || '')}
-                                        disabled={!!mappedColumn}
-                                        onChange={(e) => {
-                                          if (setTemplateVariables && templateVariables) {
-                                            const newVars = [...templateVariables];
-                                            newVars[varSlot] = e.target.value;
-                                            setTemplateVariables(newVars);
-                                          }
-                                        }}
-                                        placeholder={mappedColumn ? `Valor por contato (coluna "${mappedColumn}")` : varInfo.context}
-                                        className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none transition-all text-white text-sm placeholder-gray-600 disabled:text-gray-500 disabled:cursor-not-allowed"
-                                      />
-                                      {!isFilled ? (
-                                        <span className="text-xs text-amber-400">obrigatório</span>
-                                      ) : (
-                                        <Check size={16} className="text-primary-400" />
-                                      )}
-                                    </>
-                                  );
-                                })()
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* HEADER Variables */}
-                      {templateVariableInfo.header.length > 0 && (
-                        <div className="space-y-2 pt-2 border-t border-white/5">
-                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-2">
-                            <Eye size={12} /> Variáveis do Cabeçalho
-                          </p>
-                          {templateVariableInfo.header.map((varInfo, idx) => (
-                            <div key={`header-${varInfo.index}`} className="flex items-center gap-3">
-                              <span className="w-12 text-center text-xs font-mono bg-blue-500/20 text-blue-400 px-2 py-1.5 rounded">
-                                {varInfo.placeholder}
-                              </span>
-                              <input
-                                type="text"
-                                value={templateVariables?.[templateVariableInfo.body.filter(b => b.index > 1).length + idx] || ''}
-                                onChange={(e) => {
-                                  if (setTemplateVariables && templateVariables) {
-                                    const newVars = [...templateVariables];
-                                    const bodyVarsCount = templateVariableInfo.body.filter(b => b.index > 1).length;
-                                    newVars[bodyVarsCount + idx] = e.target.value;
-                                    setTemplateVariables(newVars);
-                                  }
-                                }}
-                                placeholder={varInfo.context}
-                                className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all text-white text-sm placeholder-gray-600"
-                              />
-                              {!templateVariables?.[templateVariableInfo.body.filter(b => b.index > 1).length + idx] ? (
-                                <span className="text-xs text-amber-400">obrigatório</span>
-                              ) : (
-                                <Check size={16} className="text-blue-400" />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* BUTTON URL Variables */}
-                      {templateVariableInfo.buttons.length > 0 && (
-                        <div className="space-y-2 pt-2 border-t border-white/5">
-                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-2">
-                            <ExternalLink size={12} /> URLs Dinâmicas dos Botões
-                          </p>
-                          {templateVariableInfo.buttons.map((varInfo, idx) => {
-                            const bodyVarsCount = templateVariableInfo.body.filter(b => b.index > 1).length;
-                            const headerVarsCount = templateVariableInfo.header.length;
-                            const varIndex = bodyVarsCount + headerVarsCount + idx;
-                            return (
-                              <div key={`button-${varInfo.buttonIndex}`} className="flex items-center gap-3">
-                                <span className="w-auto min-w-[48px] text-center text-xs font-mono bg-amber-500/20 text-amber-400 px-2 py-1.5 rounded">
-                                  {`Botão ${varInfo.buttonIndex + 1}`}
-                                </span>
-                                <input
-                                  type="text"
-                                  value={templateVariables?.[varIndex] || ''}
-                                  onChange={(e) => {
-                                    if (setTemplateVariables && templateVariables) {
-                                      const newVars = [...templateVariables];
-                                      newVars[varIndex] = e.target.value;
-                                      setTemplateVariables(newVars);
-                                    }
-                                  }}
-                                  placeholder={`Parte dinâmica da URL do botão "${varInfo.buttonText}"`}
-                                  className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 outline-none transition-all text-white text-sm placeholder-gray-600"
-                                />
-                                {!templateVariables?.[varIndex] ? (
-                                  <span className="text-xs text-amber-400">obrigatório</span>
-                                ) : (
-                                  <Check size={16} className="text-amber-400" />
-                                )}
-                              </div>
-                            );
-                          })}
-                          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5 pl-1">
-                            <AlertCircle size={11} />
-                            Ex: Se a URL é <code className="bg-zinc-800 px-1 rounded">zoom.us/j/{'{{1}}'}</code>, preencha apenas o ID da reunião
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 {/* Header Media Upload (IMAGE/VIDEO/DOCUMENT templates) */}
                 {hasMediaHeader && setHeaderImageFile && (
                   <div className="border border-white/10 rounded-xl p-4 bg-zinc-900/40">
@@ -1352,6 +1174,185 @@ export const CampaignWizardView: React.FC<CampaignWizardViewProps> = ({
                     excelContacts={excelContacts}
                     setExcelContacts={setExcelContacts}
                   />
+                )}
+
+                {/* Template Variables Section - Shows when template has extra variables. Placed here
+                    (after recipient/Excel selection) so spreadsheet columns are already available to map. */}
+                {selectedTemplate && templateVariableInfo && templateVariableInfo.totalExtra > 0 && (
+                  <div className="p-6 bg-primary-500/5 border border-primary-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="p-2 bg-primary-500/20 rounded-lg">
+                        <Sparkles className="text-primary-400" size={18} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">Variáveis do Template</h3>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Preencha os valores que serão usados neste template.
+                          {availableExcelColumns.length > 0
+                            ? <> Nas variáveis do texto, você pode escolher uma <span className="text-white">coluna da planilha</span> para que cada contato receba um valor diferente.</>
+                            : <> Esses valores serão <span className="text-white">iguais para todos</span> os destinatários.</>
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* BODY Variables */}
+                      {templateVariableInfo.body.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-2">
+                            <MessageSquare size={12} /> Variáveis do Texto
+                          </p>
+                          {templateVariableInfo.body.map((varInfo) => (
+                            <div key={`body-${varInfo.index}`} className="flex items-center gap-3">
+                              <span className={`w-12 text-center text-xs font-mono px-2 py-1.5 rounded ${varInfo.index === 1
+                                ? 'bg-zinc-800 text-gray-400'
+                                : 'bg-primary-500/20 text-primary-400'
+                                }`}>
+                                {varInfo.placeholder}
+                              </span>
+                              {varInfo.index === 1 ? (
+                                <>
+                                  <input
+                                    type="text"
+                                    value="Nome do Contato"
+                                    disabled
+                                    className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/5 rounded-lg text-gray-500 text-sm cursor-not-allowed"
+                                  />
+                                  <span className="text-xs text-gray-500">automático</span>
+                                </>
+                              ) : (
+                                (() => {
+                                  const varSlot = varInfo.index - 2;
+                                  const mappedColumn = variableColumnMap[varSlot];
+                                  const isFilled = !!mappedColumn || !!templateVariables?.[varSlot];
+                                  return (
+                                    <>
+                                      {availableExcelColumns.length > 0 && (
+                                        <select
+                                          value={mappedColumn || ''}
+                                          onChange={(e) => {
+                                            if (!setVariableColumnMap) return;
+                                            const newMap = { ...variableColumnMap };
+                                            if (e.target.value) newMap[varSlot] = e.target.value;
+                                            else delete newMap[varSlot];
+                                            setVariableColumnMap(newMap);
+                                          }}
+                                          className="px-2 py-2 bg-zinc-900/50 border border-white/10 rounded-lg text-white text-sm outline-none"
+                                        >
+                                          <option value="">Valor fixo</option>
+                                          {availableExcelColumns.map(col => (
+                                            <option key={col} value={col}>Coluna: {col}</option>
+                                          ))}
+                                        </select>
+                                      )}
+                                      <input
+                                        type="text"
+                                        value={mappedColumn ? '' : (templateVariables?.[varSlot] || '')}
+                                        disabled={!!mappedColumn}
+                                        onChange={(e) => {
+                                          if (setTemplateVariables && templateVariables) {
+                                            const newVars = [...templateVariables];
+                                            newVars[varSlot] = e.target.value;
+                                            setTemplateVariables(newVars);
+                                          }
+                                        }}
+                                        placeholder={mappedColumn ? `Valor por contato (coluna "${mappedColumn}")` : varInfo.context}
+                                        className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none transition-all text-white text-sm placeholder-gray-600 disabled:text-gray-500 disabled:cursor-not-allowed"
+                                      />
+                                      {!isFilled ? (
+                                        <span className="text-xs text-amber-400">obrigatório</span>
+                                      ) : (
+                                        <Check size={16} className="text-primary-400" />
+                                      )}
+                                    </>
+                                  );
+                                })()
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* HEADER Variables */}
+                      {templateVariableInfo.header.length > 0 && (
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-2">
+                            <Eye size={12} /> Variáveis do Cabeçalho
+                          </p>
+                          {templateVariableInfo.header.map((varInfo, idx) => (
+                            <div key={`header-${varInfo.index}`} className="flex items-center gap-3">
+                              <span className="w-12 text-center text-xs font-mono bg-blue-500/20 text-blue-400 px-2 py-1.5 rounded">
+                                {varInfo.placeholder}
+                              </span>
+                              <input
+                                type="text"
+                                value={templateVariables?.[templateVariableInfo.body.filter(b => b.index > 1).length + idx] || ''}
+                                onChange={(e) => {
+                                  if (setTemplateVariables && templateVariables) {
+                                    const newVars = [...templateVariables];
+                                    const bodyVarsCount = templateVariableInfo.body.filter(b => b.index > 1).length;
+                                    newVars[bodyVarsCount + idx] = e.target.value;
+                                    setTemplateVariables(newVars);
+                                  }
+                                }}
+                                placeholder={varInfo.context}
+                                className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all text-white text-sm placeholder-gray-600"
+                              />
+                              {!templateVariables?.[templateVariableInfo.body.filter(b => b.index > 1).length + idx] ? (
+                                <span className="text-xs text-amber-400">obrigatório</span>
+                              ) : (
+                                <Check size={16} className="text-blue-400" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* BUTTON URL Variables */}
+                      {templateVariableInfo.buttons.length > 0 && (
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-2">
+                            <ExternalLink size={12} /> URLs Dinâmicas dos Botões
+                          </p>
+                          {templateVariableInfo.buttons.map((varInfo, idx) => {
+                            const bodyVarsCount = templateVariableInfo.body.filter(b => b.index > 1).length;
+                            const headerVarsCount = templateVariableInfo.header.length;
+                            const varIndex = bodyVarsCount + headerVarsCount + idx;
+                            return (
+                              <div key={`button-${varInfo.buttonIndex}`} className="flex items-center gap-3">
+                                <span className="w-auto min-w-[48px] text-center text-xs font-mono bg-amber-500/20 text-amber-400 px-2 py-1.5 rounded">
+                                  {`Botão ${varInfo.buttonIndex + 1}`}
+                                </span>
+                                <input
+                                  type="text"
+                                  value={templateVariables?.[varIndex] || ''}
+                                  onChange={(e) => {
+                                    if (setTemplateVariables && templateVariables) {
+                                      const newVars = [...templateVariables];
+                                      newVars[varIndex] = e.target.value;
+                                      setTemplateVariables(newVars);
+                                    }
+                                  }}
+                                  placeholder={`Parte dinâmica da URL do botão "${varInfo.buttonText}"`}
+                                  className="flex-1 px-4 py-2 bg-zinc-900/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 outline-none transition-all text-white text-sm placeholder-gray-600"
+                                />
+                                {!templateVariables?.[varIndex] ? (
+                                  <span className="text-xs text-amber-400">obrigatório</span>
+                                ) : (
+                                  <Check size={16} className="text-amber-400" />
+                                )}
+                              </div>
+                            );
+                          })}
+                          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5 pl-1">
+                            <AlertCircle size={11} />
+                            Ex: Se a URL é <code className="bg-zinc-800 px-1 rounded">zoom.us/j/{'{{1}}'}</code>, preencha apenas o ID da reunião
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {/* Contact Selection List */}
