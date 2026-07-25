@@ -43,6 +43,8 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ghcr.io/optivradigital/smartzap:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
