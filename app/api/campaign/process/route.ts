@@ -148,18 +148,16 @@ async function registerInGptMaker(
   orgId?: string | null,
   templateVariables: string[] = [],
   renderedText?: string
-) {
+): Promise<{ registered: boolean; reason?: string }> {
   // Load per-org credentials first, fall back to global env
   let agentId = process.env.GPTMAKER_AGENT_ID;
   let token = process.env.GPTMAKER_JWT_TOKEN;
-  let channelId: string | undefined;
 
   if (orgId) {
     try {
       const orgConfig = await loadProviderConfig(orgId);
       if (orgConfig?.gptmakerAgentId) agentId = orgConfig.gptmakerAgentId;
       if (orgConfig?.gptmakerJwtToken) token = orgConfig.gptmakerJwtToken;
-      if (orgConfig?.gptmakerChannelId) channelId = orgConfig.gptmakerChannelId;
     } catch {
       // fall through to global env
     }
@@ -167,7 +165,7 @@ async function registerInGptMaker(
 
   if (!agentId || !token) {
     console.log("[GPTMaker] No credentials configured — skipping registration");
-    return;
+    return { registered: false, reason: "missing_credentials" };
   }
 
   // Se o texto já foi renderizado (Evolution), usa diretamente; senão busca no banco local
@@ -204,6 +202,8 @@ async function registerInGptMaker(
     }
   }
 
+  const normalizedPhone = phone.replace(/^\+/, '');
+
   try {
     const res = await fetch(
       `https://api.gptmaker.ai/v2/agent/${agentId}/add-message`,
@@ -214,20 +214,23 @@ async function registerInGptMaker(
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          context_id: channelId ? `${channelId}-${phone.replace(/^\+/, '')}` : phone.replace(/^\+/, ''),
-          phone: phone.replace(/^\+/, ''),
+          contextId: normalizedPhone,
+          phone: normalizedPhone,
           prompt: templateText,
           role: "assistant",
         }),
       }
     );
     if (!res.ok) {
-      console.warn("[GPTMaker] API returned", res.status, await res.text().catch(() => ''));
-    } else {
-      console.log(`[GPTMaker] Registered context for ${phone}: "${templateText.substring(0, 80)}"`);
+      const errText = await res.text().catch(() => '');
+      console.warn("[GPTMaker] API returned", res.status, errText, "org:", orgId, "agent:", agentId);
+      return { registered: false, reason: `api_${res.status}` };
     }
+    console.log(`[GPTMaker] Registered context for ${phone}: "${templateText.substring(0, 80)}"`);
+    return { registered: true };
   } catch (e) {
-    console.error("[GPTMaker] Failed to register campaign message:", e);
+    console.error("[GPTMaker] Failed to register campaign message:", e, "org:", orgId, "agent:", agentId);
+    return { registered: false, reason: "network_error" };
   }
 }
 
@@ -590,6 +593,7 @@ export async function POST(request: NextRequest) {
                 organizationId: payload.orgId || undefined,
               });
             }
+            const gptmakerResult = await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, contactVariables, renderedText);
             await botMessageDb.create({
               conversationId: conv.id,
               waMessageId: messageId,
@@ -599,10 +603,11 @@ export async function POST(request: NextRequest) {
               content: {
                 templateName: chosenTemplate,
                 text: renderedText ?? `Template "${chosenTemplate}" enviado para ${contact.name || contact.phone}`,
+                gptmakerContextRegistered: gptmakerResult.registered,
+                ...(gptmakerResult.reason ? { gptmakerContextFailReason: gptmakerResult.reason } : {}),
               },
               status: "sent",
             });
-            await registerInGptMaker(contact.phone, chosenTemplate, contact.name, payload.orgId, contactVariables, renderedText);
           } catch (e) {
             console.error("[Campaign] Failed to log template dispatch:", e);
           }
