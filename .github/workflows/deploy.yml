@@ -74,11 +74,6 @@ jobs:
             echo '=== Entrando na pasta ==='
             cd /home/ubuntu/apps/smartzap
 
-            echo '=== Puxando código novo do GitHub ==='
-            git fetch optivra
-            git checkout main 2>/dev/null || git checkout -b main optivra/main
-            git reset --hard optivra/main
-
             echo '=== Login no GHCR ==='
             echo "$GHCR_TOKEN" | docker login ghcr.io -u optivradigital --password-stdin
 
