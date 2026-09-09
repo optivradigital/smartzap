@@ -77,8 +77,8 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      // Fire to process route
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3002";
+      // Fire to process route (chamada interna: localhost evita o Managed Challenge do Cloudflare)
+      const baseUrl = process.env.INTERNAL_APP_URL?.trim() || "http://localhost:3002";
       const processUrl = `${baseUrl}/api/campaign/process`;
 
       const payload = {

@@ -136,8 +136,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
+  // Chamada interna (servidor-a-servidor): usar localhost em vez do domínio público
+  // para não passar pelo proxy/Managed Challenge do Cloudflare.
+  const baseUrl = process.env.INTERNAL_APP_URL?.trim() || "http://localhost:3002";
 
   // Fetch delay settings and header media from campaign
   const { data: campRow } = await supabase
