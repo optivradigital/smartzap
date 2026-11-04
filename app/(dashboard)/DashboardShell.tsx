@@ -30,7 +30,6 @@ import {
     ChevronRight,
     ChevronDown,
     Building2,
-    Workflow,
     Sun,
     Moon,
 } from 'lucide-react'
@@ -553,10 +552,6 @@ export function DashboardShell({
         { path: '/campaigns', label: 'Campanhas', icon: MessageSquare },
         { path: '/templates', label: 'Templates', icon: FileText },
         { path: '/contacts', label: 'Contatos', icon: Users },
-    ]
-
-    const systemNavItems = [
-        { path: '/workflows', label: 'Workflows', icon: Workflow },
         { path: '/conversations', label: 'Conversas', icon: MessageCircle },
     ]
 
@@ -644,28 +639,13 @@ export function DashboardShell({
                                     href={item.path}
                                     icon={item.icon}
                                     label={item.label}
-                                    isActive={pathname === item.path}
+                                    isActive={item.path === '/' ? pathname === '/' : (pathname?.startsWith(item.path) ?? false)}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     onMouseEnter={() => prefetchRoute(item.path)}
                                 />
                             ))}
                         </div>
 
-                        <div className="space-y-0.5">
-                            <p className="px-4 text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2">Sistema</p>
-                            {systemNavItems.map((item) => (
-                                <PrefetchLink
-                                    key={item.path}
-                                    href={item.path}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 text-zinc-400 dark:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-700 dark:hover:text-zinc-400 border border-transparent"
-                                >
-                                    <item.icon size={18} className="text-zinc-400 dark:text-zinc-700" />
-                                    <span className="text-sm">{item.label}</span>
-                                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700">beta</span>
-                                </PrefetchLink>
-                            ))}
-                        </div>
                     </nav>
 
                     {/* Footer: Configurações + User card */}

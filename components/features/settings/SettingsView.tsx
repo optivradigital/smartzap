@@ -409,101 +409,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
         )}
 
-        {activeSection === 'conexao' && !isManager && <div className={`glass-panel rounded-2xl p-8 flex items-start gap-6 border transition-all duration-500 ${settings.isConnected ? 'border-blue-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]'}`}>
-          <div className={`p-4 rounded-2xl ${settings.isConnected ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-            {settings.isConnected ? <Wifi size={32} /> : <AlertTriangle size={32} />}
-          </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground">
-              {settings.isConnected ? 'Sistema Online' : 'Desconectado'}
-            </h3>
-
-            <div className={`text-sm mt-3 space-y-1.5 ${settings.isConnected ? 'text-blue-400/80' : 'text-red-400/80'}`}>
-              {settings.isConnected ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span className="opacity-70">Conta Comercial:</span>
-                    <span className="font-mono text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded">{settings.businessAccountId}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="opacity-70">Telefone Verificado:</span>
-                    <span className="font-mono text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded">
-                      {settings.displayPhoneNumber || settings.phoneNumberId}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <p>Conexão com Meta API perdida. Por favor re-autentique suas credenciais abaixo.</p>
-              )}
+        {/* Usuário comum não gerencia a conexão (rotas exigem manager) — antes via um form Meta legado que mostrava "Desconectado" */}
+        {activeSection === 'conexao' && !isManager && (
+          <div className="glass-panel rounded-2xl p-6 flex items-start gap-4">
+            <Wifi size={20} className="text-muted-foreground mt-0.5" />
+            <div>
+              <h3 className="text-base font-semibold text-foreground">Conexão WhatsApp</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                A conexão do WhatsApp é gerenciada pelo administrador da sua organização.
+              </p>
             </div>
-
-            {settings.isConnected && (
-              <div className="mt-5 flex flex-wrap gap-3">
-                {/* Limits Status */}
-                {limitsLoading ? (
-                  <span className="px-3 py-1.5 bg-muted rounded-lg text-xs font-medium text-muted-foreground border border-border flex items-center gap-1.5 animate-pulse">
-                    <RefreshCw size={12} className="animate-spin" />
-                    Verificando limites...
-                  </span>
-                ) : limitsError ? (
-                  <button
-                    onClick={onRefreshLimits}
-                    className="px-3 py-1.5 bg-red-500/10 rounded-lg text-xs font-medium text-red-400 border border-red-500/20 flex items-center gap-1.5 hover:bg-red-500/20 transition-colors"
-                  >
-                    <AlertCircle size={12} />
-                    {limitsErrorMessage || 'Erro ao buscar limites'}
-                    <RefreshCw size={10} className="ml-1" />
-                  </button>
-                ) : (
-                  <span className="px-3 py-1.5 bg-muted rounded-lg text-xs font-medium text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
-                    <Wifi size={12} />
-                    Limite: {accountLimits?.maxUniqueUsersPerDay?.toLocaleString('pt-BR')} msgs/dia
-                  </span>
-                )}
-
-                {/* Quality Status */}
-                {!limitsError && !limitsLoading && (
-                  <span className={`px-3 py-1.5 bg-muted rounded-lg text-xs font-medium border flex items-center gap-1.5 ${accountLimits?.qualityScore === 'GREEN'
-                    ? 'text-blue-400 border-blue-500/20'
-                    : accountLimits?.qualityScore === 'YELLOW'
-                      ? 'text-yellow-400 border-yellow-500/20'
-                      : accountLimits?.qualityScore === 'RED'
-                        ? 'text-red-400 border-red-500/20'
-                        : 'text-muted-foreground border-border'
-                    }`}>
-                    <Shield size={12} />
-                    Qualidade: {accountLimits?.qualityScore === 'GREEN' ? 'Alta' : accountLimits?.qualityScore === 'YELLOW' ? 'Média' : accountLimits?.qualityScore === 'RED' ? 'Baixa' : '---'}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
-
-          {settings.isConnected && (
-            <div className="flex flex-col gap-3 min-w-[140px]">
-              <button
-                onClick={() => {
-                  if (isManager) {
-                    document.getElementById('whatsapp')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  } else {
-                    setIsEditing(!isEditing)
-                  }
-                }}
-                className="group relative overflow-hidden rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 bg-muted/50 text-foreground hover:bg-muted border border-border hover:border-border/60"
-              >
-                <Edit2 size={14} className="transition-transform duration-500 group-hover:scale-110" />
-                Editar
-              </button>
-
-              <button
-                onClick={onDisconnect}
-                className="text-xs font-medium text-red-400/60 hover:text-red-400 hover:bg-red-500/5 px-4 py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                Desconectar
-              </button>
-            </div>
-          )}
-        </div>}
+        )}
 
         {/* ── Agente IA ──────────────────────────────── */}
         {activeSection === 'agente' && isSuperAdmin && settings.isConnected && saveAIConfig && (
@@ -517,89 +434,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           />
         )}
 
-        {/* ── Conexão (cont.) ──────────────────────── */}
-        {/* Form - Only visible if disconnected OR editing */}
-        {activeSection === 'conexao' && (!settings.isConnected || isEditing) && !isManager && (
-          <div className="glass-panel rounded-2xl p-8 animate-in slide-in-from-top-4 duration-300">
-            <h3 className="text-lg font-semibold text-foreground mb-8 flex items-center gap-2">
-              <span className="w-1 h-6 bg-primary-500 rounded-full"></span>
-              Configuração da API
-            </h3>
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  ID do Número de Telefone <span className="text-primary-500">*</span>
-                </label>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    value={settings.phoneNumberId}
-                    onChange={(e) => setSettings({ ...settings, phoneNumberId: e.target.value })}
-                    placeholder="ex: 298347293847"
-                    className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-foreground transition-all group-hover:border-border/60"
-                  />
-                  <div className="absolute right-4 top-3.5 text-muted-foreground/50 cursor-help hover:text-foreground transition-colors" title="Encontrado no Meta Business Manager">
-                    <HelpCircle size={16} />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  ID da Conta Comercial (Business ID) <span className="text-primary-500">*</span>
-                </label>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    value={settings.businessAccountId}
-                    onChange={(e) => setSettings({ ...settings, businessAccountId: e.target.value })}
-                    placeholder="ex: 987234987234"
-                    className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-foreground transition-all group-hover:border-border/60"
-                  />
-                  <div className="absolute right-4 top-3.5 text-muted-foreground/50 cursor-help hover:text-foreground transition-colors" title="Encontrado no Meta Business Manager">
-                    <HelpCircle size={16} />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Token de Acesso do Usuário do Sistema <span className="text-primary-500">*</span>
-                </label>
-                <div className="relative group">
-                  <input
-                    type="password"
-                    value={settings.accessToken}
-                    onChange={(e) => setSettings({ ...settings, accessToken: e.target.value })}
-                    placeholder="EAAG........"
-                    className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none font-mono text-sm text-foreground transition-all group-hover:border-border/60 tracking-widest"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 font-mono">Armazenamento criptografado SHA-256.</p>
-              </div>
-            </div>
-
-            <div className="mt-10 pt-8 border-t border-border/40 flex justify-end gap-4">
-              <button
-                className="px-6 py-3 rounded-xl border border-border text-muted-foreground font-medium hover:bg-muted/50 transition-colors flex items-center gap-2"
-                onClick={() => toast.success('Teste de conexão bem-sucedido!')}
-              >
-                <RefreshCw size={18} /> Testar Conexão
-              </button>
-              <button
-                className="px-8 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition-colors flex items-center gap-2"
-                onClick={() => {
-                  onSave();
-                  setIsEditing(false);
-                }}
-                disabled={isSaving}
-              >
-                <Save size={18} /> {isSaving ? 'Salvando...' : 'Salvar Config'}
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Test Contact Section */}
         {activeSection === 'conexao' && settings.isConnected && (
