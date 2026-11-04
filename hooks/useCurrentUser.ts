@@ -60,15 +60,19 @@ export function useCurrentUser() {
   const isUser = isManager || user?.role === 'user'
 
   const switchOrg = async (orgId: string) => {
-    await fetch('/api/auth/switch-org', {
+    const res = await fetch('/api/auth/switch-org', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ orgId }),
     })
-    // Remove all cached data so everything fetches fresh with new org context
-    // (invalidateQueries shows stale data during refetch — removeQueries forces loading state)
-    queryClient.removeQueries()
+    if (!res.ok) throw new Error('Não foi possível trocar de organização')
+    // Recarrega a seção atual do zero: cache do React Query, initialData de Server Components,
+    // estados locais (useState+fetch) e assinaturas realtime são todos da org anterior.
+    // Volta pra raiz da seção porque um detalhe (/campaigns/:id) pode não existir na nova org.
+    queryClient.clear()
+    const section = window.location.pathname.split('/')[1] || ''
+    window.location.assign(`/${section}`)
   }
 
   return { user, isLoading, isSuperAdmin, isManager, isUser, organizations, activeOrgId, switchOrg }

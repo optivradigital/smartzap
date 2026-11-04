@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useClerk } from '@clerk/nextjs'
@@ -747,7 +748,7 @@ export function DashboardShell({
                                   {authOrgs.map(org => (
                                     <button
                                       key={org.id}
-                                      onClick={() => { authSwitchOrg(org.id); setOrgDropdownOpen(false) }}
+                                      onClick={() => { setOrgDropdownOpen(false); if (org.id !== authActiveOrgId) authSwitchOrg(org.id).catch(e => toast.error(e.message)) }}
                                       className={`w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-muted dark:hover:bg-zinc-800 transition-colors ${org.id === authActiveOrgId ? 'bg-muted dark:bg-zinc-800/60' : ''}`}
                                     >
                                       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${org.id === authActiveOrgId ? 'bg-green-500' : 'bg-zinc-400 dark:bg-zinc-600'}`}></span>
