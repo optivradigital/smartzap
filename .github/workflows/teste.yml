@@ -1,7 +1,7 @@
 name: Deploy SmartZap (teste)
 
 # Ambiente de testes: cada push em develop publica em https://smartzap-teste.optivra.digital
-# (container smartzap-teste no Xango, porta 3003). Usa os MESMOS dados de produção
+# (container smartzap-teste no Xango, porta 3012). Usa os MESMOS dados de produção
 # (Supabase/Redis/Evolution) — serve pra validar código/UI antes do PR develop → main.
 on:
   push:
@@ -64,7 +64,7 @@ jobs:
             docker pull ghcr.io/optivradigital/smartzap:develop
             docker compose up -d --force-recreate
             sleep 15
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3003/api/health || echo '000')
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3012/api/health || echo '000')
             if [ "$STATUS" = '200' ] || [ "$STATUS" = '307' ] || [ "$STATUS" = '401' ]; then
               echo "✅ SmartZap teste OK (HTTP $STATUS)"
             else

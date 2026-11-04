@@ -40,7 +40,7 @@ atual: corrigir bugs e evoluir o produto — sem refatorações desnecessárias.
     migração do servidor para o Xango (ver `ServidorAPPAWS/PROGRESS.md`).
 - **Fluxo de branches + ambiente de testes (desde 2026-11-04).** Trabalho na branch
   `develop`; cada push publica em https://smartzap-teste.optivra.digital (`teste.yml`,
-  container `smartzap-teste` no Xango, porta 3003). **O teste usa os dados de produção**
+  container `smartzap-teste` no Xango, porta 3012). **O teste usa os dados de produção**
   (Supabase/Redis/Evolution). Depois do ok do usuário no teste, PR `develop` → `main` = produção.
 - Migrações de banco precisam ser aplicadas manualmente no Supabase (staging e produção
   separados).
