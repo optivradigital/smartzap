@@ -21,7 +21,8 @@ export async function GET() {
     const { loadProviderConfig, isOrgScoped } = await import('@/lib/whatsapp-provider/factory')
     const config = await loadProviderConfig(orgId)
     // Org sem config própria nunca herda o número do .env/de outra org
-    if (isOrgScoped(orgId) && !config) {
+    const { getWhatsAppCredentials } = await import('@/lib/whatsapp-credentials')
+    if (isOrgScoped(orgId) && !config && !(await getWhatsAppCredentials(orgId))) {
       return NextResponse.json({ connected: false, notConfigured: true })
     }
     const hasEnvEvolution = !!(process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY)

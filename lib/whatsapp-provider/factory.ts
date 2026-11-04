@@ -90,12 +90,13 @@ export async function createWhatsAppProvider(
 ): Promise<IWhatsAppProvider> {
   const config = await loadProviderConfig(orgId);
   const isOrg = isOrgScoped(orgId);
-  if (isOrg && !config) {
+  // Org legada pode ter só settings:whatsapp:credentials (Meta) sem provider config
+  if (isOrg && !config && !(await getWhatsAppCredentials(orgId))) {
     throw new Error(NOT_CONFIGURED_MSG);
   }
   // If no saved config but EVOLUTION_API_URL is set in env, use evolution
   const providerType: WhatsAppProviderType =
-    config?.type || (process.env.EVOLUTION_API_URL ? "evolution" : "meta");
+    config?.type || (!isOrg && process.env.EVOLUTION_API_URL ? "evolution" : "meta");
 
   if (providerType === "evolution") {
     const url =

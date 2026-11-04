@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const store = new Map<string, string>()
 vi.mock('@/lib/redis', () => ({
+  isRedisAvailable: () => true,
   redis: {
     get: async (k: string) => (store.has(k) ? JSON.parse(store.get(k)!) : null),
     set: async (k: string, v: unknown) => { store.set(k, JSON.stringify(v)); return 'OK' },
@@ -33,6 +34,12 @@ describe('isolamento WhatsApp por org', () => {
   it('org evolution sem instância não usa a instância default', async () => {
     store.set('whatsapp:provider:config:org_a', JSON.stringify({ type: 'evolution' }))
     await expect(createWhatsAppProvider('org_a')).rejects.toThrow()
+  })
+
+  it('org legada só com credenciais Meta continua funcionando', async () => {
+    store.set('settings:whatsapp:credentials:org_meta', JSON.stringify({ phoneNumberId: '999', accessToken: 'x' }))
+    const p = await createWhatsAppProvider('org_meta')
+    expect(p.type).toBe('meta')
   })
 
   it('sem org (legado) ainda usa o .env', async () => {
