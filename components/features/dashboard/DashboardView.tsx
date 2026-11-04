@@ -171,8 +171,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                 <AreaChart data={stats.chartData} aria-hidden="true">
                   <defs>
                     <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
@@ -189,7 +189,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                   tick={{fill: '#71717a', fontSize: 12}} 
                 />
                 <Tooltip
-                  contentStyle={{backgroundColor: '#0d1b2e', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)', color: '#fff'}}
+                  contentStyle={{backgroundColor: '#141823', borderRadius: '12px', border: '1px solid rgba(99, 102, 241,0.2)', color: '#fff'}}
                   itemStyle={{color: '#60a5fa'}}
                   labelStyle={{color: '#71717a'}}
                   formatter={(value: number) => [value, 'Enviadas']}
@@ -197,7 +197,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                 <Area
                   type="monotone"
                   dataKey="sent"
-                  stroke="#3b82f6"
+                  stroke="#6366f1"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorSent)"

@@ -323,7 +323,7 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
           value={readCount.toLocaleString()}
           subvalue={readCount > 0 ? `${(((readCount) / (campaign.recipients ?? 1)) * 100).toFixed(1)}% taxa de abertura` : 'Aguardando webhook'}
           icon={Eye}
-          color="#3b82f6"
+          color="#6366f1"
         />
         <DetailCard
           title="Falhas"
