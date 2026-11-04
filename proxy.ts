@@ -11,10 +11,6 @@ const isPublicRoute = createRouteMatcher([
   '/api/chatwoot-bot(.*)',
   '/api/health(.*)',
   '/api/system(.*)',
-  '/api/setup(.*)',
-  '/api/debug(.*)',
-  '/api/database(.*)',
-  '/api/campaign/workflow(.*)',
   '/api/campaign/process(.*)',
   '/api/account/alerts(.*)',
 ])

@@ -17,7 +17,6 @@ import {
     LogOut,
     Menu,
     X,
-    Bell,
     Zap,
     FileText,
     AlertTriangle,
@@ -80,7 +79,7 @@ const OnboardingOverlay = ({
                     : 'pending',
             icon: React.createElement(Database, { size: 20, className: 'text-emerald-400' }),
             actionLabel: 'Abrir Assistente de Configuração',
-            actionUrl: '/setup',
+            actionUrl: '/settings',
             errorMessage: health?.services.database?.message,
             isRequired: true,
             instructions: [
@@ -100,7 +99,7 @@ const OnboardingOverlay = ({
                     : 'pending',
             icon: React.createElement(Database, { size: 20, className: 'text-red-400' }),
             actionLabel: 'Configurar no Assistente',
-            actionUrl: '/setup',
+            actionUrl: '/settings',
             errorMessage: health?.services.redis.message,
             isRequired: true,
             instructions: [
@@ -120,7 +119,7 @@ const OnboardingOverlay = ({
                     : 'pending',
             icon: React.createElement(Zap, { size: 20, className: 'text-purple-400' }),
             actionLabel: 'Configurar no Assistente',
-            actionUrl: '/setup',
+            actionUrl: '/settings',
             errorMessage: health?.services.qstash.message,
             isRequired: true,
             instructions: [
@@ -142,7 +141,7 @@ const OnboardingOverlay = ({
             errorMessage: health?.services.whatsapp.message,
             isRequired: true,
             actionLabel: 'Configurar WhatsApp',
-            actionUrl: '/setup',
+            actionUrl: '/settings',
             instructions: [
                 'Configure as credenciais do WhatsApp Business.',
                 'Use o assistente para validar o token.',
@@ -172,7 +171,7 @@ const OnboardingOverlay = ({
                         Para utilizar o sistema, precisamos configurar os serviços essenciais. Utilize nosso assistente para facilitar o processo.
                     </p>
                     <a
-                        href="/setup"
+                        href="/settings"
                         className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-primary-500/25"
                     >
                         <Sparkles size={18} />
@@ -757,10 +756,6 @@ export function DashboardShell({
                                 ? <Sun size={17} className="text-zinc-500 group-hover:text-foreground transition-colors" />
                                 : <Moon size={17} className="text-muted-foreground group-hover:text-foreground transition-colors" />
                             }
-                        </button>
-                        <button className="relative p-1.5 rounded-lg hover:bg-muted transition-colors group">
-                            <Bell size={17} className="text-zinc-500 dark:text-zinc-500 text-muted-foreground group-hover:text-foreground transition-colors" />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full border border-background"></span>
                         </button>
                     </div>
                 </header>

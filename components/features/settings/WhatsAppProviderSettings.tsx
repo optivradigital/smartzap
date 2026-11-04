@@ -84,7 +84,7 @@ export function WhatsAppProviderSettings() {
     return () => clearInterval(interval)
   }, [config.type, status?.connected, fetchStatus])
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     setSaving(true)
     try {
       const payload: ProviderConfig = { ...config }
@@ -97,9 +97,11 @@ export function WhatsAppProviderSettings() {
       if (res.ok) {
         toast.success('Configuração salva!')
         await Promise.all([fetchConfig(), fetchStatus()])
+        return true
       } else {
-        const err = await res.json()
+        const err = await res.json().catch(() => ({}))
         toast.error(err.error || 'Erro ao salvar')
+        return false
       }
     } finally {
       setSaving(false)
@@ -131,6 +133,8 @@ export function WhatsAppProviderSettings() {
   const handleGenerateQR = async () => {
     setGeneratingQR(true)
     try {
+      // Org nova: salva a instância antes (antes o botão ficava sem efeito)
+      if (status?.notConfigured && !(await handleSave())) return
       const res = await fetch('/api/whatsapp/reconnect', { method: 'POST' })
       const data = await res.json()
       if (data.qrCode) {
@@ -401,7 +405,7 @@ export function WhatsAppProviderSettings() {
                     <p className="text-sm font-semibold text-red-400">{status?.notConfigured ? 'Não configurado' : 'Desconectado'}</p>
                     <p className="text-xs text-muted-foreground">
                       {status?.notConfigured
-                        ? 'Preencha a instância, salve e depois gere o QR code'
+                        ? 'Dê um nome à instância e clique em "Gerar QR Code"'
                         : status?.error || 'Clique em "Gerar QR Code" para conectar'}
                     </p>
                   </div>
@@ -409,7 +413,7 @@ export function WhatsAppProviderSettings() {
                 <button
                   type="button"
                   onClick={handleGenerateQR}
-                  disabled={generatingQR || status?.notConfigured}
+                  disabled={generatingQR || saving || !config.evolutionInstance}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 hover:bg-green-600/30 disabled:opacity-50 text-green-400 text-sm font-medium transition-colors"
                 >
                   {generatingQR

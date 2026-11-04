@@ -42,6 +42,12 @@ describe('isolamento WhatsApp por org', () => {
     expect(p.type).toBe('meta')
   })
 
+  it('URL pública da Evolution vira a interna', async () => {
+    process.env.EVOLUTION_PUBLIC_URL = 'https://evolution.optivra.digital'
+    store.set('whatsapp:provider:config:org_x', JSON.stringify({ type: 'evolution', evolutionUrl: 'https://evolution.optivra.digital/', evolutionInstance: 'x' }))
+    expect((await loadProviderConfig('org_x'))?.evolutionUrl).toBe('http://evo')
+  })
+
   it('sem org (legado) ainda usa o .env', async () => {
     const p = await createWhatsAppProvider(null)
     expect(p.type).toBe('evolution')

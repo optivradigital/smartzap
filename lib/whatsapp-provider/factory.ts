@@ -44,6 +44,17 @@ export async function findOrgByEvolutionInstance(
   return null;
 }
 
+/**
+ * A URL pública da Evolution passa pelo Cloudflare, que responde 403 ("Just a moment...")
+ * a chamadas do servidor. Se a org salvou a URL pública, usa a interna (EVOLUTION_API_URL).
+ */
+export function toInternalEvolutionUrl(url?: string): string | undefined {
+  const pub = process.env.EVOLUTION_PUBLIC_URL?.replace(/\/+$/, "");
+  const internal = process.env.EVOLUTION_API_URL;
+  if (url && pub && internal && url.replace(/\/+$/, "") === pub) return internal;
+  return url;
+}
+
 // ── Persistência ──────────────────────────────────────────────────────────────
 
 export async function saveProviderConfig(
@@ -75,9 +86,11 @@ export async function loadProviderConfig(
     const raw = await redis.get(providerConfigKey(orgId));
 
     if (!raw) return null;
-    return JSON.parse(
+    const config = JSON.parse(
       typeof raw === "string" ? raw : JSON.stringify(raw)
     ) as ProviderConfig;
+    config.evolutionUrl = toInternalEvolutionUrl(config.evolutionUrl);
+    return config;
   } catch {
     return null;
   }
