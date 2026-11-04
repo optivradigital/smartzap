@@ -33,13 +33,15 @@ atual: corrigir bugs e evoluir o produto — sem refatorações desnecessárias.
   - Build args do Docker exigem: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_URL`,
     `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — declarados como
     ARG e ENV no Dockerfile e como secrets no workflow.
-  - Workflows: apenas `deploy.yml` (produção, em `main`) e `test.yml` (CI de testes).
+  - Workflows: `deploy.yml` (produção, em `main`), `teste.yml` (ambiente de testes, em
+    `develop`) e `test.yml` (CI de testes).
     **Não há mais staging** — `staging.yml` foi removido (2026-09-09): a imagem
     `:staging` só existia em amd64 e o ambiente de staging foi decomissionado na
     migração do servidor para o Xango (ver `ServidorAPPAWS/PROGRESS.md`).
-- **Fluxo de branches: sem staging.** Trabalho normal na branch `develop`; PR de
-  `develop` → `main` vai direto para produção após aprovação. Não recriar staging
-  sem decisão explícita do usuário.
+- **Fluxo de branches + ambiente de testes (desde 2026-11-04).** Trabalho na branch
+  `develop`; cada push publica em https://smartzap-teste.optivra.digital (`teste.yml`,
+  container `smartzap-teste` no Xango, porta 3003). **O teste usa os dados de produção**
+  (Supabase/Redis/Evolution). Depois do ok do usuário no teste, PR `develop` → `main` = produção.
 - Migrações de banco precisam ser aplicadas manualmente no Supabase (staging e produção
   separados).
 
