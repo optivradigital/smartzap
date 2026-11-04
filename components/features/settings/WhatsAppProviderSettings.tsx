@@ -45,6 +45,7 @@ interface ConnectionStatus {
   qrCode?: string
   state?: string
   error?: string
+  notConfigured?: boolean
 }
 
 export function WhatsAppProviderSettings() {
@@ -78,7 +79,7 @@ export function WhatsAppProviderSettings() {
 
   // Polling para QR code atualizado enquanto aguarda scan (Evolution)
   useEffect(() => {
-    if (config.type !== 'evolution' || status?.connected) return
+    if (config.type !== 'evolution' || status?.connected || status?.notConfigured) return
     const interval = setInterval(() => fetchStatus(true), 5000)
     return () => clearInterval(interval)
   }, [config.type, status?.connected, fetchStatus])
@@ -265,7 +266,9 @@ export function WhatsAppProviderSettings() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-red-400" />
                 <span className="text-xs text-red-400 font-medium">
-                  {status?.error || 'Não conectado — verifique as credenciais'}
+                  {status?.notConfigured
+                    ? 'Não configurado — preencha e salve as credenciais acima'
+                    : status?.error || 'Não conectado — verifique as credenciais'}
                 </span>
                 <button
                   onClick={() => fetchStatus()}
@@ -318,7 +321,7 @@ export function WhatsAppProviderSettings() {
                 type="text"
                 value={config.evolutionInstance || ''}
                 onChange={e => setConfig(c => ({ ...c, evolutionInstance: e.target.value }))}
-                placeholder="SmartZap"
+                placeholder="Ex: nome-do-cliente (único por organização)"
                 className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-green-500"
               />
             </div>
@@ -395,16 +398,18 @@ export function WhatsAppProviderSettings() {
                     <WifiOff size={20} className="text-red-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-red-400">Desconectado</p>
+                    <p className="text-sm font-semibold text-red-400">{status?.notConfigured ? 'Não configurado' : 'Desconectado'}</p>
                     <p className="text-xs text-muted-foreground">
-                      {status?.error || 'Clique em "Gerar QR Code" para conectar'}
+                      {status?.notConfigured
+                        ? 'Preencha a instância, salve e depois gere o QR code'
+                        : status?.error || 'Clique em "Gerar QR Code" para conectar'}
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleGenerateQR}
-                  disabled={generatingQR}
+                  disabled={generatingQR || status?.notConfigured}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 hover:bg-green-600/30 disabled:opacity-50 text-green-400 text-sm font-medium transition-colors"
                 >
                   {generatingQR

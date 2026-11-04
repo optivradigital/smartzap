@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { INTERNAL_SECRET_HEADER, internalSecret } from "@/lib/internal-auth";
 import { getWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import { loadProviderConfig } from "@/lib/whatsapp-provider/factory";
 import { supabase } from "@/lib/supabase";
@@ -122,8 +123,11 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (!phoneNumberId) phoneNumberId = process.env.WHATSAPP_PHONE_ID;
-  if (!accessToken) accessToken = process.env.WHATSAPP_TOKEN;
+  // .env só vale sem org — org sem credenciais próprias não dispara pelo número de outra
+  if (!orgId) {
+    if (!phoneNumberId) phoneNumberId = process.env.WHATSAPP_PHONE_ID;
+    if (!accessToken) accessToken = process.env.WHATSAPP_TOKEN;
+  }
 
   // For Evolution orgs, phoneNumberId/accessToken are not needed
   const orgProviderConfig = await loadProviderConfig(orgId).catch(() => null)
@@ -169,7 +173,7 @@ export async function POST(request: NextRequest) {
   const workflowUrl = `${baseUrl}/api/campaign/process`;
   fetch(workflowUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", [INTERNAL_SECRET_HEADER]: internalSecret() },
     body: JSON.stringify(workflowPayload),
   })
     .then((r) => {

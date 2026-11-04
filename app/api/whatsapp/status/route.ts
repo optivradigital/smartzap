@@ -18,8 +18,12 @@ export async function GET() {
     const orgId = user?.organizationId
 
     // If org has no credentials saved, check env vars before giving up
-    const { loadProviderConfig } = await import('@/lib/whatsapp-provider/factory')
+    const { loadProviderConfig, isOrgScoped } = await import('@/lib/whatsapp-provider/factory')
     const config = await loadProviderConfig(orgId)
+    // Org sem config própria nunca herda o número do .env/de outra org
+    if (isOrgScoped(orgId) && !config) {
+      return NextResponse.json({ connected: false, notConfigured: true })
+    }
     const hasEnvEvolution = !!(process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY)
     const hasEnvMeta = !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID)
     if (!config || (!config.phoneNumberId && !config.evolutionUrl)) {
@@ -33,7 +37,8 @@ export async function GET() {
 
     // Auto-configure Evolution webhook when connected so delivery ACKs arrive
     if (status.connected && provider instanceof EvolutionProvider) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL
+      // EVOLUTION_WEBHOOK_BASE_URL: ambiente de teste mantém os webhooks apontando pra produção
+      const appUrl = process.env.EVOLUTION_WEBHOOK_BASE_URL || process.env.NEXT_PUBLIC_APP_URL
       if (appUrl) {
         provider.configureWebhook(appUrl).catch(() => {})
       }

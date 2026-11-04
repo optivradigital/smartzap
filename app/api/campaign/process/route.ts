@@ -12,6 +12,7 @@ import { getUserFriendlyMessage } from "@/lib/whatsapp-errors";
 import { loadProviderConfig } from "@/lib/whatsapp-provider/factory";
 import { getWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import { EvolutionProvider } from "@/lib/whatsapp-provider/evolution";
+import { isInternalRequest } from "@/lib/internal-auth";
 
 const DEMI_BOT_ID = "demi-gptmaker-v1";
 
@@ -314,6 +315,9 @@ async function validateWhatsAppNumbers(
 }
 
 export async function POST(request: NextRequest) {
+  if (!isInternalRequest(request.headers)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   let payload: ProcessPayload;
 
   try {
@@ -354,8 +358,14 @@ export async function POST(request: NextRequest) {
       resolvedBusinessAccountId = redisCreds.businessAccountId || '';
     }
   }
-  if (!resolvedPhoneId) resolvedPhoneId = process.env.WHATSAPP_PHONE_ID || "";
-  if (!resolvedToken) resolvedToken = process.env.WHATSAPP_TOKEN || "";
+  // .env só vale sem org — org sem credenciais próprias não dispara pelo número de outra
+  if (!payload.orgId) {
+    if (!resolvedPhoneId) resolvedPhoneId = process.env.WHATSAPP_PHONE_ID || "";
+    if (!resolvedToken) resolvedToken = process.env.WHATSAPP_TOKEN || "";
+  }
+  if (isEvolution && !orgConfig?.evolutionInstance) {
+    return NextResponse.json({ error: "Instância Evolution não configurada para esta organização" }, { status: 400 });
+  }
 
   if (!isEvolution && (!resolvedPhoneId || !resolvedToken)) {
     return NextResponse.json({ error: "phoneNumberId and accessToken required for Meta Cloud API" }, { status: 400 });
@@ -422,7 +432,7 @@ export async function POST(request: NextRequest) {
     const evoProvider = new EvolutionProvider(
       orgConfig!.evolutionUrl || process.env.EVOLUTION_API_URL || 'http://evolution_api:8080',
       orgConfig!.evolutionApiKey || process.env.EVOLUTION_API_KEY || '',
-      orgConfig!.evolutionInstance || process.env.EVOLUTION_INSTANCE || 'SmartZap'
+      orgConfig!.evolutionInstance!
     )
     validPhones = await evoProvider.checkNumbers(allPhones)
   } else {
@@ -503,7 +513,7 @@ export async function POST(request: NextRequest) {
         const evoProvider = new EvolutionProvider(
           orgConfig!.evolutionUrl || process.env.EVOLUTION_API_URL || "http://evolution_api:8080",
           orgConfig!.evolutionApiKey || process.env.EVOLUTION_API_KEY || "",
-          orgConfig!.evolutionInstance || process.env.EVOLUTION_INSTANCE || "SmartZap"
+          orgConfig!.evolutionInstance!
         );
         const result = await evoProvider.sendText({
           phone: contact.phone,

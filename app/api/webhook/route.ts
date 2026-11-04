@@ -7,7 +7,8 @@ import {
   getUserFriendlyMessage,
 } from '@/lib/whatsapp-errors'
 import { botDb, botConversationDb, botMessageDb, settingsDb } from '@/lib/supabase-db'
-import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
+import { loadProviderConfig, findOrgByEvolutionInstance } from '@/lib/whatsapp-provider/factory'
+import { getWhatsAppCredentials } from '@/lib/whatsapp-credentials'
 
 // Fixed ID for the AI bot — created in Supabase bots table
 const AI_BOT_ID = 'demi-gptmaker-v1'
@@ -20,22 +21,6 @@ const DEFAULT_TRANSFER_MSG =
 type ReplyProvider =
   | { type: 'meta'; phoneNumberId: string; accessToken: string }
   | { type: 'evolution'; evolutionUrl: string; evolutionApiKey: string; instanceName: string }
-
-// ── Find orgId by Evolution instance name (scan Redis) ───────────────────────
-async function findOrgByEvolutionInstance(instanceName: string): Promise<string | null> {
-  try {
-    const keys = await redis.keys('whatsapp:provider:config:*')
-    for (const key of keys) {
-      const raw = await redis.get(key)
-      if (!raw) continue
-      const config = JSON.parse(typeof raw === 'string' ? raw : JSON.stringify(raw))
-      if (config.evolutionInstance === instanceName) {
-        return key.replace('whatsapp:provider:config:', '')
-      }
-    }
-  } catch { /* non-fatal */ }
-  return null
-}
 
 // ── Find orgId by Meta phoneNumberId (scan Redis) ────────────────────────────
 async function findOrgByPhoneNumberId(phoneNumberId: string): Promise<string | null> {
@@ -59,7 +44,10 @@ async function getWhatsAppAccessToken(orgId?: string | null): Promise<string | n
     try {
       const cfg = await loadProviderConfig(orgId)
       if (cfg?.accessToken) return cfg.accessToken
+      const creds = await getWhatsAppCredentials(orgId)
+      if (creds?.accessToken) return creds.accessToken
     } catch { /* fall through */ }
+    return null // nunca responder pelo token global/de outra org
   }
   try {
     const token = await settingsDb.get('whatsapp_access_token')

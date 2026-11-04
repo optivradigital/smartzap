@@ -6,7 +6,7 @@
 import { NextResponse } from 'next/server'
 import { requireManager } from '@/lib/role-guard'
 import { getCurrentUser } from '@/lib/clerk-auth'
-import { loadProviderConfig } from '@/lib/whatsapp-provider/factory'
+import { loadProviderConfig, isOrgScoped } from '@/lib/whatsapp-provider/factory'
 
 export async function POST() {
   const { error } = await requireManager()
@@ -16,6 +16,10 @@ export async function POST() {
   const orgId = user?.organizationId
 
   const config = await loadProviderConfig(orgId)
+  // Sem config própria: nada a desconectar (antes derrubava a instância global "SmartZap")
+  if (isOrgScoped(orgId) && !config) {
+    return NextResponse.json({ error: 'WhatsApp não configurado para esta organização' }, { status: 400 })
+  }
 
   const isEvolution = config?.type === 'evolution' || (!config && !!process.env.EVOLUTION_API_URL)
   if (!isEvolution) {
@@ -24,7 +28,9 @@ export async function POST() {
 
   const evolutionUrl = config?.evolutionUrl || process.env.EVOLUTION_API_URL || ''
   const evolutionApiKey = config?.evolutionApiKey || process.env.EVOLUTION_API_KEY || ''
-  const evolutionInstance = config?.evolutionInstance || process.env.EVOLUTION_INSTANCE || 'SmartZap'
+  const evolutionInstance = isOrgScoped(orgId)
+    ? config?.evolutionInstance || ''
+    : config?.evolutionInstance || process.env.EVOLUTION_INSTANCE || 'SmartZap'
 
   if (!evolutionUrl || !evolutionApiKey || !evolutionInstance) {
     return NextResponse.json({ error: 'Configuração Evolution incompleta' }, { status: 400 })
