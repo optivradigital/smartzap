@@ -171,7 +171,7 @@ export function WhatsAppProviderSettings() {
             <div className="flex items-center gap-2">
               <Shield size={18} className={config.type === 'meta' ? 'text-blue-400' : 'text-muted-foreground'} />
               <span className="font-semibold text-sm text-foreground">Meta Cloud API</span>
-              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Oficial</span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">Oficial</span>
             </div>
             <p className="text-xs text-muted-foreground">
               API oficial do WhatsApp Business. Mensagens cobradas. Templates precisam de aprovação do Meta.
@@ -190,7 +190,7 @@ export function WhatsAppProviderSettings() {
             <div className="flex items-center gap-2">
               <Zap size={18} className={config.type === 'evolution' ? 'text-green-400' : 'text-muted-foreground'} />
               <span className="font-semibold text-sm text-foreground">WhatsApp Business App</span>
-              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Gratuito</span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-300">Gratuito</span>
             </div>
             <p className="text-xs text-muted-foreground">
               Conecta via QR code. Sem custo por mensagem. Textos livres sem aprovação prévia.
