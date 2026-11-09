@@ -4,14 +4,9 @@ import { useState } from 'react'
 import { useSettingsController } from '@/hooks/useSettings'
 import { SettingsView } from '@/components/features/settings/SettingsView'
 import { SetupWizardView } from '@/components/features/settings/SetupWizardView'
-import { UsagePanel } from '@/components/UsagePanel'
-import { useUsage } from '@/hooks/useUsage'
-import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 export default function SettingsPage() {
   const controller = useSettingsController()
-  const { usage, isLoading: usageLoading, refetch: refetchUsage } = useUsage()
-  const { isManager } = useCurrentUser()
   const [skipWizard, setSkipWizard] = useState(false)
 
   // Show Setup Wizard if infrastructure is not ready (Redis + QStash)
@@ -37,8 +32,8 @@ export default function SettingsPage() {
   return (
     <div>
       {/* Header - fora do grid */}
-      <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Configurações</h1>
-      <p className="text-gray-400 mb-10">Gerencie sua conexão com a WhatsApp Business API</p>
+      <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Configurações</h1>
+      <p className="text-muted-foreground mb-10">Conexão do WhatsApp, equipe e preferências da organização</p>
 
       {/* Grid responsivo: mobile=1col, xl=3col */}
       <div className="flex flex-col xl:flex-row gap-8">
@@ -84,16 +79,6 @@ export default function SettingsPage() {
           />
         </div>
 
-        {/* Usage Panel - visível apenas para managers e super admins */}
-        {isManager && (
-          <div className="w-full xl:w-80 flex-shrink-0">
-            <UsagePanel
-              usage={usage}
-              isLoading={usageLoading}
-              onRefresh={refetchUsage}
-            />
-          </div>
-        )}
       </div>
     </div>
   )

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { usePathname, useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useClerk } from '@clerk/nextjs'
@@ -16,7 +17,6 @@ import {
     LogOut,
     Menu,
     X,
-    Bell,
     Zap,
     FileText,
     AlertTriangle,
@@ -29,7 +29,6 @@ import {
     ChevronRight,
     ChevronDown,
     Building2,
-    Workflow,
     Sun,
     Moon,
 } from 'lucide-react'
@@ -80,7 +79,7 @@ const OnboardingOverlay = ({
                     : 'pending',
             icon: React.createElement(Database, { size: 20, className: 'text-emerald-400' }),
             actionLabel: 'Abrir Assistente de Configuração',
-            actionUrl: '/setup',
+            actionUrl: '/settings',
             errorMessage: health?.services.database?.message,
             isRequired: true,
             instructions: [
@@ -100,7 +99,7 @@ const OnboardingOverlay = ({
                     : 'pending',
             icon: React.createElement(Database, { size: 20, className: 'text-red-400' }),
             actionLabel: 'Configurar no Assistente',
-            actionUrl: '/setup',
+            actionUrl: '/settings',
             errorMessage: health?.services.redis.message,
             isRequired: true,
             instructions: [
@@ -120,7 +119,7 @@ const OnboardingOverlay = ({
                     : 'pending',
             icon: React.createElement(Zap, { size: 20, className: 'text-purple-400' }),
             actionLabel: 'Configurar no Assistente',
-            actionUrl: '/setup',
+            actionUrl: '/settings',
             errorMessage: health?.services.qstash.message,
             isRequired: true,
             instructions: [
@@ -142,7 +141,7 @@ const OnboardingOverlay = ({
             errorMessage: health?.services.whatsapp.message,
             isRequired: true,
             actionLabel: 'Configurar WhatsApp',
-            actionUrl: '/setup',
+            actionUrl: '/settings',
             instructions: [
                 'Configure as credenciais do WhatsApp Business.',
                 'Use o assistente para validar o token.',
@@ -172,7 +171,7 @@ const OnboardingOverlay = ({
                         Para utilizar o sistema, precisamos configurar os serviços essenciais. Utilize nosso assistente para facilitar o processo.
                     </p>
                     <a
-                        href="/setup"
+                        href="/settings"
                         className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-primary-500/25"
                     >
                         <Sparkles size={18} />
@@ -482,7 +481,7 @@ export function DashboardShell({
     const companyName = initialAuthStatus?.company?.name
     const { user: currentAuthUser, isSuperAdmin: isAuthSuperAdmin, organizations: authOrgs, activeOrgId: authActiveOrgId, switchOrg: authSwitchOrg } = useCurrentUser()
     const [orgDropdownOpen, setOrgDropdownOpen] = React.useState(false)
-    const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#3b82f6' })
+    const [branding, setBranding] = React.useState({ brand_name: 'SmartZap', brand_logo_url: '', brand_primary_color: '#6366f1' })
     React.useEffect(() => {
       fetch('/api/settings/branding').then(r => r.ok ? r.json() : null).then(d => { if (d) setBranding(d) }).catch(() => {})
     }, [])
@@ -552,10 +551,6 @@ export function DashboardShell({
         { path: '/campaigns', label: 'Campanhas', icon: MessageSquare },
         { path: '/templates', label: 'Templates', icon: FileText },
         { path: '/contacts', label: 'Contatos', icon: Users },
-    ]
-
-    const systemNavItems = [
-        { path: '/workflows', label: 'Workflows', icon: Workflow },
         { path: '/conversations', label: 'Conversas', icon: MessageCircle },
     ]
 
@@ -596,7 +591,7 @@ export function DashboardShell({
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#0d1b2e] border-r border-zinc-200 dark:border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#141823] border-r border-zinc-200 dark:border-white/5 transform transition-transform duration-200 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     }`}
             >
                 <div className="h-full flex flex-col p-3">
@@ -643,28 +638,13 @@ export function DashboardShell({
                                     href={item.path}
                                     icon={item.icon}
                                     label={item.label}
-                                    isActive={pathname === item.path}
+                                    isActive={item.path === '/' ? pathname === '/' : (pathname?.startsWith(item.path) ?? false)}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     onMouseEnter={() => prefetchRoute(item.path)}
                                 />
                             ))}
                         </div>
 
-                        <div className="space-y-0.5">
-                            <p className="px-4 text-[10px] font-semibold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mb-2">Sistema</p>
-                            {systemNavItems.map((item) => (
-                                <PrefetchLink
-                                    key={item.path}
-                                    href={item.path}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-0.5 text-zinc-400 dark:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-700 dark:hover:text-zinc-400 border border-transparent"
-                                >
-                                    <item.icon size={18} className="text-zinc-400 dark:text-zinc-700" />
-                                    <span className="text-sm">{item.label}</span>
-                                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700">beta</span>
-                                </PrefetchLink>
-                            ))}
-                        </div>
                     </nav>
 
                     {/* Footer: Configurações + User card */}
@@ -747,7 +727,7 @@ export function DashboardShell({
                                   {authOrgs.map(org => (
                                     <button
                                       key={org.id}
-                                      onClick={() => { authSwitchOrg(org.id); setOrgDropdownOpen(false) }}
+                                      onClick={() => { setOrgDropdownOpen(false); if (org.id !== authActiveOrgId) authSwitchOrg(org.id).catch(e => toast.error(e.message)) }}
                                       className={`w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-muted dark:hover:bg-zinc-800 transition-colors ${org.id === authActiveOrgId ? 'bg-muted dark:bg-zinc-800/60' : ''}`}
                                     >
                                       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${org.id === authActiveOrgId ? 'bg-green-500' : 'bg-zinc-400 dark:bg-zinc-600'}`}></span>
@@ -776,10 +756,6 @@ export function DashboardShell({
                                 ? <Sun size={17} className="text-zinc-500 group-hover:text-foreground transition-colors" />
                                 : <Moon size={17} className="text-muted-foreground group-hover:text-foreground transition-colors" />
                             }
-                        </button>
-                        <button className="relative p-1.5 rounded-lg hover:bg-muted transition-colors group">
-                            <Bell size={17} className="text-zinc-500 dark:text-zinc-500 text-muted-foreground group-hover:text-foreground transition-colors" />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full border border-background"></span>
                         </button>
                     </div>
                 </header>

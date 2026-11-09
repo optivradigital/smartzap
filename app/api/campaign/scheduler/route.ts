@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { INTERNAL_SECRET_HEADER, internalSecret } from "@/lib/internal-auth";
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -101,7 +102,7 @@ export async function GET(req: NextRequest) {
       // Fire-and-forget (don't await — campaigns can run for hours)
       fetch(processUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", [INTERNAL_SECRET_HEADER]: internalSecret() },
         body: JSON.stringify(payload),
       }).catch((e) => console.error(`[Scheduler] Failed to fire campaign ${campaign.id}:`, e));
 

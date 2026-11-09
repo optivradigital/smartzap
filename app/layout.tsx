@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Geist } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { Toaster } from 'sonner'
 import { ClerkProvider } from '@clerk/nextjs'
 
-const inter = Inter({
+const geist = Geist({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-geist',
 })
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
+      <html lang="pt-BR" className={geist.variable} suppressHydrationWarning>
         <body className="font-sans antialiased">
           <Providers>
             <Toaster richColors position="top-right" theme="dark" />

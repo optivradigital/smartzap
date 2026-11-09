@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { saveProviderConfig, loadProviderConfig } from '@/lib/whatsapp-provider/factory'
+import { saveProviderConfig, loadProviderConfig, isOrgScoped, findOrgByEvolutionInstance } from '@/lib/whatsapp-provider/factory'
 import { requireManager } from '@/lib/role-guard'
 import { getCurrentUser } from '@/lib/clerk-auth'
 import type { ProviderConfig } from '@/lib/whatsapp-provider/types'
@@ -22,12 +22,17 @@ export async function GET() {
   const effectiveConfig: Partial<ProviderConfig> = config ?? {}
   const evolutionUrlFromEnv = process.env.EVOLUTION_API_URL || ''
   const evolutionKeyFromEnv = process.env.EVOLUTION_API_KEY || ''
-  const evolutionInstanceFromEnv = process.env.EVOLUTION_INSTANCE || ''
+  // Instância do .env pertence a uma org específica — org nova não herda
+  const evolutionInstanceFromEnv = isOrgScoped(orgId) ? '' : process.env.EVOLUTION_INSTANCE || ''
 
   const hasEnvEvolution = !!(evolutionUrlFromEnv && evolutionKeyFromEnv)
   const resolvedType = effectiveConfig.type || (hasEnvEvolution ? 'evolution' : 'meta')
-  const resolvedEvolutionUrl = effectiveConfig.evolutionUrl || evolutionUrlFromEnv
-  const resolvedEvolutionInstance = effectiveConfig.evolutionInstance || evolutionInstanceFromEnv || 'SmartZap'
+  const rawEvolutionUrl = effectiveConfig.evolutionUrl || evolutionUrlFromEnv
+  // Form mostra a URL pública; a interna (Docker) só é usada no servidor (toInternalEvolutionUrl)
+  const resolvedEvolutionUrl = process.env.EVOLUTION_PUBLIC_URL && rawEvolutionUrl === evolutionUrlFromEnv
+    ? process.env.EVOLUTION_PUBLIC_URL
+    : rawEvolutionUrl
+  const resolvedEvolutionInstance = effectiveConfig.evolutionInstance || evolutionInstanceFromEnv
   const resolvedEvolutionKeyExists = !!(effectiveConfig.evolutionApiKey || evolutionKeyFromEnv)
 
   const hasToken = !!(effectiveConfig.accessToken)
@@ -75,10 +80,15 @@ export async function POST(req: NextRequest) {
   if (body.type === 'evolution') {
     if (!body.evolutionUrl) return NextResponse.json({ error: 'evolutionUrl é obrigatório' }, { status: 400 })
     if (!body.evolutionInstance) return NextResponse.json({ error: 'evolutionInstance é obrigatório' }, { status: 400 })
+    const owner = await findOrgByEvolutionInstance(body.evolutionInstance)
+    if (owner && owner !== orgId) {
+      return NextResponse.json({ error: 'Essa instância já está em uso por outra organização. Escolha outro nome.' }, { status: 409 })
+    }
     if (!body.evolutionApiKey) {
       const existing = await loadProviderConfig(orgId)
       body.evolutionApiKey = existing?.evolutionApiKey || ''
-      if (!body.evolutionApiKey) return NextResponse.json({ error: 'evolutionApiKey é obrigatório' }, { status: 400 })
+      // Sem chave própria a factory usa EVOLUTION_API_KEY (infra compartilhada) — UI já mostra "chave salva"
+      if (!body.evolutionApiKey && !process.env.EVOLUTION_API_KEY) return NextResponse.json({ error: 'evolutionApiKey é obrigatório' }, { status: 400 })
     }
   }
 

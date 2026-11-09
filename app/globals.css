@@ -5,31 +5,31 @@
 
 /* CSS Variables for theming */
 :root {
-  /* Zinc colors for dark mode */
-  --color-gray-50: #fafafa;
-  --color-gray-100: #f4f4f5;
-  --color-gray-200: #e4e4e7;
-  --color-gray-300: #d4d4d8;
-  --color-gray-400: #a1a1aa;
-  --color-gray-500: #71717a;
-  --color-gray-600: #52525b;
-  --color-gray-700: #3f3f46;
-  --color-gray-800: #27272a;
-  --color-gray-900: #18181b;
-  --color-gray-950: #09090b;
+  /* Neutros ardósia (paleta B, 2026-11-04) */
+  --color-gray-50: #f6f7fb;
+  --color-gray-100: #eef0f6;
+  --color-gray-200: #e2e5ee;
+  --color-gray-300: #c3c8d6;
+  --color-gray-400: #8a91a6;
+  --color-gray-500: #6b7289;
+  --color-gray-600: #4a5168;
+  --color-gray-700: #2c3346;
+  --color-gray-800: #1d2232;
+  --color-gray-900: #141823;
+  --color-gray-950: #0d1017;
 
-  /* Tech Blue */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary-950: #172554;
+  /* Índigo (paleta B) */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+  --color-primary-950: #1e1b4b;
 
   /* ================================
      LANGFLOW COLOR SYSTEM
@@ -39,7 +39,7 @@
   --status-red: #ef4444;
   --status-yellow: #eab308;
   --status-green: #4ade80;
-  --status-blue: #2563eb;
+  --status-blue: #4f46e5;
   --status-gray: #6b7280;
 
   /* Node Category Colors (datatype) */
@@ -75,42 +75,43 @@
   --node-ring: hsl(240, 6%, 90%);
 
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #f6f7fb;
+  --foreground: #141827;
+  --card: #ffffff;
+  --card-foreground: #141827;
+  --popover: #ffffff;
+  --popover-foreground: #141827;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #eef0f6;
+  --secondary-foreground: #141827;
+  --muted: #eef0f6;
+  --muted-foreground: #5c6378;
+  --accent: #eceefe;
+  --accent-foreground: #4338ca;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #e2e5ee;
+  --input: #e2e5ee;
+  --ring: #6366f1;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #141827;
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eceefe;
+  --sidebar-accent-foreground: #4338ca;
+  --sidebar-border: #e2e5ee;
+  --sidebar-ring: #6366f1;
 }
 
 /* Tailwind v4 theme customizations */
 @theme {
-  --font-family-sans: 'Inter', sans-serif;
+  --font-family-sans: var(--font-geist), 'Inter', sans-serif;
+  --font-sans: var(--font-geist), 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   /* Colors */
   --color-primary-50: var(--color-primary-50);
@@ -126,15 +127,86 @@
   --color-primary-950: var(--color-primary-950);
 }
 
+/* Paleta B (Ardósia e índigo, escolhida 2026-11-04): as classes zinc-/blue-* espalhadas pelos
+   componentes passam a usar estes valores — trocar a paleta = editar só este bloco. */
+@theme {
+  --color-zinc-50: #f6f7fb;
+  --color-zinc-100: #eef0f6;
+  --color-zinc-200: #e2e5ee;
+  --color-zinc-300: #c3c8d6;
+  --color-zinc-400: #8a91a6;
+  --color-zinc-500: #6b7289;
+  --color-zinc-600: #4a5168;
+  --color-zinc-700: #2c3346;
+  --color-zinc-800: #1d2232;
+  --color-zinc-900: #141823;
+  --color-zinc-950: #0d1017;
+  --color-slate-50: #f6f7fb;
+  --color-slate-100: #eef0f6;
+  --color-slate-200: #e2e5ee;
+  --color-slate-300: #c3c8d6;
+  --color-slate-400: #8a91a6;
+  --color-slate-500: #6b7289;
+  --color-slate-600: #4a5168;
+  --color-slate-700: #2c3346;
+  --color-slate-800: #1d2232;
+  --color-slate-900: #141823;
+  --color-slate-950: #0d1017;
+  --color-neutral-50: #f6f7fb;
+  --color-neutral-100: #eef0f6;
+  --color-neutral-200: #e2e5ee;
+  --color-neutral-300: #c3c8d6;
+  --color-neutral-400: #8a91a6;
+  --color-neutral-500: #6b7289;
+  --color-neutral-600: #4a5168;
+  --color-neutral-700: #2c3346;
+  --color-neutral-800: #1d2232;
+  --color-neutral-900: #141823;
+  --color-neutral-950: #0d1017;
+  --color-gray-50: #f6f7fb;
+  --color-gray-100: #eef0f6;
+  --color-gray-200: #e2e5ee;
+  --color-gray-300: #c3c8d6;
+  --color-gray-400: #8a91a6;
+  --color-gray-500: #6b7289;
+  --color-gray-600: #4a5168;
+  --color-gray-700: #2c3346;
+  --color-gray-800: #1d2232;
+  --color-gray-900: #141823;
+  --color-gray-950: #0d1017;
+  --color-blue-50: #eef2ff;
+  --color-blue-100: #e0e7ff;
+  --color-blue-200: #c7d2fe;
+  --color-blue-300: #a5b4fc;
+  --color-blue-400: #818cf8;
+  --color-blue-500: #6366f1;
+  --color-blue-600: #4f46e5;
+  --color-blue-700: #4338ca;
+  --color-blue-800: #3730a3;
+  --color-blue-900: #312e81;
+  --color-blue-950: #1e1b4b;
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-300: #a5b4fc;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+  --color-indigo-800: #3730a3;
+  --color-indigo-900: #312e81;
+  --color-indigo-950: #1e1b4b;
+}
+
 /* Brand color — overridden dynamically by BrandingSettings via style tag */
 :root {
-  --brand-primary: #3b82f6;
-  --brand-primary-hover: #2563eb;
+  --brand-primary: #4f46e5;
+  --brand-primary-hover: #4338ca;
 }
 
 /* Base styles — cores via CSS vars (light/dark automático) */
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-geist), 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ================================
@@ -179,7 +251,7 @@ a:focus-visible,
 [role="button"]:focus-visible {
   outline: 2px solid var(--color-primary-400);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
 }
 
 input:focus-visible,
@@ -187,7 +259,7 @@ select:focus-visible,
 textarea:focus-visible {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 /* Remove default focus outline when using :focus-visible */
@@ -240,21 +312,21 @@ textarea:focus-visible {
 }
 
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--color-zinc-300);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: var(--color-zinc-400);
 }
 
 /* Glass panel effect */
 .glass-panel {
-  background: rgba(24, 24, 27, 0.7);
+  background: rgba(20, 24, 35, 0.8);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -266,7 +338,7 @@ html:not(.dark) .glass-panel {
 }
 
 .glass-panel-subtle {
-  background: rgba(18, 18, 20, 0.85);
+  background: rgba(20, 24, 35, 0.85);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -286,7 +358,7 @@ html:not(.dark) .glass-panel-subtle {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(255, 255, 255, 0.04), rgba(59, 130, 246, 0.1));
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(255, 255, 255, 0.04), rgba(99, 102, 241, 0.1));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -295,7 +367,7 @@ html:not(.dark) .glass-panel-subtle {
 
 /* Blue glow for active elements */
 .emerald-glow {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), 0 0 40px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2), 0 0 40px rgba(99, 102, 241, 0.08);
 }
 
 /* Stat card number shine */
@@ -317,7 +389,7 @@ html:not(.dark) .glass-panel-subtle {
   width: 3px;
   height: 60%;
   border-radius: 0 3px 3px 0;
-  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+  background: linear-gradient(to bottom, #6366f1, #4f46e5);
 }
 
 /* No scrollbar utility */
@@ -569,7 +641,7 @@ html:not(.dark) .glass-panel-subtle {
 /* Edge animations */
 .react-flow__edge.selected path {
   stroke-width: 3px;
-  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
+  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.5));
 }
 
 .react-flow__edge:hover path {
@@ -616,7 +688,7 @@ html:not(.dark) .glass-panel-subtle {
 .react-flow__handle.connectingto,
 .react-flow__handle.connectingfrom {
   transform: scale(1.5);
-  box-shadow: 0 0 10px 3px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 10px 3px rgba(99, 102, 241, 0.5);
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
 }
 
@@ -659,37 +731,37 @@ html:not(.dark) .glass-panel-subtle {
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #0d1017;
+  --foreground: #e6e9f2;
+  --card: #141823;
+  --card-foreground: #e6e9f2;
+  --popover: #141823;
+  --popover-foreground: #e6e9f2;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #1d2232;
+  --secondary-foreground: #e6e9f2;
+  --muted: #1d2232;
+  --muted-foreground: #8a91a6;
+  --accent: rgba(99, 102, 241, 0.16);
+  --accent-foreground: #c7d2fe;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: #222838;
+  --input: #2c3346;
+  --ring: #6366f1;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: #0a0d13;
+  --sidebar-foreground: #e6e9f2;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(99, 102, 241, 0.16);
+  --sidebar-accent-foreground: #e6e9f2;
+  --sidebar-border: #222838;
+  --sidebar-ring: #6366f1;
 }
 
 @layer base {
@@ -805,5 +877,5 @@ html:not(.dark) .glass-panel-subtle {
 
 /* Handle que pode receber conexão */
 .react-flow__handle.valid {
-  box-shadow: 0 0 12px 4px rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 0 12px 4px rgba(99, 102, 241, 0.5) !important;
 }

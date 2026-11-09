@@ -45,6 +45,7 @@ interface ConnectionStatus {
   qrCode?: string
   state?: string
   error?: string
+  notConfigured?: boolean
 }
 
 export function WhatsAppProviderSettings() {
@@ -78,12 +79,12 @@ export function WhatsAppProviderSettings() {
 
   // Polling para QR code atualizado enquanto aguarda scan (Evolution)
   useEffect(() => {
-    if (config.type !== 'evolution' || status?.connected) return
+    if (config.type !== 'evolution' || status?.connected || status?.notConfigured) return
     const interval = setInterval(() => fetchStatus(true), 5000)
     return () => clearInterval(interval)
   }, [config.type, status?.connected, fetchStatus])
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     setSaving(true)
     try {
       const payload: ProviderConfig = { ...config }
@@ -96,9 +97,11 @@ export function WhatsAppProviderSettings() {
       if (res.ok) {
         toast.success('Configuração salva!')
         await Promise.all([fetchConfig(), fetchStatus()])
+        return true
       } else {
-        const err = await res.json()
+        const err = await res.json().catch(() => ({}))
         toast.error(err.error || 'Erro ao salvar')
+        return false
       }
     } finally {
       setSaving(false)
@@ -130,6 +133,8 @@ export function WhatsAppProviderSettings() {
   const handleGenerateQR = async () => {
     setGeneratingQR(true)
     try {
+      // Org nova: salva a instância antes (antes o botão ficava sem efeito)
+      if (status?.notConfigured && !(await handleSave())) return
       const res = await fetch('/api/whatsapp/reconnect', { method: 'POST' })
       const data = await res.json()
       if (data.qrCode) {
@@ -166,7 +171,7 @@ export function WhatsAppProviderSettings() {
             <div className="flex items-center gap-2">
               <Shield size={18} className={config.type === 'meta' ? 'text-blue-400' : 'text-muted-foreground'} />
               <span className="font-semibold text-sm text-foreground">Meta Cloud API</span>
-              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Oficial</span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">Oficial</span>
             </div>
             <p className="text-xs text-muted-foreground">
               API oficial do WhatsApp Business. Mensagens cobradas. Templates precisam de aprovação do Meta.
@@ -185,7 +190,7 @@ export function WhatsAppProviderSettings() {
             <div className="flex items-center gap-2">
               <Zap size={18} className={config.type === 'evolution' ? 'text-green-400' : 'text-muted-foreground'} />
               <span className="font-semibold text-sm text-foreground">WhatsApp Business App</span>
-              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Gratuito</span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-300">Gratuito</span>
             </div>
             <p className="text-xs text-muted-foreground">
               Conecta via QR code. Sem custo por mensagem. Textos livres sem aprovação prévia.
@@ -265,7 +270,9 @@ export function WhatsAppProviderSettings() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-red-400" />
                 <span className="text-xs text-red-400 font-medium">
-                  {status?.error || 'Não conectado — verifique as credenciais'}
+                  {status?.notConfigured
+                    ? 'Não configurado — preencha e salve as credenciais acima'
+                    : status?.error || 'Não conectado — verifique as credenciais'}
                 </span>
                 <button
                   onClick={() => fetchStatus()}
@@ -318,7 +325,7 @@ export function WhatsAppProviderSettings() {
                 type="text"
                 value={config.evolutionInstance || ''}
                 onChange={e => setConfig(c => ({ ...c, evolutionInstance: e.target.value }))}
-                placeholder="SmartZap"
+                placeholder="Ex: nome-do-cliente (único por organização)"
                 className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground/50 focus:outline-none focus:border-green-500"
               />
             </div>
@@ -395,16 +402,18 @@ export function WhatsAppProviderSettings() {
                     <WifiOff size={20} className="text-red-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-red-400">Desconectado</p>
+                    <p className="text-sm font-semibold text-red-400">{status?.notConfigured ? 'Não configurado' : 'Desconectado'}</p>
                     <p className="text-xs text-muted-foreground">
-                      {status?.error || 'Clique em "Gerar QR Code" para conectar'}
+                      {status?.notConfigured
+                        ? 'Dê um nome à instância e clique em "Gerar QR Code"'
+                        : status?.error || 'Clique em "Gerar QR Code" para conectar'}
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleGenerateQR}
-                  disabled={generatingQR}
+                  disabled={generatingQR || saving || !config.evolutionInstance}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 hover:bg-green-600/30 disabled:opacity-50 text-green-400 text-sm font-medium transition-colors"
                 >
                   {generatingQR
