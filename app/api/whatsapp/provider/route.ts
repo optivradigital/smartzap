@@ -27,7 +27,11 @@ export async function GET() {
 
   const hasEnvEvolution = !!(evolutionUrlFromEnv && evolutionKeyFromEnv)
   const resolvedType = effectiveConfig.type || (hasEnvEvolution ? 'evolution' : 'meta')
-  const resolvedEvolutionUrl = effectiveConfig.evolutionUrl || evolutionUrlFromEnv
+  const rawEvolutionUrl = effectiveConfig.evolutionUrl || evolutionUrlFromEnv
+  // Form mostra a URL pública; a interna (Docker) só é usada no servidor (toInternalEvolutionUrl)
+  const resolvedEvolutionUrl = process.env.EVOLUTION_PUBLIC_URL && rawEvolutionUrl === evolutionUrlFromEnv
+    ? process.env.EVOLUTION_PUBLIC_URL
+    : rawEvolutionUrl
   const resolvedEvolutionInstance = effectiveConfig.evolutionInstance || evolutionInstanceFromEnv
   const resolvedEvolutionKeyExists = !!(effectiveConfig.evolutionApiKey || evolutionKeyFromEnv)
 
