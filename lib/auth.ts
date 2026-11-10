@@ -28,8 +28,6 @@ export const ADMIN_ENDPOINTS = [
   '/api/database/cleanup',
   '/api/database/migrate',
   '/api/database/fix-schema',
-  '/api/vercel/redeploy',
-  '/api/vercel/info',
 ]
 
 // Public endpoints that don't require authentication

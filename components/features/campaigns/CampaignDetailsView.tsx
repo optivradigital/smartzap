@@ -309,7 +309,7 @@ export const CampaignDetailsView: React.FC<CampaignDetailsViewProps> = ({
           value={sentCount.toLocaleString()}
           subvalue={`${campaign.recipients ?? 0} destinatários`}
           icon={Clock}
-          color="#a1a1aa"
+          color="#8a91a6"
         />
         <DetailCard
           title="Entregues"

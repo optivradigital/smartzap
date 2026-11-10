@@ -175,23 +175,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, recentCampa
                       <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#8a91a6" strokeOpacity={0.25} />
                 <XAxis 
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{fill: '#71717a', fontSize: 12}} 
+                  tick={{fill: '#8a91a6', fontSize: 12}} 
                   dy={15}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{fill: '#71717a', fontSize: 12}} 
+                  tick={{fill: '#8a91a6', fontSize: 12}} 
                 />
                 <Tooltip
                   contentStyle={{backgroundColor: '#141823', borderRadius: '12px', border: '1px solid rgba(99, 102, 241,0.2)', color: '#fff'}}
-                  itemStyle={{color: '#60a5fa'}}
-                  labelStyle={{color: '#71717a'}}
+                  itemStyle={{color: '#818cf8'}}
+                  labelStyle={{color: '#8a91a6'}}
                   formatter={(value: number) => [value, 'Enviadas']}
                 />
                 <Area
