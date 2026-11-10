@@ -80,12 +80,12 @@ export const supabase = {
     // Default to admin for server-side operations
     from: (table: string) => {
         const client = getSupabaseAdmin()
-        if (!client) throw new Error('Supabase not configured. Complete setup at /setup')
+        if (!client) throw new Error('Supabase not configured. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY')
         return client.from(table)
     },
     rpc: (fn: string, params?: object) => {
         const client = getSupabaseAdmin()
-        if (!client) throw new Error('Supabase not configured. Complete setup at /setup')
+        if (!client) throw new Error('Supabase not configured. Check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY')
         return client.rpc(fn, params)
     },
 

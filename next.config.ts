@@ -10,11 +10,6 @@ const nextConfig: NextConfig = {
   // Standalone output for Docker
   output: 'standalone',
 
-  // Include SQL migration files in the serverless bundle
-  outputFileTracingIncludes: {
-    '/api/setup/migrate': ['./lib/migrations/**/*'],
-  },
-
   // Environment variables exposed to client
   env: {
     NEXT_PUBLIC_APP_NAME: 'SmartZap',
