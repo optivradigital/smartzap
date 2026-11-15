@@ -12,8 +12,10 @@ atual: corrigir bugs e evoluir o produto — sem refatorações desnecessárias.
   (Next.js 16 usa `proxy.ts`, **não** `middleware.ts` — não existe `middleware.ts` neste
   projeto; confirme sempre a versão do Next antes de assumir qual arquivo usar).
   `proxy.ts` exporta `clerkMiddleware` como `proxy`, com rotas públicas em `isPublicRoute`.
-- Banco: **Supabase** (PostgreSQL) — migrations em `supabase/`, aplicadas manualmente em
-  staging e produção (`npm run db:migrate` roda `scripts/migrate.mjs`)
+- Banco: **Supabase** (PostgreSQL) — migrations em `supabase/`, aplicadas manualmente no
+  Supabase de produção, o único banco, pelo SQL Editor do painel. Não há comando de migração:
+  `scripts/apply-supabase-migration.ts` só aplica a `0001` (esquema inicial) e não deve ser
+  rodado contra o banco em uso
 - Fila/workflows: Upstash Redis + QStash (`@upstash/qstash`, `@upstash/workflow`)
 - Billing: Stripe (`stripe`)
 - IA: AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`) + GPTMaker
@@ -42,8 +44,8 @@ atual: corrigir bugs e evoluir o produto — sem refatorações desnecessárias.
   `develop`; cada push publica em https://smartzap-teste.optivra.digital (`teste.yml`,
   container `smartzap-teste` no Xango, porta 3012). **O teste usa os dados de produção**
   (Supabase/Redis/Evolution). Depois do ok do usuário no teste, PR `develop` → `main` = produção.
-- Migrações de banco precisam ser aplicadas manualmente no Supabase (staging e produção
-  separados).
+- Migrações de banco são aplicadas manualmente no Supabase. Há um banco só: o ambiente de
+  teste usa o de produção, então a migração vale para os dois na hora.
 
 ## Estrutura principal
 - `app/`          → rotas Next.js (App Router) e API routes
@@ -53,7 +55,7 @@ atual: corrigir bugs e evoluir o produto — sem refatorações desnecessárias.
 - `hooks/`        → React hooks
 - `utils/`        → utilitários
 - `supabase/`     → migrations e configuração do banco
-- `scripts/`      → scripts auxiliares (ex.: `migrate.mjs`)
+- `scripts/`      → scripts auxiliares (ex.: `apply-supabase-migration.ts`)
 - `proxy.ts`      → auth middleware (Clerk) — substitui o antigo `middleware.ts`
 
 ## Regras de trabalho
