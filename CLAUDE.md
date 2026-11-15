@@ -13,8 +13,9 @@ atual: corrigir bugs e evoluir o produto — sem refatorações desnecessárias.
   projeto; confirme sempre a versão do Next antes de assumir qual arquivo usar).
   `proxy.ts` exporta `clerkMiddleware` como `proxy`, com rotas públicas em `isPublicRoute`.
 - Banco: **Supabase** (PostgreSQL) — migrations em `supabase/`, aplicadas manualmente no
-  Supabase de produção, o único banco (o `npm run db:migrate` aponta para `scripts/migrate.mjs`,
-  que não existe; o script presente é `scripts/apply-supabase-migration.ts`)
+  Supabase de produção, o único banco, pelo SQL Editor do painel. Não há comando de migração:
+  `scripts/apply-supabase-migration.ts` só aplica a `0001` (esquema inicial) e não deve ser
+  rodado contra o banco em uso
 - Fila/workflows: Upstash Redis + QStash (`@upstash/qstash`, `@upstash/workflow`)
 - Billing: Stripe (`stripe`)
 - IA: AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`) + GPTMaker

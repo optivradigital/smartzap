@@ -15,8 +15,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
-    "test:all": "npm run test && npm run test:e2e",
-    "db:migrate": "node scripts/migrate.mjs"
+    "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.0-beta.77",
